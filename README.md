@@ -1,62 +1,58 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Planning Agenda
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Een lichte PHP-agenda geïnspireerd op Google Agenda met rollen voor **admin** en **instructeur**. De interface is gebouwd met Tailwind CSS en maakt het mogelijk om leerlingen in te plannen via een soepele modal workflow.
 
-## About Laravel
+## Functies
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Inloggen met rolgebaseerde permissies (admin of instructeur).
+- Weekkalender met Google Agenda-look & feel, inclusief drag-grid voor uren en dagen.
+- Admin ziet de planning gegroepeerd per instructeur en kan afspraken voor iedere instructeur maken.
+- Instructeurs zien alleen hun eigen afspraken en kunnen enkel voor zichzelf plannen.
+- Snelle leerlingzoeker binnen de modal inclusief voertuig-, pakket-, contact- en locatie-informatie.
+- SQLite database met eenvoudige migratie- en seed-scripts.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Installatie
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+1. **Installeer PHP 8+** (CLI) in je omgeving.
+2. Installeer de afhankelijkheden (Tailwind wordt via CDN geladen, er zijn dus geen npm stappen nodig).
+3. Maak en seed de database:
 
-## Learning Laravel
+   ```bash
+   php database/migrate.php
+   php database/seed.php
+   ```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+   Dit genereert `database/app.sqlite` met:
+   - 1 admin gebruiker (admin@example.com / secret123)
+   - 2 instructeurs (iris@example.com, bram@example.com / secret123)
+   - 4 voorbeeldleerlingen
+   - Een paar voorbeeldlessen voor de huidige week
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+4. Start de ingebouwde PHP server vanuit de `public` map:
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+   ```bash
+   php -S localhost:8000 -t public
+   ```
 
-## Laravel Sponsors
+5. Bezoek [http://localhost:8000](http://localhost:8000) en log in met één van de seed-accounts.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## Structuur
 
-### Premium Partners
+```
+app/
+  bootstrap.php       # Globale helper functies en database bootstrap
+  views/
+    login.php         # Tailwind login scherm
+    calendar.php      # Hoofdkalender met modal planner
+public/
+  index.php           # Front controller en routing (API + views)
+database/
+  migrate.php         # Maak/initialiseer SQLite schema
+  seed.php            # Vul database met demo data
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## Notities
 
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
-# speed
+- Alle data wordt opgeslagen in `database/app.sqlite`. Verwijder het bestand om met een lege database te starten.
+- Pas gemakkelijk rollen of voorbeelddata aan door de seeders te wijzigen.
+- Voor productie-omgevingen is het aan te raden wachtwoorden te wijzigen en validatie/toegang verder uit te breiden.
