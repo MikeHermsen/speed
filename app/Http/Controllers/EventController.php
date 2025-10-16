@@ -63,6 +63,12 @@ class EventController extends Controller
             'package' => ['nullable', 'string'],
             'email' => ['nullable', 'email'],
             'phone' => ['nullable', 'string'],
+            'parent_email' => ['nullable', 'email'],
+            'parent_phone' => ['nullable', 'string'],
+            'notify_student_email' => ['nullable', 'boolean'],
+            'notify_parent_email' => ['nullable', 'boolean'],
+            'notify_student_phone' => ['nullable', 'boolean'],
+            'notify_parent_phone' => ['nullable', 'boolean'],
             'location' => ['nullable', 'string'],
             'description' => ['nullable', 'string'],
         ];
@@ -85,8 +91,22 @@ class EventController extends Controller
             'end_time' => $data['end_time'],
             'vehicle' => $data['vehicle'] ?? $student->vehicle,
             'package' => $data['package'] ?? $student->package,
-            'email' => $data['email'] ?? $student->email,
-            'phone' => $data['phone'] ?? $student->phone,
+            'email' => array_key_exists('email', $data) ? $data['email'] : $student->email,
+            'phone' => array_key_exists('phone', $data) ? $data['phone'] : $student->phone,
+            'parent_email' => array_key_exists('parent_email', $data) ? $data['parent_email'] : $student->parent_email,
+            'parent_phone' => array_key_exists('parent_phone', $data) ? $data['parent_phone'] : $student->parent_phone,
+            'notify_student_email' => array_key_exists('notify_student_email', $data)
+                ? (bool) $data['notify_student_email']
+                : (bool) $student->notify_student_email,
+            'notify_parent_email' => array_key_exists('notify_parent_email', $data)
+                ? (bool) $data['notify_parent_email']
+                : (bool) $student->notify_parent_email,
+            'notify_student_phone' => array_key_exists('notify_student_phone', $data)
+                ? (bool) $data['notify_student_phone']
+                : (bool) $student->notify_student_phone,
+            'notify_parent_phone' => array_key_exists('notify_parent_phone', $data)
+                ? (bool) $data['notify_parent_phone']
+                : (bool) $student->notify_parent_phone,
             'location' => $data['location'] ?? $student->location,
             'description' => $data['description'] ?? null,
         ]);
@@ -113,6 +133,12 @@ class EventController extends Controller
             'package' => ['nullable', 'string'],
             'email' => ['nullable', 'email'],
             'phone' => ['nullable', 'string'],
+            'parent_email' => ['nullable', 'email'],
+            'parent_phone' => ['nullable', 'string'],
+            'notify_student_email' => ['nullable', 'boolean'],
+            'notify_parent_email' => ['nullable', 'boolean'],
+            'notify_student_phone' => ['nullable', 'boolean'],
+            'notify_parent_phone' => ['nullable', 'boolean'],
             'location' => ['nullable', 'string'],
             'description' => ['nullable', 'string'],
         ];
@@ -133,8 +159,22 @@ class EventController extends Controller
             'end_time' => $data['end_time'],
             'vehicle' => $data['vehicle'] ?? $event->vehicle,
             'package' => $data['package'] ?? $event->package,
-            'email' => $data['email'] ?? $event->email,
-            'phone' => $data['phone'] ?? $event->phone,
+            'email' => array_key_exists('email', $data) ? $data['email'] : $event->email,
+            'phone' => array_key_exists('phone', $data) ? $data['phone'] : $event->phone,
+            'parent_email' => array_key_exists('parent_email', $data) ? $data['parent_email'] : $event->parent_email,
+            'parent_phone' => array_key_exists('parent_phone', $data) ? $data['parent_phone'] : $event->parent_phone,
+            'notify_student_email' => array_key_exists('notify_student_email', $data)
+                ? (bool) $data['notify_student_email']
+                : $event->notify_student_email,
+            'notify_parent_email' => array_key_exists('notify_parent_email', $data)
+                ? (bool) $data['notify_parent_email']
+                : $event->notify_parent_email,
+            'notify_student_phone' => array_key_exists('notify_student_phone', $data)
+                ? (bool) $data['notify_student_phone']
+                : $event->notify_student_phone,
+            'notify_parent_phone' => array_key_exists('notify_parent_phone', $data)
+                ? (bool) $data['notify_parent_phone']
+                : $event->notify_parent_phone,
             'location' => $data['location'] ?? $event->location,
             'description' => $data['description'] ?? $event->description,
         ])->save();
@@ -154,6 +194,13 @@ class EventController extends Controller
             'student_name' => $event->student?->full_name,
             'student_email' => $event->student?->email,
             'student_phone' => $event->student?->phone,
+            'student_parent_email' => $event->student?->parent_email,
+            'student_parent_phone' => $event->student?->parent_phone,
+            'student_birth_date' => $event->student?->birth_date?->toDateString(),
+            'student_notify_student_email' => $event->student?->notify_student_email,
+            'student_notify_parent_email' => $event->student?->notify_parent_email,
+            'student_notify_student_phone' => $event->student?->notify_student_phone,
+            'student_notify_parent_phone' => $event->student?->notify_parent_phone,
             'status' => $event->status,
             'start_time' => $event->start_time?->toIso8601String(),
             'end_time' => $event->end_time?->toIso8601String(),
@@ -161,6 +208,12 @@ class EventController extends Controller
             'package' => $event->package,
             'email' => $event->email,
             'phone' => $event->phone,
+            'parent_email' => $event->parent_email,
+            'parent_phone' => $event->parent_phone,
+            'notify_student_email' => $event->notify_student_email,
+            'notify_parent_email' => $event->notify_parent_email,
+            'notify_student_phone' => $event->notify_student_phone,
+            'notify_parent_phone' => $event->notify_parent_phone,
             'location' => $event->location,
             'description' => $event->description,
         ];

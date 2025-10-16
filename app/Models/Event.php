@@ -20,6 +20,12 @@ class Event extends Model
         'package',
         'email',
         'phone',
+        'parent_email',
+        'parent_phone',
+        'notify_student_email',
+        'notify_parent_email',
+        'notify_student_phone',
+        'notify_parent_phone',
         'location',
         'description',
     ];
@@ -27,6 +33,10 @@ class Event extends Model
     protected $casts = [
         'start_time' => 'datetime',
         'end_time' => 'datetime',
+        'notify_student_email' => 'boolean',
+        'notify_parent_email' => 'boolean',
+        'notify_student_phone' => 'boolean',
+        'notify_parent_phone' => 'boolean',
     ];
 
     public function instructor(): BelongsTo

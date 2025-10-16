@@ -22,6 +22,12 @@ return new class extends Migration
             $table->string('package')->nullable();
             $table->string('email')->nullable();
             $table->string('phone')->nullable();
+            $table->string('parent_email')->nullable();
+            $table->string('parent_phone')->nullable();
+            $table->boolean('notify_student_email')->default(true);
+            $table->boolean('notify_parent_email')->default(false);
+            $table->boolean('notify_student_phone')->default(true);
+            $table->boolean('notify_parent_phone')->default(false);
             $table->string('location')->nullable();
             $table->text('description')->nullable();
             $table->timestamps();

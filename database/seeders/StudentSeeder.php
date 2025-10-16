@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Student;
 use Illuminate\Database\Seeder;
+use Faker\Factory as Faker;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
@@ -26,13 +27,23 @@ class StudentSeeder extends Seeder
             ['first_name' => 'Ravi', 'last_name' => 'de Wit'],
         ];
 
+        $faker = Faker::create('nl_NL');
+
         foreach ($students as $student) {
+            $email = Str::slug($student['first_name'] . $student['last_name']) . '@leerling.test';
             Student::updateOrCreate(
-                ['email' => Str::slug($student['first_name'] . $student['last_name']) . '@leerling.test'],
+                ['email' => $email],
                 [
                     'first_name' => $student['first_name'],
                     'last_name' => $student['last_name'],
-                    'phone' => '06-' . random_int(10000000, 99999999),
+                    'birth_date' => $faker->dateTimeBetween('-24 years', '-17 years')->format('Y-m-d'),
+                    'phone' => '06' . $faker->numberBetween(10000000, 99999999),
+                    'parent_email' => 'ouder+' . $email,
+                    'parent_phone' => '06' . $faker->numberBetween(10000000, 99999999),
+                    'notify_student_email' => true,
+                    'notify_parent_email' => $faker->boolean(40),
+                    'notify_student_phone' => true,
+                    'notify_parent_phone' => $faker->boolean(40),
                     'package' => Arr::random($packages),
                     'vehicle' => Arr::random($vehicles),
                     'location' => Arr::random($locations),

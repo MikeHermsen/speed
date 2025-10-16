@@ -161,18 +161,66 @@
                             </div>
                         </div>
 
-                        <div class="grid gap-4 sm:grid-cols-2">
-                            <div>
-                                <label class="block text-sm font-medium text-slate-700">E-mail</label>
-                                <div class="mt-2 flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                                    <a id="email-link" href="#" class="flex-1 truncate text-sm font-medium text-sky-600" target="_blank" rel="noopener">Geen e-mail</a>
-                                    <button type="button" id="toggle-email-edit" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-sky-400 hover:text-sky-600">Bewerk</button>
+                        <div class="space-y-6">
+                            <div class="grid gap-4 sm:grid-cols-2">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700">E-mail leerling</label>
+                                    <div class="mt-2 space-y-2">
+                                        <div id="email-display" class="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                                            <a id="email-link" href="#" data-empty-label="Geen e-mail" class="flex-1 truncate text-sm font-medium text-slate-400" target="_blank" rel="noopener">Geen e-mail</a>
+                                            <button type="button" id="toggle-email-edit" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-sky-400 hover:text-sky-600">Bewerk</button>
+                                        </div>
+                                        <input id="email" name="email" type="email" class="hidden w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                                    </div>
+                                    <label class="mt-2 flex items-center gap-2 text-xs font-medium text-slate-600">
+                                        <input id="notify-student-email" name="notify_student_email" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" checked />
+                                        <span>Student ontvangt e-mails</span>
+                                    </label>
                                 </div>
-                                <input id="email" name="email" type="email" class="mt-2 hidden w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700">Telefoon leerling</label>
+                                    <div class="mt-2 space-y-2">
+                                        <div id="phone-display" class="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                                            <a id="phone-link" href="#" data-empty-label="Geen telefoon" class="flex-1 truncate text-sm font-medium text-slate-400">Geen telefoon</a>
+                                            <button type="button" id="toggle-phone-edit" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-sky-400 hover:text-sky-600">Bewerk</button>
+                                        </div>
+                                        <input id="phone" name="phone" type="tel" class="hidden w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                                    </div>
+                                    <label class="mt-2 flex items-center gap-2 text-xs font-medium text-slate-600">
+                                        <input id="notify-student-phone" name="notify_student_phone" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" checked />
+                                        <span>Student ontvangt telefoontjes</span>
+                                    </label>
+                                </div>
                             </div>
-                            <div>
-                                <label for="phone" class="block text-sm font-medium text-slate-700">Telefoon</label>
-                                <input id="phone" name="phone" type="text" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                            <div class="grid gap-4 sm:grid-cols-2">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700">E-mail ouder/verzorger</label>
+                                    <div class="mt-2 space-y-2">
+                                        <div id="parent-email-display" class="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                                            <a id="parent-email-link" href="#" data-empty-label="Geen e-mail" class="flex-1 truncate text-sm font-medium text-slate-400" target="_blank" rel="noopener">Geen e-mail</a>
+                                            <button type="button" id="toggle-parent-email-edit" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-sky-400 hover:text-sky-600">Bewerk</button>
+                                        </div>
+                                        <input id="parent_email" name="parent_email" type="email" class="hidden w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                                    </div>
+                                    <label class="mt-2 flex items-center gap-2 text-xs font-medium text-slate-600">
+                                        <input id="notify-parent-email" name="notify_parent_email" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                                        <span>Ouder ontvangt e-mails</span>
+                                    </label>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700">Telefoon ouder/verzorger</label>
+                                    <div class="mt-2 space-y-2">
+                                        <div id="parent-phone-display" class="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                                            <a id="parent-phone-link" href="#" data-empty-label="Geen telefoon" class="flex-1 truncate text-sm font-medium text-slate-400">Geen telefoon</a>
+                                            <button type="button" id="toggle-parent-phone-edit" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-sky-400 hover:text-sky-600">Bewerk</button>
+                                        </div>
+                                        <input id="parent_phone" name="parent_phone" type="tel" class="hidden w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                                    </div>
+                                    <label class="mt-2 flex items-center gap-2 text-xs font-medium text-slate-600">
+                                        <input id="notify-parent-phone" name="notify_parent_phone" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                                        <span>Ouder ontvangt telefoontjes</span>
+                                    </label>
+                                </div>
                             </div>
                         </div>
 
@@ -242,6 +290,16 @@
                 </div>
                 <div class="grid gap-4 sm:grid-cols-2">
                     <div>
+                        <label for="student_birth_date" class="block text-sm font-medium text-slate-700">Geboortedatum</label>
+                        <input id="student_birth_date" name="birth_date" type="date" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                    </div>
+                    <div>
+                        <label for="student_location" class="block text-sm font-medium text-slate-700">Exacte locatie</label>
+                        <input id="student_location" name="location" type="text" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                    </div>
+                </div>
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <div>
                         <label for="student_email" class="block text-sm font-medium text-slate-700">E-mail</label>
                         <input id="student_email" name="email" type="email" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
                     </div>
@@ -260,9 +318,33 @@
                         <input id="student_package" name="package" type="text" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
                     </div>
                 </div>
-                <div>
-                    <label for="student_location" class="block text-sm font-medium text-slate-700">Exacte locatie</label>
-                    <input id="student_location" name="location" type="text" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <div>
+                        <label for="student_parent_email" class="block text-sm font-medium text-slate-700">E-mail ouder/verzorger</label>
+                        <input id="student_parent_email" name="parent_email" type="email" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                    </div>
+                    <div>
+                        <label for="student_parent_phone" class="block text-sm font-medium text-slate-700">Telefoon ouder/verzorger</label>
+                        <input id="student_parent_phone" name="parent_phone" type="tel" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-4 text-xs font-medium text-slate-600">
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" name="notify_student_email" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" checked />
+                        <span>Student e-mail</span>
+                    </label>
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" name="notify_student_phone" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" checked />
+                        <span>Student telefoon</span>
+                    </label>
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" name="notify_parent_email" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                        <span>Ouder e-mail</span>
+                    </label>
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" name="notify_parent_phone" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                        <span>Ouder telefoon</span>
+                    </label>
                 </div>
                 <div class="flex items-center justify-end gap-3">
                     <button type="button" data-close-student-modal class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-slate-300">Annuleren</button>
@@ -309,9 +391,25 @@
             const packageInput = document.getElementById('package');
             const locationInput = document.getElementById('location');
             const emailInput = document.getElementById('email');
+            const emailDisplay = document.getElementById('email-display');
             const emailLink = document.getElementById('email-link');
             const toggleEmailButton = document.getElementById('toggle-email-edit');
             const phoneInput = document.getElementById('phone');
+            const phoneDisplay = document.getElementById('phone-display');
+            const phoneLink = document.getElementById('phone-link');
+            const togglePhoneButton = document.getElementById('toggle-phone-edit');
+            const parentEmailInput = document.getElementById('parent_email');
+            const parentEmailDisplay = document.getElementById('parent-email-display');
+            const parentEmailLink = document.getElementById('parent-email-link');
+            const toggleParentEmailButton = document.getElementById('toggle-parent-email-edit');
+            const parentPhoneInput = document.getElementById('parent_phone');
+            const parentPhoneDisplay = document.getElementById('parent-phone-display');
+            const parentPhoneLink = document.getElementById('parent-phone-link');
+            const toggleParentPhoneButton = document.getElementById('toggle-parent-phone-edit');
+            const notifyStudentEmailInput = document.getElementById('notify-student-email');
+            const notifyStudentPhoneInput = document.getElementById('notify-student-phone');
+            const notifyParentEmailInput = document.getElementById('notify-parent-email');
+            const notifyParentPhoneInput = document.getElementById('notify-parent-phone');
             const descriptionInput = document.getElementById('description');
             const startInput = document.getElementById('start_time');
             const endInput = document.getElementById('end_time');
@@ -348,65 +446,214 @@
             };
 
             let selectedStudentData = null;
-            let emailEditing = false;
 
-            function setEmailValue(value) {
-                const email = value || '';
-                emailInput.value = email;
-                emailLink.textContent = email ? email : 'Geen e-mail';
-                emailLink.href = email ? `mailto:${email}` : '#';
-                emailLink.classList.toggle('text-sky-600', !!email);
-                emailLink.classList.toggle('text-slate-400', !email);
+            function escapeHtml(value) {
+                if (value === undefined || value === null) {
+                    return '';
+                }
+                return String(value)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
             }
 
-            function toggleEmailEditing(force) {
-                emailEditing = typeof force === 'boolean' ? force : !emailEditing;
-                emailInput.classList.toggle('hidden', !emailEditing);
-                emailLink.parentElement.classList.toggle('hidden', emailEditing);
-                toggleEmailButton.textContent = emailEditing ? 'Opslaan e-mail' : 'Bewerk';
-                if (emailEditing) {
-                    emailInput.focus();
-                } else {
-                    setEmailValue(emailInput.value);
-                }
+            function normalisePhoneHref(value) {
+                return `tel:${(value || '').replace(/[^0-9+]/g, '')}`;
             }
 
-            toggleEmailButton.addEventListener('click', () => {
-                toggleEmailEditing();
+            function createContactEditor({ input, display, link, toggleButton, editLabel, saveLabel, hrefFormatter }) {
+                let editing = false;
+
+                function applyDisplay(rawValue) {
+                    const value = rawValue || '';
+                    const hasValue = value.trim() !== '';
+                    const emptyLabel = link.dataset.emptyLabel || 'Niet ingesteld';
+                    link.textContent = hasValue ? value : emptyLabel;
+                    link.href = hasValue ? hrefFormatter(value) : '#';
+                    if (hasValue) {
+                        link.classList.add('text-sky-600');
+                        link.classList.remove('text-slate-400');
+                    } else {
+                        link.classList.add('text-slate-400');
+                        link.classList.remove('text-sky-600');
+                    }
+                }
+
+                function setValue(rawValue) {
+                    input.value = rawValue || '';
+                    applyDisplay(input.value);
+                    if (editing) {
+                        editing = false;
+                        input.classList.add('hidden');
+                        display.classList.remove('hidden');
+                        toggleButton.textContent = editLabel;
+                    }
+                }
+
+                function toggle(force) {
+                    const nextState = typeof force === 'boolean' ? force : !editing;
+                    if (nextState === editing) {
+                        if (!nextState) {
+                            applyDisplay(input.value);
+                        }
+                        return;
+                    }
+                    editing = nextState;
+                    input.classList.toggle('hidden', !editing);
+                    display.classList.toggle('hidden', editing);
+                    toggleButton.textContent = editing ? saveLabel : editLabel;
+                    if (editing) {
+                        input.focus();
+                    } else {
+                        applyDisplay(input.value);
+                    }
+                }
+
+                toggleButton.addEventListener('click', () => toggle());
+                link.addEventListener('click', (event) => {
+                    if (!input.value) {
+                        event.preventDefault();
+                    }
+                });
+
+                return {
+                    setValue,
+                    toggle,
+                    getValue: () => input.value || '',
+                    ensureView: () => {
+                        if (editing) {
+                            toggle(false);
+                        } else {
+                            applyDisplay(input.value);
+                        }
+                    },
+                };
+            }
+
+            const studentEmailEditor = createContactEditor({
+                input: emailInput,
+                display: emailDisplay,
+                link: emailLink,
+                toggleButton: toggleEmailButton,
+                editLabel: 'Bewerk',
+                saveLabel: 'Opslaan e-mail',
+                hrefFormatter: (value) => `mailto:${value}`,
             });
 
-            emailLink.addEventListener('click', (event) => {
-                if (!emailInput.value) {
-                    event.preventDefault();
-                }
+            const studentPhoneEditor = createContactEditor({
+                input: phoneInput,
+                display: phoneDisplay,
+                link: phoneLink,
+                toggleButton: togglePhoneButton,
+                editLabel: 'Bewerk',
+                saveLabel: 'Opslaan nummer',
+                hrefFormatter: (value) => normalisePhoneHref(value),
             });
+
+            const parentEmailEditor = createContactEditor({
+                input: parentEmailInput,
+                display: parentEmailDisplay,
+                link: parentEmailLink,
+                toggleButton: toggleParentEmailButton,
+                editLabel: 'Bewerk',
+                saveLabel: 'Opslaan e-mail',
+                hrefFormatter: (value) => `mailto:${value}`,
+            });
+
+            const parentPhoneEditor = createContactEditor({
+                input: parentPhoneInput,
+                display: parentPhoneDisplay,
+                link: parentPhoneLink,
+                toggleButton: toggleParentPhoneButton,
+                editLabel: 'Bewerk',
+                saveLabel: 'Opslaan nummer',
+                hrefFormatter: (value) => normalisePhoneHref(value),
+            });
+
+            studentEmailEditor.setValue('');
+            studentPhoneEditor.setValue('');
+            parentEmailEditor.setValue('');
+            parentPhoneEditor.setValue('');
+
+            function formatDisplayDate(dateString) {
+                if (!dateString) {
+                    return null;
+                }
+                const date = new Date(dateString);
+                if (Number.isNaN(date.getTime())) {
+                    return null;
+                }
+                return date.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+            }
+
+            function renderSelectedStudent(student) {
+                if (!student) {
+                    selectedStudent.innerHTML = '';
+                    selectedStudent.classList.add('hidden');
+                    return;
+                }
+
+                const contactParts = [student.email ?? 'Geen e-mail', student.phone ?? 'Geen telefoon'];
+                const metaParts = [];
+                const birth = formatDisplayDate(student.birth_date);
+                if (birth) {
+                    metaParts.push(`Geboren: ${birth}`);
+                }
+                const parentParts = [];
+                if (student.parent_email) {
+                    parentParts.push(`Ouder e-mail: ${student.parent_email}`);
+                }
+                if (student.parent_phone) {
+                    parentParts.push(`Ouder tel: ${student.parent_phone}`);
+                }
+                if (parentParts.length) {
+                    metaParts.push(parentParts.join(' · '));
+                }
+
+                selectedStudent.innerHTML = `
+                    <div class="font-semibold text-slate-800">${escapeHtml(student.full_name)}</div>
+                    <div class="text-xs text-slate-500">${escapeHtml(contactParts.join(' · '))}</div>
+                    ${metaParts.length ? `<div class="text-[11px] text-slate-400">${escapeHtml(metaParts.join(' · '))}</div>` : ''}
+                `;
+                selectedStudent.classList.remove('hidden');
+            }
 
             function setSelectedStudent(student, options = {}) {
                 const preserveContact = options.preserveContact ?? false;
                 selectedStudentData = student;
                 if (student) {
                     studentIdInput.value = student.id;
-                    selectedStudent.textContent = `${student.full_name}${student.email ? ` · ${student.email}` : ''}`;
-                    selectedStudent.classList.remove('hidden');
+                    renderSelectedStudent(student);
                     if (!preserveContact) {
                         vehicleInput.value = student.vehicle || '';
                         packageInput.value = student.package || '';
                         locationInput.value = student.location || '';
-                        setEmailValue(student.email || '');
-                        phoneInput.value = student.phone || '';
-                        toggleEmailEditing(false);
+                        studentEmailEditor.setValue(student.email || '');
+                        studentPhoneEditor.setValue(student.phone || '');
+                        parentEmailEditor.setValue(student.parent_email || '');
+                        parentPhoneEditor.setValue(student.parent_phone || '');
+                        notifyStudentEmailInput.checked = student.notify_student_email ?? true;
+                        notifyStudentPhoneInput.checked = student.notify_student_phone ?? true;
+                        notifyParentEmailInput.checked = student.notify_parent_email ?? false;
+                        notifyParentPhoneInput.checked = student.notify_parent_phone ?? false;
                     }
                 } else {
                     studentIdInput.value = '';
-                    selectedStudent.textContent = '';
-                    selectedStudent.classList.add('hidden');
+                    renderSelectedStudent(null);
                     if (!preserveContact) {
                         vehicleInput.value = '';
                         packageInput.value = '';
                         locationInput.value = '';
-                        setEmailValue('');
-                        phoneInput.value = '';
-                        toggleEmailEditing(false);
+                        studentEmailEditor.setValue('');
+                        studentPhoneEditor.setValue('');
+                        parentEmailEditor.setValue('');
+                        parentPhoneEditor.setValue('');
+                        notifyStudentEmailInput.checked = true;
+                        notifyStudentPhoneInput.checked = true;
+                        notifyParentEmailInput.checked = false;
+                        notifyParentPhoneInput.checked = false;
                     }
                 }
                 studentSearch.focus();
@@ -434,16 +681,15 @@
                 modal.dataset.mode = mode;
                 modal.classList.remove('hidden');
                 modal.classList.add('flex');
-                emailEditing = false;
-                toggleEmailEditing(false);
                 modalForm.reset();
                 descriptionInput.value = '';
-                if (selectedStudent) {
-                    selectedStudent.classList.add('hidden');
-                }
                 studentResults.innerHTML = '';
                 studentSearch.value = '';
                 setSelectedStudent(null);
+                studentEmailEditor.ensureView();
+                studentPhoneEditor.ensureView();
+                parentEmailEditor.ensureView();
+                parentPhoneEditor.ensureView();
 
                 if (mode === 'create') {
                     modalTitle.textContent = 'Afspraak plannen';
@@ -473,7 +719,6 @@
                     packageInput.value = props.package || '';
                     locationInput.value = props.location || '';
                     descriptionInput.value = props.description || '';
-                    phoneInput.value = props.phone || props.student_phone || '';
                     summaryStudent.textContent = props.student_name || '-';
                     summaryInstructor.textContent = props.instructor_name || '-';
                     summaryStatus.textContent = statusLabels[props.status] ?? props.status;
@@ -486,11 +731,29 @@
                         full_name: props.student_name,
                         email: props.student_email,
                         phone: props.student_phone,
+                        parent_email: props.student_parent_email,
+                        parent_phone: props.student_parent_phone,
+                        birth_date: props.student_birth_date,
                         package: props.package,
                         vehicle: props.vehicle,
                         location: props.location,
+                        notify_student_email: props.student_notify_student_email,
+                        notify_student_phone: props.student_notify_student_phone,
+                        notify_parent_email: props.student_notify_parent_email,
+                        notify_parent_phone: props.student_notify_parent_phone,
                     }, { preserveContact: true });
-                    setEmailValue(props.email || props.student_email || '');
+                    studentEmailEditor.setValue(props.email ?? props.student_email ?? '');
+                    studentPhoneEditor.setValue(props.phone ?? props.student_phone ?? '');
+                    parentEmailEditor.setValue(props.parent_email ?? props.student_parent_email ?? '');
+                    parentPhoneEditor.setValue(props.parent_phone ?? props.student_parent_phone ?? '');
+                    notifyStudentEmailInput.checked = props.notify_student_email ?? props.student_notify_student_email ?? true;
+                    notifyStudentPhoneInput.checked = props.notify_student_phone ?? props.student_notify_student_phone ?? true;
+                    notifyParentEmailInput.checked = props.notify_parent_email ?? props.student_notify_parent_email ?? false;
+                    notifyParentPhoneInput.checked = props.notify_parent_phone ?? props.student_notify_parent_phone ?? false;
+                    studentEmailEditor.ensureView();
+                    studentPhoneEditor.ensureView();
+                    parentEmailEditor.ensureView();
+                    parentPhoneEditor.ensureView();
                 }
                 refreshSummary();
             }
@@ -565,9 +828,25 @@
                     const button = document.createElement('button');
                     button.type = 'button';
                     button.className = 'w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm text-slate-700 transition hover:border-sky-400 hover:bg-sky-50';
+                    const contactLine = `${student.email ?? 'Geen e-mail'} · ${student.phone ?? 'Geen telefoon'}`;
+                    const detailParts = [];
+                    const birth = formatDisplayDate(student.birth_date);
+                    if (birth) {
+                        detailParts.push(`Geboren: ${birth}`);
+                    }
+                    if (student.parent_email) {
+                        detailParts.push(`Ouder e-mail: ${student.parent_email}`);
+                    }
+                    if (student.parent_phone) {
+                        detailParts.push(`Ouder tel: ${student.parent_phone}`);
+                    }
+                    const detailLine = detailParts.length
+                        ? `<div class="text-[11px] text-slate-400">${escapeHtml(detailParts.join(' · '))}</div>`
+                        : '';
                     button.innerHTML = `
-                        <div class="font-semibold">${student.full_name}</div>
-                        <div class="text-xs text-slate-500">${student.email ?? 'Geen e-mail'} · ${student.phone ?? 'Geen telefoon'}</div>
+                        <div class="font-semibold">${escapeHtml(student.full_name)}</div>
+                        <div class="text-xs text-slate-500">${escapeHtml(contactLine)}</div>
+                        ${detailLine}
                     `;
                     button.addEventListener('click', () => {
                         setSelectedStudent(student);
@@ -742,10 +1021,23 @@
                         student_name: event.student_name,
                         student_email: event.student_email,
                         student_phone: event.student_phone,
+                        student_parent_email: event.student_parent_email,
+                        student_parent_phone: event.student_parent_phone,
+                        student_birth_date: event.student_birth_date,
+                        student_notify_student_email: event.student_notify_student_email,
+                        student_notify_parent_email: event.student_notify_parent_email,
+                        student_notify_student_phone: event.student_notify_student_phone,
+                        student_notify_parent_phone: event.student_notify_parent_phone,
                         vehicle: event.vehicle,
                         package: event.package,
                         email: event.email,
                         phone: event.phone,
+                        parent_email: event.parent_email,
+                        parent_phone: event.parent_phone,
+                        notify_student_email: event.notify_student_email,
+                        notify_parent_email: event.notify_parent_email,
+                        notify_student_phone: event.notify_student_phone,
+                        notify_parent_phone: event.notify_parent_phone,
                         location: event.location,
                         description: event.description,
                     },
@@ -793,6 +1085,12 @@
                         package: props.package,
                         email: props.email,
                         phone: props.phone,
+                        parent_email: props.parent_email,
+                        parent_phone: props.parent_phone,
+                        notify_student_email: props.notify_student_email,
+                        notify_parent_email: props.notify_parent_email,
+                        notify_student_phone: props.notify_student_phone,
+                        notify_parent_phone: props.notify_parent_phone,
                         location: props.location,
                         description: props.description,
                     };
@@ -961,8 +1259,14 @@
                     vehicle: vehicleInput.value || null,
                     package: packageInput.value || null,
                     location: locationInput.value || null,
-                    email: emailInput.value || null,
-                    phone: phoneInput.value || null,
+                    email: studentEmailEditor.getValue() || null,
+                    phone: studentPhoneEditor.getValue() || null,
+                    parent_email: parentEmailEditor.getValue() || null,
+                    parent_phone: parentPhoneEditor.getValue() || null,
+                    notify_student_email: notifyStudentEmailInput.checked,
+                    notify_parent_email: notifyParentEmailInput.checked,
+                    notify_student_phone: notifyStudentPhoneInput.checked,
+                    notify_parent_phone: notifyParentPhoneInput.checked,
                     description: descriptionInput.value || null,
                 };
                 if (config.userRole === 'admin' && instructorSelect) {
