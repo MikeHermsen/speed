@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Student;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -22,17 +23,53 @@ class StudentController extends Controller
                 return response()->json([]);
             }
 
-            $studentsQuery->where(function ($sub) use ($query) {
-                $sub->where('first_name', 'like', "%{$query}%")
-                    ->orWhere('last_name', 'like', "%{$query}%")
-                    ->orWhere('email', 'like', "%{$query}%")
-                    ->orWhere('phone', 'like', "%{$query}%")
-                    ->orWhere('parent_email', 'like', "%{$query}%")
-                    ->orWhere('parent_phone', 'like', "%{$query}%");
+            $normalizedQuery = $this->normalizeValue($query);
+            $tokens = $this->tokenizeQuery($query);
+            $dateCandidate = $this->detectDate($query);
+
+            $studentsQuery->where(function ($builder) use ($query, $normalizedQuery, $tokens, $dateCandidate) {
+                $builder->where(function ($base) use ($query) {
+                    $base->where('first_name', 'like', "%{$query}%")
+                        ->orWhere('last_name', 'like', "%{$query}%")
+                        ->orWhere('email', 'like', "%{$query}%")
+                        ->orWhere('phone', 'like', "%{$query}%")
+                        ->orWhere('parent_email', 'like', "%{$query}%")
+                        ->orWhere('parent_phone', 'like', "%{$query}%");
+                });
+
+                if ($normalizedQuery !== '') {
+                    $like = "%{$normalizedQuery}%";
+                    $builder->orWhereRaw($this->normalizedColumn("CONCAT(first_name, ' ', last_name)") . ' LIKE ?', [$like])
+                        ->orWhereRaw($this->normalizedColumn("CONCAT(last_name, ' ', first_name)") . ' LIKE ?', [$like])
+                        ->orWhereRaw($this->normalizedColumn('first_name') . ' LIKE ?', [$like])
+                        ->orWhereRaw($this->normalizedColumn('last_name') . ' LIKE ?', [$like])
+                        ->orWhereRaw($this->normalizedColumn('email') . ' LIKE ?', [$like])
+                        ->orWhereRaw($this->normalizedColumn('phone') . ' LIKE ?', [$like])
+                        ->orWhereRaw($this->normalizedColumn('parent_email') . ' LIKE ?', [$like])
+                        ->orWhereRaw($this->normalizedColumn('parent_phone') . ' LIKE ?', [$like]);
+                }
+
+                foreach ($tokens as $token) {
+                    $tokenLike = "%{$token}%";
+                    $builder->orWhere(function ($tokenBuilder) use ($tokenLike) {
+                        $tokenBuilder->orWhereRaw($this->normalizedColumn('first_name') . ' LIKE ?', [$tokenLike])
+                            ->orWhereRaw($this->normalizedColumn('last_name') . ' LIKE ?', [$tokenLike])
+                            ->orWhereRaw($this->normalizedColumn("CONCAT(first_name, last_name)") . ' LIKE ?', [$tokenLike])
+                            ->orWhereRaw($this->normalizedColumn("CONCAT(last_name, first_name)") . ' LIKE ?', [$tokenLike])
+                            ->orWhereRaw($this->normalizedColumn('email') . ' LIKE ?', [$tokenLike])
+                            ->orWhereRaw($this->normalizedColumn('phone') . ' LIKE ?', [$tokenLike])
+                            ->orWhereRaw($this->normalizedColumn('parent_email') . ' LIKE ?', [$tokenLike])
+                            ->orWhereRaw($this->normalizedColumn('parent_phone') . ' LIKE ?', [$tokenLike]);
+                    });
+                }
+
+                if ($dateCandidate) {
+                    $builder->orWhereDate('birth_date', $dateCandidate->toDateString());
+                }
             });
         }
 
-        $limit = $initial ? 12 : 50;
+        $limit = $initial ? 12 : 80;
 
         $students = $studentsQuery
             ->orderBy('first_name')
@@ -43,6 +80,7 @@ class StudentController extends Controller
         if (! $initial) {
             $students = $students
                 ->filter(fn (Student $student) => $this->matchesQuery($student, $query))
+                ->sortBy(fn (Student $student) => $this->scoreStudent($student, $query))
                 ->values();
         }
 
@@ -96,6 +134,15 @@ class StudentController extends Controller
         ]);
 
         return response()->json($this->formatStudent($student), 201);
+    }
+
+    public function destroy(Student $student): JsonResponse
+    {
+        $student->delete();
+
+        return response()->json([
+            'message' => 'Leerling verwijderd.',
+        ]);
     }
 
     protected function formatStudent(Student $student): array
@@ -165,6 +212,32 @@ class StudentController extends Controller
         });
     }
 
+    protected function scoreStudent(Student $student, string $query): int
+    {
+        $normalizedQuery = $this->normalizeValue($query);
+
+        if ($normalizedQuery === '') {
+            return 1000;
+        }
+
+        $scores = [
+            $this->normalizeValue($student->full_name) => 0,
+            $this->normalizeValue($student->email) => 2,
+            $this->normalizeValue($student->phone) => 4,
+            $this->normalizeValue($student->parent_email) => 6,
+            $this->normalizeValue($student->parent_phone) => 8,
+            optional($student->birth_date)->format('dmY') => 3,
+        ];
+
+        foreach ($scores as $value => $score) {
+            if ($value && str_contains($value, $normalizedQuery)) {
+                return $score;
+            }
+        }
+
+        return 1000;
+    }
+
     protected function normalizeValue(?string $value): string
     {
         if ($value === null) {
@@ -175,5 +248,56 @@ class StudentController extends Controller
             ->lower()
             ->replaceMatches('/[^\p{L}0-9]/u', '')
             ->value();
+    }
+
+    protected function tokenizeQuery(string $query): array
+    {
+        $prepared = preg_replace('/[\-_.@\/]+/u', ' ', $query) ?? '';
+
+        return collect(preg_split('/\s+/u', trim($prepared)))
+            ->map(fn ($token) => $this->normalizeValue($token))
+            ->filter()
+            ->values()
+            ->all();
+    }
+
+    protected function detectDate(string $query): ?Carbon
+    {
+        $candidates = array_unique([
+            $query,
+            str_replace(['/', '.'], '-', $query),
+            preg_replace('/[^0-9]/', '', $query) ?? '',
+        ]);
+
+        $formats = ['Y-m-d', 'd-m-Y', 'd-m-y', 'Ymd', 'dmY'];
+
+        foreach ($candidates as $candidate) {
+            if (! $candidate) {
+                continue;
+            }
+            foreach ($formats as $format) {
+                try {
+                    $date = Carbon::createFromFormat($format, $candidate);
+                    if ($date !== false) {
+                        return $date;
+                    }
+                } catch (\Exception) {
+                    // Ignore invalid formats
+                }
+            }
+        }
+
+        return null;
+    }
+
+    protected function normalizedColumn(string $expression): string
+    {
+        $wrapped = "COALESCE({$expression}, '')";
+
+        foreach ([' ', '-', '/', '.', '+', '(', ')', '@', '_'] as $character) {
+            $wrapped = "REPLACE({$wrapped}, '{$character}', '')";
+        }
+
+        return "LOWER({$wrapped})";
     }
 }

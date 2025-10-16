@@ -23,4 +23,5 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/students/search', [StudentController::class, 'search']);
     Route::post('/students', [StudentController::class, 'store']);
+    Route::delete('/students/{student}', [StudentController::class, 'destroy']);
 });

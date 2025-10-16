@@ -1,5 +1,64 @@
 @push('head')
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css">
+    <style>
+        body {
+            background: radial-gradient(circle at top, rgba(59, 130, 246, 0.15), transparent 55%),
+                radial-gradient(circle at bottom, rgba(16, 185, 129, 0.1), transparent 45%),
+                #f8fafc;
+        }
+
+        #calendar .fc-event {
+            backdrop-filter: saturate(140%) blur(0.5px);
+            border-radius: 18px;
+            border: none;
+            box-shadow: 0 10px 25px -12px rgba(15, 23, 42, 0.4);
+        }
+
+        #calendar .fc-timegrid-slot:hover {
+            background-color: rgba(14, 165, 233, 0.08);
+        }
+
+        #calendar .fc-timegrid-now-indicator-line,
+        #calendar .fc-timegrid-now-indicator-arrow {
+            border-color: rgba(56, 189, 248, 0.85);
+        }
+
+        #calendar .fc-daygrid-day.fc-day-today,
+        #calendar .fc-timegrid-col.fc-day-today {
+            background: linear-gradient(180deg, rgba(56, 189, 248, 0.08), rgba(56, 189, 248, 0));
+        }
+
+        #calendar .fc-scrollgrid {
+            border-radius: 28px;
+            overflow: hidden;
+        }
+
+        #calendar .fc-toolbar-title {
+            font-weight: 700;
+        }
+
+        .fancy-chip {
+            position: relative;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .fancy-chip::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            background: linear-gradient(120deg, rgba(59, 130, 246, 0.25), rgba(14, 165, 233, 0.15));
+            transition: opacity 150ms ease;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .fancy-chip:hover::before,
+        .fancy-chip[data-active="true"]::before {
+            opacity: 1;
+        }
+    </style>
 @endpush
 
 <x-layouts.app title="Planning">
@@ -40,6 +99,13 @@
                                     <button type="button" class="rounded-full px-3 py-1 transition" data-calendar-view="resourceTimeGridWeek">Per instructeur</button>
                                 @endif
                             </div>
+                            <button
+                                type="button"
+                                data-open-student-modal
+                                class="fancy-chip rounded-full bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-sky-600 shadow-lg shadow-sky-100 transition hover:text-sky-700"
+                            >
+                                Nieuwe leerling toevoegen
+                            </button>
                         </div>
                         <div>
                             <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Datum bereik</p>
@@ -58,7 +124,7 @@
                                 <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Instructeurs filteren</p>
                                 <div id="instructor-filter" class="mt-2 flex flex-wrap gap-2">
                                     @foreach ($instructors as $instructor)
-                                        <button type="button" data-instructor-filter="{{ $instructor['id'] }}" data-active="true" class="filter-chip active">
+                                        <button type="button" data-instructor-filter="{{ $instructor['id'] }}" data-active="true" class="filter-chip fancy-chip active">
                                             <span class="h-2.5 w-2.5 rounded-full bg-gradient-to-br from-sky-400 to-blue-500"></span>
                                             <span>{{ $instructor['name'] }}</span>
                                         </button>
@@ -75,7 +141,7 @@
                                     ['value' => 'examen', 'label' => 'Examen', 'color' => 'bg-amber-500'],
                                     ['value' => 'ziek', 'label' => 'Ziek', 'color' => 'bg-rose-500'],
                                 ] as $status)
-                                    <button type="button" data-status-filter="{{ $status['value'] }}" data-active="true" class="filter-chip active">
+                                    <button type="button" data-status-filter="{{ $status['value'] }}" data-active="true" class="filter-chip fancy-chip active">
                                         <span class="h-2.5 w-2.5 rounded-full {{ $status['color'] }}"></span>
                                         <span>{{ $status['label'] }}</span>
                                     </button>
@@ -134,12 +200,28 @@
                         <div>
                             <div class="flex items-center justify-between gap-3">
                                 <label class="block text-sm font-medium text-slate-700">Leerling zoeken</label>
-                                <button type="button" id="open-student-modal" class="text-xs font-semibold text-sky-600 transition hover:text-sky-700">Nieuwe leerling</button>
+                                <button type="button" data-open-student-modal class="text-xs font-semibold text-sky-600 transition hover:text-sky-700">Nieuwe leerling</button>
                             </div>
                             <div class="mt-2 rounded-2xl border border-slate-200 bg-slate-50 p-4">
                                 <input type="search" id="student-search" placeholder="Zoek op naam of e-mail" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
                                 <div id="student-results" class="mt-3 max-h-52 space-y-2 overflow-y-auto"></div>
-                                <div id="selected-student" class="mt-3 hidden rounded-xl bg-white px-4 py-3 text-sm text-slate-700 shadow-inner"></div>
+                                <div
+                                    id="selected-student"
+                                    class="mt-3 hidden rounded-2xl bg-white/90 px-4 py-4 text-sm text-slate-700 shadow-lg shadow-slate-200"
+                                >
+                                    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                                        <div id="selected-student-details" class="space-y-1"></div>
+                                        <div class="flex items-center gap-2">
+                                            <button
+                                                type="button"
+                                                id="delete-student"
+                                                class="fancy-chip rounded-full border border-transparent bg-rose-500/90 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white shadow-sm transition hover:bg-rose-600"
+                                            >
+                                                Leerling verwijderen
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -393,6 +475,8 @@
             const studentSearch = document.getElementById('student-search');
             const studentResults = document.getElementById('student-results');
             const selectedStudent = document.getElementById('selected-student');
+            const selectedStudentDetails = document.getElementById('selected-student-details');
+            const deleteStudentButton = document.getElementById('delete-student');
             const studentIdInput = document.getElementById('student_id');
             const eventIdInput = document.getElementById('event_id');
             const statusSelect = document.getElementById('status');
@@ -423,7 +507,7 @@
             const descriptionInput = document.getElementById('description');
             const startInput = document.getElementById('start_time');
             const endInput = document.getElementById('end_time');
-            const openStudentModalButton = document.getElementById('open-student-modal');
+            const openStudentModalButtons = document.querySelectorAll('[data-open-student-modal]');
             const modalTitle = document.getElementById('event-modal-title');
             const summaryStudent = document.getElementById('summary-student');
             const summaryInstructor = document.getElementById('summary-instructor');
@@ -434,14 +518,18 @@
             const statusFilter = document.getElementById('status-filter');
             const instructorLookup = new Map((config.instructors || []).map((instructor) => [String(instructor.id), instructor.name]));
             let calendar;
-            const hasResourceSupport = Boolean(FullCalendar?.resourceTimeGridPlugin);
+            const dayGridPlugin = FullCalendar?.dayGridPlugin || FullCalendar?.DayGrid;
+            const timeGridPlugin = FullCalendar?.timeGridPlugin || FullCalendar?.TimeGrid;
+            const interactionPlugin = FullCalendar?.interactionPlugin || FullCalendar?.Interaction;
+            const resourceTimeGridPlugin = FullCalendar?.resourceTimeGridPlugin || FullCalendar?.ResourceTimeGrid;
+            const hasResourceSupport = Boolean(resourceTimeGridPlugin);
 
             const plugins = [];
-            if (FullCalendar?.dayGridPlugin) plugins.push(FullCalendar.dayGridPlugin);
-            if (FullCalendar?.timeGridPlugin) plugins.push(FullCalendar.timeGridPlugin);
-            if (FullCalendar?.interactionPlugin) plugins.push(FullCalendar.interactionPlugin);
-            if (config.userRole === 'admin' && hasResourceSupport && FullCalendar?.resourceTimeGridPlugin) {
-                plugins.push(FullCalendar.resourceTimeGridPlugin);
+            if (dayGridPlugin) plugins.push(dayGridPlugin);
+            if (timeGridPlugin) plugins.push(timeGridPlugin);
+            if (interactionPlugin) plugins.push(interactionPlugin);
+            if (config.userRole === 'admin' && hasResourceSupport && resourceTimeGridPlugin) {
+                plugins.push(resourceTimeGridPlugin);
             }
 
             if (config.userRole === 'admin' && !hasResourceSupport) {
@@ -608,8 +696,9 @@
 
             function renderSelectedStudent(student) {
                 if (!student) {
-                    selectedStudent.innerHTML = '';
+                    selectedStudentDetails.innerHTML = '';
                     selectedStudent.classList.add('hidden');
+                    deleteStudentButton?.classList.add('hidden');
                     return;
                 }
 
@@ -630,12 +719,13 @@
                     metaParts.push(parentParts.join(' · '));
                 }
 
-                selectedStudent.innerHTML = `
+                selectedStudentDetails.innerHTML = `
                     <div class="font-semibold text-slate-800">${escapeHtml(student.full_name)}</div>
                     <div class="text-xs text-slate-500">${escapeHtml(contactParts.join(' · '))}</div>
                     ${metaParts.length ? `<div class="text-[11px] text-slate-400">${escapeHtml(metaParts.join(' · '))}</div>` : ''}
                 `;
                 selectedStudent.classList.remove('hidden');
+                deleteStudentButton?.classList.remove('hidden');
             }
 
             function setSelectedStudent(student, options = {}) {
@@ -803,7 +893,9 @@
                 studentModal.classList.add('hidden');
             }
 
-            openStudentModalButton?.addEventListener('click', openStudentModal);
+            openStudentModalButtons.forEach((button) => {
+                button.addEventListener('click', openStudentModal);
+            });
 
             closeStudentButtons.forEach((button) => {
                 button.addEventListener('click', closeStudentModal);
@@ -832,6 +924,20 @@
                 return response.json();
             }
 
+            async function deleteStudent(studentId) {
+                const response = await fetch(`/students/${studentId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': config.csrfToken,
+                        Accept: 'application/json',
+                    },
+                });
+                if (!response.ok) {
+                    const error = await response.json().catch(() => ({}));
+                    throw new Error(error.message ?? 'Kon leerling niet verwijderen.');
+                }
+            }
+
             function renderStudentResults(students) {
                 studentResults.innerHTML = '';
                 if (!students.length) {
@@ -845,7 +951,7 @@
                 students.forEach((student) => {
                     const button = document.createElement('button');
                     button.type = 'button';
-                    button.className = 'w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm text-slate-700 transition hover:border-sky-400 hover:bg-sky-50';
+                    button.className = 'fancy-chip w-full rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-left text-sm text-slate-700 transition hover:border-sky-400 hover:bg-sky-50';
                     const contactLine = `${student.email ?? 'Geen e-mail'} · ${student.phone ?? 'Geen telefoon'}`;
                     const detailParts = [];
                     const birth = formatDisplayDate(student.birth_date);
@@ -917,6 +1023,36 @@
                 closeStudentModal();
             });
 
+            deleteStudentButton?.addEventListener('click', async () => {
+                if (!selectedStudentData?.id) {
+                    return;
+                }
+                const confirmed = window.confirm(
+                    'Weet je zeker dat je deze leerling wilt verwijderen? Bestaande afspraken voor deze leerling worden ook verwijderd.',
+                );
+                if (!confirmed) {
+                    return;
+                }
+                const previousLabel = deleteStudentButton.textContent;
+                try {
+                    deleteStudentButton.disabled = true;
+                    deleteStudentButton.textContent = 'Verwijderen...';
+                    await deleteStudent(selectedStudentData.id);
+                    alert('Leerling is verwijderd.');
+                    setSelectedStudent(null);
+                    studentSearch.value = '';
+                    studentResults.innerHTML = '';
+                    if (calendar) {
+                        calendar.refetchEvents();
+                    }
+                } catch (error) {
+                    alert(error.message);
+                } finally {
+                    deleteStudentButton.disabled = false;
+                    deleteStudentButton.textContent = previousLabel;
+                }
+            });
+
             function refreshSummary() {
                 summaryStudent.textContent = selectedStudentData?.full_name ?? '-';
                 if (config.userRole === 'admin' && instructorSelect) {
@@ -945,9 +1081,9 @@
                 return activeButtons.map((button) => button.dataset.statusFilter);
             }
 
-            const baseFilterClasses = 'flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold transition';
-            const activeFilterClasses = 'border-sky-500 bg-sky-50 text-sky-700 shadow-sm shadow-sky-100';
-            const inactiveFilterClasses = 'border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-700';
+            const baseFilterClasses = 'fancy-chip flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold transition backdrop-blur';
+            const activeFilterClasses = 'border-sky-500 bg-white/90 text-sky-700 shadow-sm shadow-sky-100';
+            const inactiveFilterClasses = 'border-slate-200 bg-white/60 text-slate-500 hover:border-slate-300 hover:text-slate-700';
 
             function updateFilterButton(button, active) {
                 button.dataset.active = active ? 'true' : 'false';
@@ -994,8 +1130,8 @@
             }
 
             const viewButtons = document.querySelectorAll('[data-calendar-view]');
-            const baseViewClasses = 'rounded-full px-3 py-1 transition';
-            const activeViewClasses = 'bg-white text-slate-900 shadow-sm shadow-slate-200';
+            const baseViewClasses = 'fancy-chip rounded-full px-3 py-1 transition backdrop-blur';
+            const activeViewClasses = 'bg-white/90 text-slate-900 shadow-sm shadow-slate-200';
             const inactiveViewClasses = 'text-slate-600 hover:text-slate-900';
 
             function updateViewButtons(activeView) {
