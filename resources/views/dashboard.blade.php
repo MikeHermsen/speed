@@ -88,6 +88,12 @@
                 <div class="mt-6 overflow-hidden rounded-3xl border border-slate-200 shadow-inner">
                     <div id="calendar" class="min-h-[700px]"></div>
                 </div>
+                <p
+                    id="calendar-error"
+                    class="mt-4 hidden rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
+                >
+                    Kon afspraken niet laden. Vernieuw de pagina of probeer het later opnieuw.
+                </p>
             </div>
         </main>
     </div>
@@ -365,6 +371,9 @@
 
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.8/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/timegrid@6.1.8/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/interaction@6.1.8/index.global.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/resource-timegrid@6.1.8/index.global.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -390,6 +399,7 @@
             const vehicleInput = document.getElementById('vehicle');
             const packageInput = document.getElementById('package');
             const locationInput = document.getElementById('location');
+            const calendarError = document.getElementById('calendar-error');
             const emailInput = document.getElementById('email');
             const emailDisplay = document.getElementById('email-display');
             const emailLink = document.getElementById('email-link');
@@ -424,7 +434,15 @@
             const statusFilter = document.getElementById('status-filter');
             const instructorLookup = new Map((config.instructors || []).map((instructor) => [String(instructor.id), instructor.name]));
             let calendar;
-            const hasResourceSupport = typeof FullCalendar.Calendar.prototype.addResource === 'function';
+            const hasResourceSupport = Boolean(FullCalendar?.resourceTimeGridPlugin);
+
+            const plugins = [];
+            if (FullCalendar?.dayGridPlugin) plugins.push(FullCalendar.dayGridPlugin);
+            if (FullCalendar?.timeGridPlugin) plugins.push(FullCalendar.timeGridPlugin);
+            if (FullCalendar?.interactionPlugin) plugins.push(FullCalendar.interactionPlugin);
+            if (config.userRole === 'admin' && hasResourceSupport && FullCalendar?.resourceTimeGridPlugin) {
+                plugins.push(FullCalendar.resourceTimeGridPlugin);
+            }
 
             if (config.userRole === 'admin' && !hasResourceSupport) {
                 document.querySelector('[data-calendar-view="resourceTimeGridWeek"]')?.remove();
@@ -1128,6 +1146,7 @@
                         });
                         const instructorIds = getActiveInstructorIds();
                         if (instructorFilter && instructorFilter.querySelectorAll('button').length && instructorIds.length === 0) {
+                            calendarError?.classList.add('hidden');
                             successCallback([]);
                             return;
                         }
@@ -1136,6 +1155,7 @@
                         }
                         const statuses = getActiveStatuses();
                         if (statusFilter && statuses.length === 0) {
+                            calendarError?.classList.add('hidden');
                             successCallback([]);
                             return;
                         }
@@ -1147,8 +1167,11 @@
                             throw new Error('Kon afspraken niet laden.');
                         }
                         const data = await response.json();
+                        calendarError?.classList.add('hidden');
                         successCallback(data.map(mapEventToCalendar));
                     } catch (error) {
+                        calendarError?.classList.remove('hidden');
+                        console.error(error);
                         failureCallback(error);
                     }
                 },
@@ -1201,6 +1224,10 @@
                     updateResources();
                 },
             };
+
+            if (plugins.length) {
+                calendarOptions.plugins = plugins;
+            }
 
             if (config.userRole === 'admin' && hasResourceSupport) {
                 calendarOptions.schedulerLicenseKey = 'GPL-My-Project-Is-Open-Source';
