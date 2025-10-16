@@ -19,6 +19,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/events', [EventController::class, 'index']);
     Route::post('/events', [EventController::class, 'store']);
+    Route::patch('/events/{event}', [EventController::class, 'update']);
 
     Route::get('/students/search', [StudentController::class, 'search']);
+    Route::post('/students', [StudentController::class, 'store']);
 });

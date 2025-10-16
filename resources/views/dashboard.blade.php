@@ -1,10 +1,14 @@
+@push('head')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css">
+@endpush
+
 <x-layouts.app title="Planning">
     <div class="flex min-h-screen flex-col">
         <header class="sticky top-0 z-10 border-b border-slate-200 bg-white/90 backdrop-blur">
             <div class="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
                 <div>
                     <h1 class="text-xl font-semibold text-slate-900">Planningsoverzicht</h1>
-                    <p class="text-sm text-slate-500">Week van <span id="week-range"></span></p>
+                    <p class="text-sm text-slate-500">Beheer afspraken met een Google Agenda-achtige ervaring.</p>
                 </div>
                 <div class="flex items-center gap-4">
                     <span class="hidden text-sm text-slate-600 sm:block">Ingelogd als <strong>{{ $user->name }}</strong> ({{ $user->role }})</span>
@@ -20,110 +24,249 @@
 
         <main class="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
             <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl">
-                <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                        <h2 class="text-lg font-semibold text-slate-900">{{ $user->isAdmin() ? 'Overzicht per instructeur' : 'Jouw lessen' }}</h2>
-                        <p class="text-sm text-slate-500">Klik op een tijdslot om een leerling in te plannen.</p>
+                <div class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+                    <div class="flex flex-col gap-4">
+                        <div class="flex flex-wrap items-center gap-3">
+                            <div class="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm">
+                                <button type="button" class="rounded-full bg-gradient-to-r from-sky-500 to-blue-600 px-3 py-1 text-xs font-semibold text-white shadow-sm transition hover:from-sky-600 hover:to-blue-700" data-calendar-nav="prev">Vorige</button>
+                                <button type="button" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 transition hover:border-sky-400 hover:text-sky-600" data-calendar-nav="today">Vandaag</button>
+                                <button type="button" class="rounded-full bg-gradient-to-r from-sky-500 to-blue-600 px-3 py-1 text-xs font-semibold text-white shadow-sm transition hover:from-sky-600 hover:to-blue-700" data-calendar-nav="next">Volgende</button>
+                            </div>
+                            <div class="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-2 text-xs font-medium uppercase tracking-wide text-slate-500">
+                                <button type="button" class="rounded-full px-3 py-1 transition" data-calendar-view="timeGridDay">Dag</button>
+                                <button type="button" class="rounded-full px-3 py-1 transition" data-calendar-view="timeGridWeek">Week</button>
+                                <button type="button" class="rounded-full px-3 py-1 transition" data-calendar-view="dayGridMonth">Maand</button>
+                                @if ($user->isAdmin())
+                                    <button type="button" class="rounded-full px-3 py-1 transition" data-calendar-view="resourceTimeGridWeek">Per instructeur</button>
+                                @endif
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Datum bereik</p>
+                            <p id="calendar-range" class="text-lg font-semibold text-slate-900">&nbsp;</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                            <span class="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1"><span class="h-2.5 w-2.5 rounded-full bg-emerald-400"></span>Les</span>
+                            <span class="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1"><span class="h-2.5 w-2.5 rounded-full bg-sky-400"></span>Proefles</span>
+                            <span class="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1"><span class="h-2.5 w-2.5 rounded-full bg-amber-400"></span>Examen</span>
+                            <span class="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1"><span class="h-2.5 w-2.5 rounded-full bg-rose-400"></span>Ziek</span>
+                        </div>
                     </div>
-                    <div class="flex flex-wrap gap-2 text-xs text-slate-500">
-                        <span class="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1"><span class="h-2.5 w-2.5 rounded-full bg-emerald-400"></span>Les</span>
-                        <span class="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1"><span class="h-2.5 w-2.5 rounded-full bg-sky-400"></span>Proefles</span>
-                        <span class="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1"><span class="h-2.5 w-2.5 rounded-full bg-amber-400"></span>Examen</span>
-                        <span class="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1"><span class="h-2.5 w-2.5 rounded-full bg-rose-400"></span>Ziek</span>
+                    <div class="flex w-full flex-col gap-4 lg:w-80">
+                        @if ($user->isAdmin())
+                            <div>
+                                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Instructeurs filteren</p>
+                                <div id="instructor-filter" class="mt-2 flex flex-wrap gap-2">
+                                    @foreach ($instructors as $instructor)
+                                        <button type="button" data-instructor-filter="{{ $instructor['id'] }}" data-active="true" class="filter-chip active">
+                                            <span class="h-2.5 w-2.5 rounded-full bg-gradient-to-br from-sky-400 to-blue-500"></span>
+                                            <span>{{ $instructor['name'] }}</span>
+                                        </button>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Statussen</p>
+                            <div id="status-filter" class="mt-2 flex flex-wrap gap-2">
+                                @foreach ([
+                                    ['value' => 'les', 'label' => 'Les', 'color' => 'bg-emerald-500'],
+                                    ['value' => 'proefles', 'label' => 'Proefles', 'color' => 'bg-sky-500'],
+                                    ['value' => 'examen', 'label' => 'Examen', 'color' => 'bg-amber-500'],
+                                    ['value' => 'ziek', 'label' => 'Ziek', 'color' => 'bg-rose-500'],
+                                ] as $status)
+                                    <button type="button" data-status-filter="{{ $status['value'] }}" data-active="true" class="filter-chip active">
+                                        <span class="h-2.5 w-2.5 rounded-full {{ $status['color'] }}"></span>
+                                        <span>{{ $status['label'] }}</span>
+                                    </button>
+                                @endforeach
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div id="calendar" class="space-y-10"></div>
+                <div class="mt-6 overflow-hidden rounded-3xl border border-slate-200 shadow-inner">
+                    <div id="calendar" class="min-h-[700px]"></div>
+                </div>
             </div>
         </main>
     </div>
 
-    <div id="event-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/30 p-4">
-        <div class="w-full max-w-2xl rounded-3xl bg-white p-6 shadow-2xl">
-            <div class="flex items-start justify-between">
+    <div id="event-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 p-4">
+        <div class="w-full max-w-3xl rounded-3xl bg-white p-6 shadow-2xl">
+            <div class="flex items-start justify-between gap-4">
                 <div>
-                    <h3 class="text-lg font-semibold text-slate-900">Nieuwe planning</h3>
-                    <p class="text-sm text-slate-500">Selecteer een leerling en vul de details in.</p>
+                    <h3 id="event-modal-title" class="text-lg font-semibold text-slate-900">Afspraak plannen</h3>
+                    <p class="text-sm text-slate-500">Zoek of maak een leerling en vul de details in.</p>
                 </div>
                 <button type="button" class="rounded-full p-2 text-slate-400 transition hover:bg-slate-100" data-close-modal>
                     <span class="sr-only">Sluiten</span>
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5">
-                        <path
-                            fill-rule="evenodd"
-                            d="M10 8.586 4.757 3.343 3.343 4.757 8.586 10l-5.243 5.243 1.414 1.414L10 11.414l5.243 5.243 1.414-1.414L11.414 10l5.243-5.243-1.414-1.414z"
-                            clip-rule="evenodd"
-                        />
+                        <path fill-rule="evenodd" d="M10 8.586 4.757 3.343 3.343 4.757 8.586 10l-5.243 5.243 1.414 1.414L10 11.414l5.243 5.243 1.414-1.414L11.414 10l5.243-5.243-1.414-1.414z" clip-rule="evenodd" />
                     </svg>
                 </button>
             </div>
 
             <form id="event-form" class="mt-6 space-y-6">
                 @csrf
+                <input type="hidden" name="event_id" id="event_id" />
                 <input type="hidden" name="student_id" id="student_id" />
-                <input type="hidden" name="start_time" id="start_time" />
-                <input type="hidden" name="end_time" id="end_time" />
-                @if ($user->isAdmin())
-                    <div>
-                        <label for="instructor_id" class="block text-sm font-medium text-slate-700">Instructeur</label>
-                        <select id="instructor_id" name="instructor_id" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200">
-                            <option value="">Selecteer instructeur</option>
-                            @foreach ($instructors as $instructor)
-                                <option value="{{ $instructor['id'] }}">{{ $instructor['name'] }}</option>
-                            @endforeach
-                        </select>
+                <div class="grid gap-6 lg:grid-cols-[2fr_1fr]">
+                    <div class="space-y-6">
+                        @if ($user->isAdmin())
+                            <div>
+                                <label for="instructor_id" class="block text-sm font-medium text-slate-700">Instructeur</label>
+                                <select id="instructor_id" name="instructor_id" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200">
+                                    <option value="">Selecteer instructeur</option>
+                                    @foreach ($instructors as $instructor)
+                                        <option value="{{ $instructor['id'] }}">{{ $instructor['name'] }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        @endif
+
+                        <div>
+                            <div class="flex items-center justify-between gap-3">
+                                <label class="block text-sm font-medium text-slate-700">Leerling zoeken</label>
+                                <button type="button" id="open-student-modal" class="text-xs font-semibold text-sky-600 transition hover:text-sky-700">Nieuwe leerling</button>
+                            </div>
+                            <div class="mt-2 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                                <input type="search" id="student-search" placeholder="Zoek op naam of e-mail" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                                <div id="student-results" class="mt-3 max-h-52 space-y-2 overflow-y-auto"></div>
+                                <div id="selected-student" class="mt-3 hidden rounded-xl bg-white px-4 py-3 text-sm text-slate-700 shadow-inner"></div>
+                            </div>
+                        </div>
+
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <div>
+                                <label for="status" class="block text-sm font-medium text-slate-700">Status</label>
+                                <select id="status" name="status" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200">
+                                    <option value="les">Les</option>
+                                    <option value="proefles">Proefles</option>
+                                    <option value="examen">Examen</option>
+                                    <option value="ziek">Ziek</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="vehicle" class="block text-sm font-medium text-slate-700">Voertuig</label>
+                                <input id="vehicle" name="vehicle" type="text" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                            </div>
+                            <div>
+                                <label for="package" class="block text-sm font-medium text-slate-700">Pakket</label>
+                                <input id="package" name="package" type="text" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                            </div>
+                            <div>
+                                <label for="location" class="block text-sm font-medium text-slate-700">Exacte locatie</label>
+                                <input id="location" name="location" type="text" placeholder="Bijvoorbeeld: Stationsstraat 12, Utrecht" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                            </div>
+                        </div>
+
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700">E-mail</label>
+                                <div class="mt-2 flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                                    <a id="email-link" href="#" class="flex-1 truncate text-sm font-medium text-sky-600" target="_blank" rel="noopener">Geen e-mail</a>
+                                    <button type="button" id="toggle-email-edit" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-sky-400 hover:text-sky-600">Bewerk</button>
+                                </div>
+                                <input id="email" name="email" type="email" class="mt-2 hidden w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                            </div>
+                            <div>
+                                <label for="phone" class="block text-sm font-medium text-slate-700">Telefoon</label>
+                                <input id="phone" name="phone" type="text" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="description" class="block text-sm font-medium text-slate-700">Omschrijving</label>
+                            <textarea id="description" name="description" rows="3" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200"></textarea>
+                        </div>
                     </div>
-                @endif
+                    <div class="space-y-6">
+                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Tijd</p>
+                            <div class="mt-3 space-y-3">
+                                <div>
+                                    <label for="start_time" class="block text-xs font-medium text-slate-500">Start</label>
+                                    <input id="start_time" name="start_time" type="datetime-local" step="900" class="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                                </div>
+                                <div>
+                                    <label for="end_time" class="block text-xs font-medium text-slate-500">Einde</label>
+                                    <input id="end_time" name="end_time" type="datetime-local" step="900" class="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Contact</p>
+                            <ul class="mt-3 space-y-2 text-sm text-slate-600">
+                                <li class="flex items-center justify-between"><span class="text-slate-500">Student</span><span id="summary-student" class="font-medium text-slate-800">-</span></li>
+                                <li class="flex items-center justify-between"><span class="text-slate-500">Instructeur</span><span id="summary-instructor" class="font-medium text-slate-800">-</span></li>
+                                <li class="flex items-center justify-between"><span class="text-slate-500">Status</span><span id="summary-status" class="font-medium text-slate-800">-</span></li>
+                                <li class="flex items-center justify-between"><span class="text-slate-500">Locatie</span><span id="summary-location" class="font-medium text-slate-800">-</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+                    <button type="button" data-close-modal class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-slate-300">Annuleren</button>
+                    <button type="submit" class="rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-sky-200 transition hover:from-sky-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2">Opslaan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="student-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 p-4">
+        <div class="w-full max-w-xl rounded-3xl bg-white p-6 shadow-2xl">
+            <div class="flex items-start justify-between gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-slate-700">Leerling zoeken</label>
-                    <input
-                        type="search"
-                        id="student-search"
-                        placeholder="Zoek op naam of e-mail"
-                        class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200"
-                    />
-                    <div id="student-results" class="mt-2 max-h-48 space-y-2 overflow-y-auto"></div>
-                    <p id="selected-student" class="mt-2 hidden rounded-xl bg-slate-100 px-4 py-3 text-sm text-slate-700"></p>
+                    <h3 class="text-lg font-semibold text-slate-900">Nieuwe leerling</h3>
+                    <p class="text-sm text-slate-500">Voeg een leerling toe om direct in te plannen.</p>
+                </div>
+                <button type="button" class="rounded-full p-2 text-slate-400 transition hover:bg-slate-100" data-close-student-modal>
+                    <span class="sr-only">Sluiten</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5">
+                        <path fill-rule="evenodd" d="M10 8.586 4.757 3.343 3.343 4.757 8.586 10l-5.243 5.243 1.414 1.414L10 11.414l5.243 5.243 1.414-1.414L11.414 10l5.243-5.243-1.414-1.414z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+            </div>
+            <form id="student-form" class="mt-6 space-y-4">
+                @csrf
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <div>
+                        <label for="student_first_name" class="block text-sm font-medium text-slate-700">Voornaam</label>
+                        <input id="student_first_name" name="first_name" type="text" required class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                    </div>
+                    <div>
+                        <label for="student_last_name" class="block text-sm font-medium text-slate-700">Achternaam</label>
+                        <input id="student_last_name" name="last_name" type="text" required class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                    </div>
                 </div>
                 <div class="grid gap-4 sm:grid-cols-2">
                     <div>
-                        <label for="status" class="block text-sm font-medium text-slate-700">Status</label>
-                        <select id="status" name="status" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200">
-                            <option value="les">Les</option>
-                            <option value="proefles">Proefles</option>
-                            <option value="examen">Examen</option>
-                            <option value="ziek">Ziek</option>
-                        </select>
+                        <label for="student_email" class="block text-sm font-medium text-slate-700">E-mail</label>
+                        <input id="student_email" name="email" type="email" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
                     </div>
                     <div>
-                        <label for="vehicle" class="block text-sm font-medium text-slate-700">Voertuig</label>
-                        <input id="vehicle" name="vehicle" type="text" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                        <label for="student_phone" class="block text-sm font-medium text-slate-700">Telefoon</label>
+                        <input id="student_phone" name="phone" type="text" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                    </div>
+                </div>
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <div>
+                        <label for="student_vehicle" class="block text-sm font-medium text-slate-700">Voertuig</label>
+                        <input id="student_vehicle" name="vehicle" type="text" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
                     </div>
                     <div>
-                        <label for="package" class="block text-sm font-medium text-slate-700">Pakket</label>
-                        <input id="package" name="package" type="text" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
-                    </div>
-                    <div>
-                        <label for="location" class="block text-sm font-medium text-slate-700">Locatie</label>
-                        <input id="location" name="location" type="text" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
-                    </div>
-                    <div>
-                        <label for="email" class="block text-sm font-medium text-slate-700">E-mail</label>
-                        <input id="email" name="email" type="email" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
-                    </div>
-                    <div>
-                        <label for="phone" class="block text-sm font-medium text-slate-700">Telefoon</label>
-                        <input id="phone" name="phone" type="text" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                        <label for="student_package" class="block text-sm font-medium text-slate-700">Pakket</label>
+                        <input id="student_package" name="package" type="text" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
                     </div>
                 </div>
                 <div>
-                    <label for="description" class="block text-sm font-medium text-slate-700">Omschrijving</label>
-                    <textarea id="description" name="description" rows="3" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200"></textarea>
+                    <label for="student_location" class="block text-sm font-medium text-slate-700">Exacte locatie</label>
+                    <input id="student_location" name="location" type="text" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
                 </div>
                 <div class="flex items-center justify-end gap-3">
-                    <button type="button" data-close-modal class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-slate-300">Annuleren</button>
-                    <button type="submit" class="rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-sky-200 transition hover:from-sky-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2">
-                        Opslaan
-                    </button>
+                    <button type="button" data-close-student-modal class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-slate-300">Annuleren</button>
+                    <button type="submit" class="rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-200 transition hover:from-emerald-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2">Opslaan</button>
                 </div>
             </form>
         </div>
@@ -133,189 +276,233 @@
         window.planningConfig = {
             csrfToken: '{{ csrf_token() }}',
             userRole: '{{ $user->role }}',
-            weekStart: '{{ $weekStart }}',
             instructors: @json($instructors),
-            events: @json($events),
         };
     </script>
+</x-layouts.app>
+
+@push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/resource-timegrid@6.1.8/index.global.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const config = window.planningConfig;
-            const calendarRoot = document.getElementById('calendar');
+            if (!window.FullCalendar || !FullCalendar.Calendar) {
+                console.error('FullCalendar kon niet geladen worden.');
+                return;
+            }
+            const calendarElement = document.getElementById('calendar');
+            const rangeLabel = document.getElementById('calendar-range');
             const modal = document.getElementById('event-modal');
+            const studentModal = document.getElementById('student-modal');
             const modalForm = document.getElementById('event-form');
+            const studentForm = document.getElementById('student-form');
             const closeButtons = modal.querySelectorAll('[data-close-modal]');
+            const closeStudentButtons = studentModal.querySelectorAll('[data-close-student-modal]');
             const studentSearch = document.getElementById('student-search');
             const studentResults = document.getElementById('student-results');
             const selectedStudent = document.getElementById('selected-student');
             const studentIdInput = document.getElementById('student_id');
-            const startInput = document.getElementById('start_time');
-            const endInput = document.getElementById('end_time');
+            const eventIdInput = document.getElementById('event_id');
             const statusSelect = document.getElementById('status');
             const vehicleInput = document.getElementById('vehicle');
             const packageInput = document.getElementById('package');
             const locationInput = document.getElementById('location');
             const emailInput = document.getElementById('email');
+            const emailLink = document.getElementById('email-link');
+            const toggleEmailButton = document.getElementById('toggle-email-edit');
             const phoneInput = document.getElementById('phone');
             const descriptionInput = document.getElementById('description');
+            const startInput = document.getElementById('start_time');
+            const endInput = document.getElementById('end_time');
+            const openStudentModalButton = document.getElementById('open-student-modal');
+            const modalTitle = document.getElementById('event-modal-title');
+            const summaryStudent = document.getElementById('summary-student');
+            const summaryInstructor = document.getElementById('summary-instructor');
+            const summaryStatus = document.getElementById('summary-status');
+            const summaryLocation = document.getElementById('summary-location');
             const instructorSelect = document.getElementById('instructor_id');
-            const weekRangeLabel = document.getElementById('week-range');
+            const instructorFilter = document.getElementById('instructor-filter');
+            const statusFilter = document.getElementById('status-filter');
+            const instructorLookup = new Map((config.instructors || []).map((instructor) => [String(instructor.id), instructor.name]));
+            let calendar;
+            const hasResourceSupport = typeof FullCalendar.Calendar.prototype.addResource === 'function';
 
-            const hourSlots = Array.from({ length: 12 }, (_, index) => index + 7); // 07:00 - 18:00
-            const dayFormatter = new Intl.DateTimeFormat('nl-NL', { weekday: 'short', day: 'numeric', month: 'long' });
-            const timeFormatter = new Intl.DateTimeFormat('nl-NL', { hour: '2-digit', minute: '2-digit' });
+            if (config.userRole === 'admin' && !hasResourceSupport) {
+                document.querySelector('[data-calendar-view="resourceTimeGridWeek"]')?.remove();
+                console.warn('FullCalendar resource plug-in niet beschikbaar; standaardweergave wordt gebruikt.');
+            }
+
             const colorByStatus = {
-                les: 'bg-emerald-500',
-                proefles: 'bg-sky-500',
-                examen: 'bg-amber-500',
-                ziek: 'bg-rose-500',
+                les: '#10b981',
+                proefles: '#0ea5e9',
+                examen: '#f59e0b',
+                ziek: '#f43f5e',
             };
 
-            const weekStartDate = new Date(config.weekStart);
-            const weekDays = Array.from({ length: 7 }, (_, index) => {
-                const date = new Date(weekStartDate);
-                date.setDate(weekStartDate.getDate() + index);
-                return date;
+            const statusLabels = {
+                les: 'Les',
+                proefles: 'Proefles',
+                examen: 'Examen',
+                ziek: 'Ziek',
+            };
+
+            let selectedStudentData = null;
+            let emailEditing = false;
+
+            function setEmailValue(value) {
+                const email = value || '';
+                emailInput.value = email;
+                emailLink.textContent = email ? email : 'Geen e-mail';
+                emailLink.href = email ? `mailto:${email}` : '#';
+                emailLink.classList.toggle('text-sky-600', !!email);
+                emailLink.classList.toggle('text-slate-400', !email);
+            }
+
+            function toggleEmailEditing(force) {
+                emailEditing = typeof force === 'boolean' ? force : !emailEditing;
+                emailInput.classList.toggle('hidden', !emailEditing);
+                emailLink.parentElement.classList.toggle('hidden', emailEditing);
+                toggleEmailButton.textContent = emailEditing ? 'Opslaan e-mail' : 'Bewerk';
+                if (emailEditing) {
+                    emailInput.focus();
+                } else {
+                    setEmailValue(emailInput.value);
+                }
+            }
+
+            toggleEmailButton.addEventListener('click', () => {
+                toggleEmailEditing();
             });
 
-            const weekEndDate = new Date(weekDays[6]);
-            weekRangeLabel.textContent = `${dayFormatter.format(weekStartDate)} – ${dayFormatter.format(weekEndDate)}`;
+            emailLink.addEventListener('click', (event) => {
+                if (!emailInput.value) {
+                    event.preventDefault();
+                }
+            });
 
-            let currentEvents = [...config.events];
-
-            function slotKey(date) {
-                const d = new Date(date);
-                return [
-                    d.getFullYear(),
-                    String(d.getMonth() + 1).padStart(2, '0'),
-                    String(d.getDate()).padStart(2, '0'),
-                    String(d.getHours()).padStart(2, '0'),
-                ].join('-');
-            }
-
-            function buildCalendar() {
-                calendarRoot.innerHTML = '';
-
-                config.instructors.forEach((instructor) => {
-                    const card = document.createElement('section');
-                    card.className = 'rounded-3xl border border-slate-200 bg-slate-50 p-4 shadow-inner';
-
-                    const heading = document.createElement('div');
-                    heading.className = 'flex items-center justify-between gap-4';
-                    heading.innerHTML = `
-                        <div>
-                            <h3 class="text-base font-semibold text-slate-900">${instructor.name}</h3>
-                            <p class="text-xs text-slate-500">Weekoverzicht</p>
-                        </div>
-                    `;
-                    card.appendChild(heading);
-
-                    const grid = document.createElement('div');
-                    grid.className = 'mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white';
-
-                    const headerRow = document.createElement('div');
-                    headerRow.className = 'grid grid-cols-[80px_repeat(7,minmax(0,1fr))] bg-slate-100 text-xs font-medium uppercase text-slate-500';
-                    headerRow.appendChild(document.createElement('div'));
-                    weekDays.forEach((day) => {
-                        const cell = document.createElement('div');
-                        cell.className = 'border-l border-slate-200 px-3 py-2';
-                        cell.textContent = dayFormatter.format(day);
-                        headerRow.appendChild(cell);
-                    });
-                    grid.appendChild(headerRow);
-
-                    hourSlots.forEach((hour) => {
-                        const row = document.createElement('div');
-                        row.className = 'grid grid-cols-[80px_repeat(7,minmax(0,1fr))]';
-
-                        const timeCell = document.createElement('div');
-                        timeCell.className = 'flex h-24 items-start justify-end border-t border-slate-100 px-3 pt-4 text-xs text-slate-400';
-                        timeCell.textContent = `${String(hour).padStart(2, '0')}:00`;
-                        row.appendChild(timeCell);
-
-                        weekDays.forEach((day) => {
-                            const slot = document.createElement('button');
-                            slot.type = 'button';
-                            slot.className = 'relative flex h-24 flex-col border-l border-t border-slate-100 bg-white px-2 py-2 text-left transition hover:bg-sky-50';
-                            const slotDate = new Date(day);
-                            slotDate.setHours(hour, 0, 0, 0);
-                            slot.dataset.key = `${instructor.id}-${slotKey(slotDate)}`;
-                            slot.dataset.instructorId = instructor.id;
-                            slot.dataset.startIso = slotDate.toISOString();
-                            const endDate = new Date(slotDate);
-                            endDate.setHours(endDate.getHours() + 1);
-                            slot.dataset.endIso = endDate.toISOString();
-
-                            slot.addEventListener('click', () => openModal({
-                                instructorId: instructor.id,
-                                start: slot.dataset.startIso,
-                                end: slot.dataset.endIso,
-                            }));
-
-                            row.appendChild(slot);
-                        });
-
-                        grid.appendChild(row);
-                    });
-
-                    card.appendChild(grid);
-                    calendarRoot.appendChild(card);
-                });
-
-                renderEvents();
-            }
-
-            function renderEvents() {
-                document.querySelectorAll('[data-event-pill]').forEach((element) => element.remove());
-
-                currentEvents.forEach((event) => {
-                    const key = `${event.instructor_id}-${slotKey(event.start_time)}`;
-                    const slot = calendarRoot.querySelector(`[data-key="${key}"]`);
-                    if (!slot) {
-                        return;
+            function setSelectedStudent(student, options = {}) {
+                const preserveContact = options.preserveContact ?? false;
+                selectedStudentData = student;
+                if (student) {
+                    studentIdInput.value = student.id;
+                    selectedStudent.textContent = `${student.full_name}${student.email ? ` · ${student.email}` : ''}`;
+                    selectedStudent.classList.remove('hidden');
+                    if (!preserveContact) {
+                        vehicleInput.value = student.vehicle || '';
+                        packageInput.value = student.package || '';
+                        locationInput.value = student.location || '';
+                        setEmailValue(student.email || '');
+                        phoneInput.value = student.phone || '';
+                        toggleEmailEditing(false);
                     }
-
-                    const pill = document.createElement('div');
-                    pill.dataset.eventPill = 'true';
-                    pill.className = `pointer-events-none absolute inset-1 rounded-2xl px-3 py-2 text-xs text-white shadow ${colorByStatus[event.status] ?? 'bg-slate-500'}`;
-                    pill.innerHTML = `
-                        <div class="font-semibold leading-tight">${event.student_name ?? 'Onbekend'}</div>
-                        <div class="leading-tight opacity-80">${timeFormatter.format(new Date(event.start_time))} – ${timeFormatter.format(new Date(event.end_time))}</div>
-                        <div class="leading-tight opacity-80 capitalize">${event.status}</div>
-                    `;
-                    slot.appendChild(pill);
-                });
-            }
-
-            function openModal({ instructorId, start, end }) {
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-                startInput.value = start;
-                endInput.value = end;
-                studentIdInput.value = '';
-                studentSearch.value = '';
-                selectedStudent.classList.add('hidden');
-                selectedStudent.textContent = '';
-                studentResults.innerHTML = '';
-                statusSelect.value = 'les';
-                vehicleInput.value = '';
-                packageInput.value = '';
-                locationInput.value = '';
-                emailInput.value = '';
-                phoneInput.value = '';
-                descriptionInput.value = '';
-                if (instructorSelect) {
-                    instructorSelect.value = instructorId ?? '';
+                } else {
+                    studentIdInput.value = '';
+                    selectedStudent.textContent = '';
+                    selectedStudent.classList.add('hidden');
+                    if (!preserveContact) {
+                        vehicleInput.value = '';
+                        packageInput.value = '';
+                        locationInput.value = '';
+                        setEmailValue('');
+                        phoneInput.value = '';
+                        toggleEmailEditing(false);
+                    }
                 }
                 studentSearch.focus();
+                refreshSummary();
+            }
+
+            function toLocalInputValue(dateString) {
+                if (!dateString) {
+                    return '';
+                }
+                const date = new Date(dateString);
+                const tzOffset = date.getTimezoneOffset() * 60000;
+                return new Date(date.getTime() - tzOffset).toISOString().slice(0, 16);
+            }
+
+            function toIsoString(value) {
+                if (!value) {
+                    return null;
+                }
+                const date = new Date(value);
+                return Number.isNaN(date.getTime()) ? null : date.toISOString();
+            }
+
+            function openModal(mode, payload) {
+                modal.dataset.mode = mode;
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                emailEditing = false;
+                toggleEmailEditing(false);
+                modalForm.reset();
+                descriptionInput.value = '';
+                if (selectedStudent) {
+                    selectedStudent.classList.add('hidden');
+                }
+                studentResults.innerHTML = '';
+                studentSearch.value = '';
+                setSelectedStudent(null);
+
+                if (mode === 'create') {
+                    modalTitle.textContent = 'Afspraak plannen';
+                    eventIdInput.value = '';
+                    const { start, end, instructorId } = payload;
+                    startInput.value = toLocalInputValue(start.toISOString());
+                    endInput.value = toLocalInputValue(end.toISOString());
+                    if (config.userRole === 'admin') {
+                        const initialInstructor = instructorId || (config.instructors[0] ? config.instructors[0].id : '');
+                        if (instructorSelect) {
+                            instructorSelect.value = initialInstructor ? String(initialInstructor) : '';
+                        }
+                    }
+                    summaryInstructor.textContent = instructorSelect ? instructorSelect.options[instructorSelect.selectedIndex]?.textContent ?? '-' : payload.instructorName || '-';
+                    summaryStatus.textContent = statusLabels[statusSelect.value] ?? statusSelect.value;
+                    summaryLocation.textContent = locationInput.value || '-';
+                    summaryStudent.textContent = '-';
+                } else if (mode === 'edit') {
+                    modalTitle.textContent = 'Afspraak bewerken';
+                    const { event } = payload;
+                    const props = event.extendedProps;
+                    eventIdInput.value = event.id;
+                    startInput.value = toLocalInputValue(event.startStr);
+                    endInput.value = toLocalInputValue(event.endStr || event.startStr);
+                    statusSelect.value = props.status;
+                    vehicleInput.value = props.vehicle || '';
+                    packageInput.value = props.package || '';
+                    locationInput.value = props.location || '';
+                    descriptionInput.value = props.description || '';
+                    phoneInput.value = props.phone || props.student_phone || '';
+                    summaryStudent.textContent = props.student_name || '-';
+                    summaryInstructor.textContent = props.instructor_name || '-';
+                    summaryStatus.textContent = statusLabels[props.status] ?? props.status;
+                    summaryLocation.textContent = props.location || '-';
+                    if (config.userRole === 'admin' && instructorSelect) {
+                        instructorSelect.value = String(props.instructor_id);
+                    }
+                    setSelectedStudent({
+                        id: props.student_id,
+                        full_name: props.student_name,
+                        email: props.student_email,
+                        phone: props.student_phone,
+                        package: props.package,
+                        vehicle: props.vehicle,
+                        location: props.location,
+                    }, { preserveContact: true });
+                    setEmailValue(props.email || props.student_email || '');
+                }
+                refreshSummary();
             }
 
             function closeModal() {
-                modal.classList.add('hidden');
                 modal.classList.remove('flex');
+                modal.classList.add('hidden');
             }
 
-            closeButtons.forEach((button) => button.addEventListener('click', closeModal));
+            closeButtons.forEach((button) => {
+                button.addEventListener('click', closeModal);
+            });
 
             modal.addEventListener('click', (event) => {
                 if (event.target === modal) {
@@ -323,90 +510,477 @@
                 }
             });
 
+            function openStudentModal() {
+                studentModal.classList.remove('hidden');
+                studentModal.classList.add('flex');
+                studentForm.reset();
+                document.getElementById('student_first_name').focus();
+            }
+
+            function closeStudentModal() {
+                studentModal.classList.remove('flex');
+                studentModal.classList.add('hidden');
+            }
+
+            openStudentModalButton?.addEventListener('click', openStudentModal);
+
+            closeStudentButtons.forEach((button) => {
+                button.addEventListener('click', closeStudentModal);
+            });
+
+            studentModal.addEventListener('click', (event) => {
+                if (event.target === studentModal) {
+                    closeStudentModal();
+                }
+            });
+
             let searchTimeout;
+
+            async function fetchStudents(params = {}) {
+                const searchParams = new URLSearchParams();
+                if (params.query) {
+                    searchParams.set('query', params.query);
+                }
+                if (params.initial) {
+                    searchParams.set('initial', '1');
+                }
+                const response = await fetch(`/students/search?${searchParams.toString()}`);
+                if (!response.ok) {
+                    return [];
+                }
+                return response.json();
+            }
+
+            function renderStudentResults(students) {
+                studentResults.innerHTML = '';
+                if (!students.length) {
+                    const empty = document.createElement('p');
+                    empty.className = 'rounded-xl bg-white px-4 py-3 text-xs text-slate-500 shadow-inner';
+                    empty.textContent = 'Geen leerlingen gevonden.';
+                    studentResults.appendChild(empty);
+                    return;
+                }
+
+                students.forEach((student) => {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm text-slate-700 transition hover:border-sky-400 hover:bg-sky-50';
+                    button.innerHTML = `
+                        <div class="font-semibold">${student.full_name}</div>
+                        <div class="text-xs text-slate-500">${student.email ?? 'Geen e-mail'} · ${student.phone ?? 'Geen telefoon'}</div>
+                    `;
+                    button.addEventListener('click', () => {
+                        setSelectedStudent(student);
+                        studentResults.innerHTML = '';
+                        refreshSummary();
+                    });
+                    studentResults.appendChild(button);
+                });
+            }
+
+            studentSearch.addEventListener('focus', async () => {
+                if (studentResults.childElementCount === 0) {
+                    const students = await fetchStudents({ initial: true });
+                    renderStudentResults(students);
+                }
+            });
+
             studentSearch.addEventListener('input', () => {
                 const value = studentSearch.value.trim();
                 clearTimeout(searchTimeout);
-
                 if (value.length < 2) {
                     studentResults.innerHTML = '';
                     return;
                 }
-
                 searchTimeout = setTimeout(async () => {
-                    const response = await fetch(`/students/search?query=${encodeURIComponent(value)}`, {
-                        headers: {
-                            Accept: 'application/json',
-                        },
-                    });
-                    if (!response.ok) {
-                        return;
-                    }
-                    const students = await response.json();
-                    studentResults.innerHTML = '';
-                    if (students.length === 0) {
-                        const empty = document.createElement('p');
-                        empty.className = 'rounded-xl bg-slate-100 px-3 py-2 text-xs text-slate-500';
-                        empty.textContent = 'Geen leerlingen gevonden.';
-                        studentResults.appendChild(empty);
-                        return;
-                    }
-
-                    students.forEach((student) => {
-                        const button = document.createElement('button');
-                        button.type = 'button';
-                        button.className = 'w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-left text-sm text-slate-700 transition hover:border-sky-400 hover:bg-sky-50';
-                        button.innerHTML = `
-                            <div class="font-semibold">${student.full_name}</div>
-                            <div class="text-xs text-slate-500">${student.email ?? 'Geen e-mail'} · ${student.phone ?? 'Geen telefoon'}</div>
-                        `;
-                        button.addEventListener('click', () => {
-                            studentIdInput.value = student.id;
-                            selectedStudent.textContent = `${student.full_name} (${student.email ?? 'geen e-mail'})`;
-                            selectedStudent.classList.remove('hidden');
-                            studentResults.innerHTML = '';
-                            vehicleInput.value = student.vehicle ?? '';
-                            packageInput.value = student.package ?? '';
-                            locationInput.value = student.location ?? '';
-                            emailInput.value = student.email ?? '';
-                            phoneInput.value = student.phone ?? '';
-                        });
-                        studentResults.appendChild(button);
-                    });
+                    const students = await fetchStudents({ query: value });
+                    renderStudentResults(students);
                 }, 250);
+            });
+
+            studentForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const formData = new FormData(studentForm);
+                const response = await fetch('/students', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': config.csrfToken,
+                    },
+                    body: formData,
+                });
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    alert(errorData.message ?? 'Kon leerling niet opslaan.');
+                    return;
+                }
+                const student = await response.json();
+                setSelectedStudent(student);
+                studentSearch.value = '';
+                studentResults.innerHTML = '';
+                closeStudentModal();
+            });
+
+            function refreshSummary() {
+                summaryStudent.textContent = selectedStudentData?.full_name ?? '-';
+                if (config.userRole === 'admin' && instructorSelect) {
+                    summaryInstructor.textContent = instructorSelect.value
+                        ? instructorSelect.options[instructorSelect.selectedIndex]?.textContent ?? '-'
+                        : '-';
+                }
+                summaryStatus.textContent = statusLabels[statusSelect.value] ?? statusSelect.value;
+                summaryLocation.textContent = locationInput.value || '-';
+            }
+
+            statusSelect.addEventListener('change', refreshSummary);
+            locationInput.addEventListener('input', refreshSummary);
+            instructorSelect?.addEventListener('change', refreshSummary);
+
+            function getActiveInstructorIds() {
+                if (!instructorFilter) {
+                    return [];
+                }
+                const activeButtons = [...instructorFilter.querySelectorAll('[data-instructor-filter]')].filter((button) => button.dataset.active === 'true');
+                return activeButtons.map((button) => Number.parseInt(button.dataset.instructorFilter, 10));
+            }
+
+            function getActiveStatuses() {
+                const activeButtons = [...statusFilter.querySelectorAll('[data-status-filter]')].filter((button) => button.dataset.active === 'true');
+                return activeButtons.map((button) => button.dataset.statusFilter);
+            }
+
+            const baseFilterClasses = 'flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold transition';
+            const activeFilterClasses = 'border-sky-500 bg-sky-50 text-sky-700 shadow-sm shadow-sky-100';
+            const inactiveFilterClasses = 'border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-700';
+
+            function updateFilterButton(button, active) {
+                button.dataset.active = active ? 'true' : 'false';
+                button.className = `${baseFilterClasses} ${active ? activeFilterClasses : inactiveFilterClasses}`;
+            }
+
+            function attachFilterHandlers(container) {
+                container?.querySelectorAll('button').forEach((button) => {
+                    updateFilterButton(button, button.dataset.active !== 'false');
+                    button.addEventListener('click', () => {
+                        const currentlyActive = button.dataset.active === 'true';
+                        updateFilterButton(button, !currentlyActive);
+                        if (calendar) {
+                            updateResources();
+                            calendar.refetchEvents();
+                        }
+                    });
+                });
+            }
+
+            attachFilterHandlers(instructorFilter);
+            attachFilterHandlers(statusFilter);
+
+            function updateResources() {
+                if (!hasResourceSupport || !calendar || !calendar.view || !calendar.view.type.includes('resource')) {
+                    return;
+                }
+                if (!instructorFilter) {
+                    return;
+                }
+                const activeIds = getActiveInstructorIds().map((id) => String(id));
+                const activeSet = new Set(activeIds);
+                calendar.getResources().forEach((resource) => {
+                    if (!activeSet.has(resource.id)) {
+                        resource.remove();
+                    }
+                });
+                activeIds.forEach((id) => {
+                    if (!calendar.getResourceById(id)) {
+                        const title = instructorLookup.get(id) ?? `Instructeur ${id}`;
+                        calendar.addResource({ id, title });
+                    }
+                });
+            }
+
+            const viewButtons = document.querySelectorAll('[data-calendar-view]');
+            const baseViewClasses = 'rounded-full px-3 py-1 transition';
+            const activeViewClasses = 'bg-white text-slate-900 shadow-sm shadow-slate-200';
+            const inactiveViewClasses = 'text-slate-600 hover:text-slate-900';
+
+            function updateViewButtons(activeView) {
+                viewButtons.forEach((button) => {
+                    const isActive = button.dataset.calendarView === activeView;
+                    button.className = `${baseViewClasses} ${isActive ? activeViewClasses : inactiveViewClasses}`;
+                });
+            }
+
+            function formatRange() {
+                const calendarDate = calendar.getDate();
+                const view = calendar.view.type;
+                if (view === 'dayGridMonth') {
+                    rangeLabel.textContent = calendarDate.toLocaleDateString('nl-NL', { month: 'long', year: 'numeric' });
+                } else if (view === 'timeGridDay') {
+                    rangeLabel.textContent = calendarDate.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+                } else {
+                    const start = calendar.view.currentStart;
+                    const end = new Date(calendar.view.currentEnd.getTime() - 86400000);
+                    const sameYear = start.getFullYear() === end.getFullYear();
+                    const startFormatter = new Intl.DateTimeFormat('nl-NL', sameYear ? { day: 'numeric', month: 'long' } : { day: 'numeric', month: 'long', year: 'numeric' });
+                    const endFormatter = new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+                    rangeLabel.textContent = `${startFormatter.format(start)} – ${endFormatter.format(end)}`;
+                }
+            }
+
+            function mapEventToCalendar(event) {
+                return {
+                    id: event.id,
+                    title: event.student_name ?? 'Onbekende leerling',
+                    start: event.start_time,
+                    end: event.end_time,
+                    resourceId: event.instructor_id ? String(event.instructor_id) : undefined,
+                    backgroundColor: colorByStatus[event.status] ?? '#1f2937',
+                    borderColor: colorByStatus[event.status] ?? '#1f2937',
+                    extendedProps: {
+                        status: event.status,
+                        instructor_id: event.instructor_id,
+                        instructor_name: event.instructor_name,
+                        student_id: event.student_id,
+                        student_name: event.student_name,
+                        student_email: event.student_email,
+                        student_phone: event.student_phone,
+                        vehicle: event.vehicle,
+                        package: event.package,
+                        email: event.email,
+                        phone: event.phone,
+                        location: event.location,
+                        description: event.description,
+                    },
+                };
+            }
+
+            async function saveEvent(eventId, payload) {
+                const url = eventId ? `/events/${eventId}` : '/events';
+                const method = eventId ? 'PATCH' : 'POST';
+                const response = await fetch(url, {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': config.csrfToken,
+                    },
+                    body: JSON.stringify(payload),
+                });
+                if (!response.ok) {
+                    const error = await response.json().catch(() => ({}));
+                    throw new Error(error.message ?? 'Er ging iets mis.');
+                }
+                return response.json();
+            }
+
+            async function handleEventMove(info) {
+                try {
+                    const event = info.event;
+                    const props = event.extendedProps;
+                    let instructorId = props.instructor_id;
+                    if (info.newResource) {
+                        instructorId = Number.parseInt(info.newResource.id, 10);
+                        props.instructor_id = instructorId;
+                        props.instructor_name = info.newResource.title;
+                        event.setExtendedProp('instructor_id', instructorId);
+                        event.setExtendedProp('instructor_name', info.newResource.title);
+                        event.setProp('resourceId', String(instructorId));
+                    }
+                    const payload = {
+                        student_id: props.student_id,
+                        status: props.status,
+                        start_time: event.start.toISOString(),
+                        end_time: (event.end ?? new Date(event.start.getTime() + 60 * 60 * 1000)).toISOString(),
+                        vehicle: props.vehicle,
+                        package: props.package,
+                        email: props.email,
+                        phone: props.phone,
+                        location: props.location,
+                        description: props.description,
+                    };
+                    if (config.userRole === 'admin') {
+                        payload.instructor_id = instructorId;
+                    }
+                    await saveEvent(event.id, payload);
+                    calendar.refetchEvents();
+                } catch (error) {
+                    info.revert();
+                    alert(error.message);
+                }
+            }
+
+            const calendarOptions = {
+                locale: 'nl',
+                initialView: config.userRole === 'admin' && hasResourceSupport ? 'resourceTimeGridWeek' : 'timeGridWeek',
+                height: 'auto',
+                headerToolbar: false,
+                slotMinTime: '06:00:00',
+                slotMaxTime: '21:00:00',
+                selectable: true,
+                selectMirror: true,
+                nowIndicator: true,
+                expandRows: true,
+                eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
+                buttonText: {
+                    today: 'Vandaag',
+                },
+                events: async (fetchInfo, successCallback, failureCallback) => {
+                    try {
+                        const params = new URLSearchParams({
+                            start: fetchInfo.startStr,
+                            end: fetchInfo.endStr,
+                        });
+                        const instructorIds = getActiveInstructorIds();
+                        if (instructorFilter && instructorFilter.querySelectorAll('button').length && instructorIds.length === 0) {
+                            successCallback([]);
+                            return;
+                        }
+                        if (instructorIds.length) {
+                            instructorIds.forEach((id) => params.append('instructor_ids[]', id));
+                        }
+                        const statuses = getActiveStatuses();
+                        if (statusFilter && statuses.length === 0) {
+                            successCallback([]);
+                            return;
+                        }
+                        if (statuses.length) {
+                            statuses.forEach((status) => params.append('statuses[]', status));
+                        }
+                        const response = await fetch(`/events?${params.toString()}`);
+                        if (!response.ok) {
+                            throw new Error('Kon afspraken niet laden.');
+                        }
+                        const data = await response.json();
+                        successCallback(data.map(mapEventToCalendar));
+                    } catch (error) {
+                        failureCallback(error);
+                    }
+                },
+                select: (selectionInfo) => {
+                    const resource = selectionInfo.resource;
+                    const resourceId = resource ? Number.parseInt(resource.id, 10) : null;
+                    const resourceTitle = resource ? resource.title : null;
+                    const fallbackInstructorId = config.userRole === 'admin'
+                        ? (getActiveInstructorIds()[0] ?? (config.instructors[0]?.id ?? null))
+                        : (config.instructors[0]?.id ?? null);
+                    const fallbackInstructorName = resourceTitle
+                        ?? (config.userRole === 'admin'
+                            ? (instructorSelect?.options[instructorSelect.selectedIndex]?.textContent
+                                ?? (fallbackInstructorId ? instructorLookup.get(String(fallbackInstructorId)) ?? '-' : '-'))
+                            : (config.instructors[0]?.name ?? '-'));
+                    openModal('create', {
+                        start: selectionInfo.start,
+                        end: selectionInfo.end,
+                        instructorId: resourceId ?? fallbackInstructorId,
+                        instructorName: resourceTitle ?? fallbackInstructorName,
+                    });
+                    calendar.unselect();
+                },
+                eventClick: (info) => {
+                    openModal('edit', { event: info.event });
+                },
+                eventDrop: handleEventMove,
+                eventResize: handleEventMove,
+                eventClassNames: () => ['rounded-2xl', 'border-0', 'px-3', 'py-2', 'shadow-lg', 'text-white', 'text-sm', 'leading-tight'],
+                eventContent: (arg) => {
+                    const props = arg.event.extendedProps;
+                    const start = arg.timeText;
+                    const statusLabel = statusLabels[props.status] ?? props.status;
+                    const locationLine = props.location ? `<div class="text-[11px] opacity-90">${props.location}</div>` : '';
+                    return {
+                        html: `
+                            <div class="flex flex-col gap-1">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="font-semibold">${arg.event.title}</span>
+                                    <span class="rounded-full bg-white/20 px-2 py-0.5 text-[10px] uppercase tracking-wide">${statusLabel}</span>
+                                </div>
+                                <div class="text-[12px] opacity-90">${start}</div>
+                                ${locationLine}
+                            </div>
+                        `,
+                    };
+                },
+                datesSet: () => {
+                    formatRange();
+                    updateResources();
+                },
+            };
+
+            if (config.userRole === 'admin' && hasResourceSupport) {
+                calendarOptions.schedulerLicenseKey = 'GPL-My-Project-Is-Open-Source';
+                calendarOptions.resources = (config.instructors || []).map((instructor) => ({
+                    id: String(instructor.id),
+                    title: instructor.name,
+                }));
+            }
+
+            calendar = new FullCalendar.Calendar(calendarElement, calendarOptions);
+
+            calendar.render();
+            formatRange();
+            updateResources();
+            updateViewButtons(calendar.view.type);
+
+            document.querySelectorAll('[data-calendar-nav]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    const action = button.dataset.calendarNav;
+                    if (action === 'prev') {
+                        calendar.prev();
+                    } else if (action === 'next') {
+                        calendar.next();
+                    } else if (action === 'today') {
+                        calendar.today();
+                    }
+                    formatRange();
+                });
+            });
+
+            document.querySelectorAll('[data-calendar-view]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    const view = button.dataset.calendarView;
+                    calendar.changeView(view);
+                    formatRange();
+                    updateResources();
+                    updateViewButtons(view);
+                });
             });
 
             modalForm.addEventListener('submit', async (event) => {
                 event.preventDefault();
-
                 if (!studentIdInput.value) {
                     alert('Selecteer eerst een leerling.');
                     return;
                 }
-
-                const formData = new FormData(modalForm);
-                const response = await fetch('/events', {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': config.csrfToken,
-                        Accept: 'application/json',
-                    },
-                    body: formData,
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    alert(errorData.message ?? 'Er is iets misgegaan bij het opslaan.');
+                if (!startInput.value || !endInput.value) {
+                    alert('Vul start- en eindtijd in.');
                     return;
                 }
-
-                const savedEvent = await response.json();
-                currentEvents.push(savedEvent);
-                renderEvents();
-                closeModal();
+                const payload = {
+                    student_id: Number.parseInt(studentIdInput.value, 10),
+                    status: statusSelect.value,
+                    start_time: toIsoString(startInput.value),
+                    end_time: toIsoString(endInput.value),
+                    vehicle: vehicleInput.value || null,
+                    package: packageInput.value || null,
+                    location: locationInput.value || null,
+                    email: emailInput.value || null,
+                    phone: phoneInput.value || null,
+                    description: descriptionInput.value || null,
+                };
+                if (config.userRole === 'admin' && instructorSelect) {
+                    if (!instructorSelect.value) {
+                        alert('Selecteer een instructeur.');
+                        return;
+                    }
+                    payload.instructor_id = Number.parseInt(instructorSelect.value, 10);
+                }
+                const eventId = eventIdInput.value || null;
+                try {
+                    await saveEvent(eventId, payload);
+                    closeModal();
+                    calendar.refetchEvents();
+                } catch (error) {
+                    alert(error.message);
+                }
             });
-
-            buildCalendar();
         });
     </script>
-</x-layouts.app>
+@endpush
