@@ -1287,6 +1287,8 @@
         const studentGuardianPrefToggles = studentModal.querySelectorAll('[data-student-guardian-pref]');
         const studentNotifyGuardianEmailInput = document.getElementById('student_notify_guardian_email');
         const studentNotifyGuardianPhoneInput = document.getElementById('student_notify_guardian_phone');
+        const studentNotifyStudentEmailInput = studentForm.querySelector('[name="notify_student_email"]');
+        const studentNotifyStudentPhoneInput = studentForm.querySelector('[name="notify_student_phone"]');
 
         let selectedStudentData = null;
         let searchTimeout = null;
@@ -1756,6 +1758,19 @@
         studentForm.addEventListener('submit', async (event) => {
             event.preventDefault();
             const formData = new FormData(studentForm);
+            formData.set('has_guardian', studentHasGuardianInput?.checked ? '1' : '0');
+            if (studentNotifyStudentEmailInput) {
+                formData.set('notify_student_email', studentNotifyStudentEmailInput.checked ? '1' : '0');
+            }
+            if (studentNotifyStudentPhoneInput) {
+                formData.set('notify_student_phone', studentNotifyStudentPhoneInput.checked ? '1' : '0');
+            }
+            if (studentNotifyGuardianEmailInput) {
+                formData.set('notify_guardian_email', studentNotifyGuardianEmailInput.checked ? '1' : '0');
+            }
+            if (studentNotifyGuardianPhoneInput) {
+                formData.set('notify_guardian_phone', studentNotifyGuardianPhoneInput.checked ? '1' : '0');
+            }
             try {
                 const student = await fetchJson('/students', {
                     method: 'POST',
@@ -1825,6 +1840,7 @@
             }
             const startDate = parseLocalDate(startInput.value);
             const endDate = parseLocalDate(endInput.value);
+            const guardianEnabled = hasGuardianInput.checked;
             const payload = {
                 student_id: Number.parseInt(studentIdInput.value, 10),
                 status: statusSelect.value,
@@ -1836,17 +1852,19 @@
                 description: descriptionInput.value || null,
                 email: contactEditors.studentEmail?.getValue() || null,
                 phone: contactEditors.studentPhone?.getValue() || null,
-                has_guardian: hasGuardianInput.checked,
-                guardian_email: hasGuardianInput.checked
+                has_guardian: guardianEnabled ? 1 : 0,
+                guardian_email: guardianEnabled
                     ? contactEditors.guardianEmail?.getValue() || null
                     : null,
-                guardian_phone: hasGuardianInput.checked
+                guardian_phone: guardianEnabled
                     ? contactEditors.guardianPhone?.getValue() || null
                     : null,
-                notify_student_email: notifyStudentEmailInput.checked,
-                notify_student_phone: notifyStudentPhoneInput.checked,
-                notify_guardian_email: hasGuardianInput.checked ? notifyGuardianEmailInput.checked : false,
-                notify_guardian_phone: hasGuardianInput.checked ? notifyGuardianPhoneInput.checked : false,
+                notify_student_email: notifyStudentEmailInput.checked ? 1 : 0,
+                notify_student_phone: notifyStudentPhoneInput.checked ? 1 : 0,
+                notify_guardian_email:
+                    guardianEnabled && notifyGuardianEmailInput ? (notifyGuardianEmailInput.checked ? 1 : 0) : 0,
+                notify_guardian_phone:
+                    guardianEnabled && notifyGuardianPhoneInput ? (notifyGuardianPhoneInput.checked ? 1 : 0) : 0,
                 student_birth_date: studentBirthDateInput?.value || null,
             };
             if (config.userRole === 'admin' && instructorSelect) {
@@ -1882,13 +1900,13 @@
                 description: event.description,
                 email: event.email,
                 phone: event.phone,
-                has_guardian: event.has_guardian,
+                has_guardian: event.has_guardian ? 1 : 0,
                 guardian_email: event.guardian_email,
                 guardian_phone: event.guardian_phone,
-                notify_student_email: event.notify_student_email,
-                notify_student_phone: event.notify_student_phone,
-                notify_guardian_email: event.notify_guardian_email,
-                notify_guardian_phone: event.notify_guardian_phone,
+                notify_student_email: event.notify_student_email ? 1 : 0,
+                notify_student_phone: event.notify_student_phone ? 1 : 0,
+                notify_guardian_email: event.notify_guardian_email ? 1 : 0,
+                notify_guardian_phone: event.notify_guardian_phone ? 1 : 0,
             };
             event.start = new Date(start.getTime());
             event.end = new Date(end.getTime());

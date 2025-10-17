@@ -813,76 +813,83 @@
                         </div>
 
                         <div class="space-y-6">
-                            <div class="grid gap-4 sm:grid-cols-2">
-                                <div>
-                                    <label for="selected_student_birth_date" class="block text-sm font-medium text-slate-700">Geboortedatum</label>
-                                    <input id="selected_student_birth_date" name="student_birth_date" type="date" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-slate-700">E-mail leerling</label>
-                                    <div class="mt-2 space-y-2">
+                            <div class="grid gap-6 sm:grid-cols-2">
+                                <div class="space-y-3">
+                                    <div class="flex items-center justify-between gap-3">
+                                        <label class="block text-sm font-medium text-slate-700">E-mail leerling</label>
+                                        <label class="flex items-center gap-2 text-xs font-medium text-slate-600">
+                                            <input id="notify-student-email" name="notify_student_email" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" checked />
+                                            <span>Ontvangt e-mail</span>
+                                        </label>
+                                    </div>
+                                    <div class="space-y-2">
                                         <div id="email-display" class="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
                                             <a id="email-link" href="#" data-empty-label="Geen e-mail" class="flex-1 truncate text-sm font-medium text-slate-400" target="_blank" rel="noopener">Geen e-mail</a>
                                             <button type="button" id="toggle-email-edit" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-sky-400 hover:text-sky-600">Bewerk</button>
                                         </div>
                                         <input id="email" name="email" type="email" class="hidden w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
                                     </div>
-                                    <label class="mt-2 flex items-center gap-2 text-xs font-medium text-slate-600">
-                                        <input id="notify-student-email" name="notify_student_email" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" checked />
-                                        <span>Student ontvangt e-mails</span>
-                                    </label>
                                 </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-slate-700">Telefoon leerling</label>
-                                    <div class="mt-2 space-y-2">
+                                <div class="space-y-3">
+                                    <div class="flex items-center justify-between gap-3">
+                                        <label class="block text-sm font-medium text-slate-700">Telefoon leerling</label>
+                                        <label class="flex items-center gap-2 text-xs font-medium text-slate-600">
+                                            <input id="notify-student-phone" name="notify_student_phone" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" checked />
+                                            <span>Ontvangt telefoon</span>
+                                        </label>
+                                    </div>
+                                    <div class="space-y-2">
                                         <div id="phone-display" class="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
                                             <a id="phone-link" href="#" data-empty-label="Geen telefoon" class="flex-1 truncate text-sm font-medium text-slate-400">Geen telefoon</a>
                                             <button type="button" id="toggle-phone-edit" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-sky-400 hover:text-sky-600">Bewerk</button>
                                         </div>
                                         <input id="phone" name="phone" type="tel" class="hidden w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
                                     </div>
-                                    <label class="mt-2 flex items-center gap-2 text-xs font-medium text-slate-600">
-                                        <input id="notify-student-phone" name="notify_student_phone" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" checked />
-                                        <span>Student ontvangt telefoontjes</span>
-                                    </label>
                                 </div>
                             </div>
-                            <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Contactvoorkeuren</p>
-                            <div class="pt-2">
+                            <div class="pt-4 space-y-4">
                                 <label class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
                                     <input id="has_guardian" name="has_guardian" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
                                     <span>Voogd-contact toevoegen</span>
                                 </label>
-                                <div id="guardian-section" class="mt-4 hidden grid gap-4 sm:grid-cols-2">
-                                    <div>
-                                        <label class="block text-sm font-medium text-slate-700">E-mail voogd</label>
-                                        <div class="mt-2 space-y-2">
+                                <div id="guardian-section" class="hidden grid gap-6 sm:grid-cols-2">
+                                    <div class="space-y-3">
+                                        <div class="flex items-center justify-between gap-3">
+                                            <label class="block text-sm font-medium text-slate-700">E-mail voogd</label>
+                                            <label class="flex items-center gap-2 text-xs font-medium text-slate-600">
+                                                <input id="notify-guardian-email" name="notify_guardian_email" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                                                <span>Ontvangt e-mail</span>
+                                            </label>
+                                        </div>
+                                        <div class="space-y-2">
                                             <div id="guardian-email-display" class="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
                                                 <a id="guardian-email-link" href="#" data-empty-label="Geen e-mail" class="flex-1 truncate text-sm font-medium text-slate-400" target="_blank" rel="noopener">Geen e-mail</a>
                                                 <button type="button" id="toggle-guardian-email-edit" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-sky-400 hover:text-sky-600">Bewerk</button>
                                             </div>
                                             <input id="guardian_email" name="guardian_email" type="email" class="hidden w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
                                         </div>
-                                        <label class="mt-2 flex items-center gap-2 text-xs font-medium text-slate-600">
-                                            <input id="notify-guardian-email" name="notify_guardian_email" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
-                                            <span>Voogd ontvangt e-mails</span>
-                                        </label>
                                     </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-slate-700">Telefoon voogd</label>
-                                        <div class="mt-2 space-y-2">
+                                    <div class="space-y-3">
+                                        <div class="flex items-center justify-between gap-3">
+                                            <label class="block text-sm font-medium text-slate-700">Telefoon voogd</label>
+                                            <label class="flex items-center gap-2 text-xs font-medium text-slate-600">
+                                                <input id="notify-guardian-phone" name="notify_guardian_phone" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                                                <span>Ontvangt telefoon</span>
+                                            </label>
+                                        </div>
+                                        <div class="space-y-2">
                                             <div id="guardian-phone-display" class="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
                                                 <a id="guardian-phone-link" href="#" data-empty-label="Geen telefoon" class="flex-1 truncate text-sm font-medium text-slate-400">Geen telefoon</a>
                                                 <button type="button" id="toggle-guardian-phone-edit" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-sky-400 hover:text-sky-600">Bewerk</button>
                                             </div>
                                             <input id="guardian_phone" name="guardian_phone" type="tel" class="hidden w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
                                         </div>
-                                        <label class="mt-2 flex items-center gap-2 text-xs font-medium text-slate-600">
-                                            <input id="notify-guardian-phone" name="notify_guardian_phone" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
-                                            <span>Voogd ontvangt telefoontjes</span>
-                                        </label>
                                     </div>
                                 </div>
+                            </div>
+                            <div>
+                                <label for="selected_student_birth_date" class="block text-sm font-medium text-slate-700">Geboortedatum</label>
+                                <input id="selected_student_birth_date" name="student_birth_date" type="date" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
                             </div>
                         </div>
 
