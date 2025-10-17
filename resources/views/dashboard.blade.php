@@ -1234,7 +1234,7 @@
                             </div>
                         </div>
 
-                        <div class="grid gap-4 sm:grid-cols-2">
+                        <div data-student-dependent class="hidden grid gap-4 sm:grid-cols-2" aria-hidden="true">
                             <div>
                                 <label for="status" class="block text-sm font-medium text-slate-700">Status</label>
                                 <select id="status" name="status" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200">
@@ -1264,7 +1264,7 @@
                             </div>
                         </div>
 
-                        <div class="space-y-6">
+                        <div data-student-dependent class="hidden space-y-6" aria-hidden="true">
                             <div class="grid gap-6 sm:grid-cols-2">
                                 <div class="space-y-3">
                                     <div class="flex items-center justify-between gap-3">
@@ -1341,7 +1341,7 @@
                             </div>
                         </div>
 
-                        <div>
+                        <div data-student-dependent class="hidden" aria-hidden="true">
                             <label for="description" class="block text-sm font-medium text-slate-700">Omschrijving</label>
                             <textarea id="description" name="description" rows="3" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200"></textarea>
                         </div>

@@ -638,6 +638,7 @@
         const instructorSelect = document.getElementById('instructor_id');
         const instructorFilter = document.getElementById('instructor-filter');
         const statusFilter = document.getElementById('status-filter');
+        const studentDependentSections = document.querySelectorAll('[data-student-dependent]');
         const modalTitle = document.getElementById('event-modal-title');
         const quickCreateButton = document.getElementById('quick-create-event');
         const studentBirthDateInput = document.getElementById('student_birth_date');
@@ -662,6 +663,15 @@
         let searchTimeout = null;
 
         const contactEditors = buildContactEditors();
+
+        function setStudentDependentVisibility(visible) {
+            studentDependentSections.forEach((section) => {
+                section.classList.toggle('hidden', !visible);
+                section.setAttribute('aria-hidden', visible ? 'false' : 'true');
+            });
+        }
+
+        setStudentDependentVisibility(false);
 
         function buildContactEditors() {
             function createContactEditor({ inputId, displayId, linkId, toggleId, emptyLabel, hrefFormatter }) {
@@ -976,6 +986,7 @@
                 clearStudentFormFields();
             }
             selectedStudentData = student || null;
+            setStudentDependentVisibility(Boolean(student));
             if (!student) {
                 studentIdInput.value = '';
                 if (selectedStudent) {
