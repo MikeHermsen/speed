@@ -131,13 +131,14 @@
 
         .planner-time-grid__header {
             display: grid;
-            grid-template-columns: 80px repeat(
-                var(--planner-column-count, 1),
-                minmax(var(--planner-column-min, 180px), 1fr)
-            );
+            grid-template-columns:
+                80px repeat(
+                    var(--planner-column-count, 1),
+                    minmax(var(--planner-column-min, 180px), 1fr)
+                ) 80px;
             gap: 1rem;
             align-items: end;
-            min-width: calc(80px + var(--planner-column-count, 1) * var(--planner-column-min, 180px));
+            min-width: calc(160px + var(--planner-column-count, 1) * var(--planner-column-min, 180px));
         }
 
         .planner-time-grid__header-cell {
@@ -152,11 +153,6 @@
             font-size: 0.75rem;
         }
 
-        .planner-time-grid__header-cell:first-child {
-            justify-content: flex-end;
-            color: #64748b;
-        }
-
         .planner-time-grid__header-label {
             display: inline-flex;
             align-items: center;
@@ -167,35 +163,84 @@
             padding: 0.5rem 1rem;
         }
 
+        .planner-time-grid__times-header {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(241, 245, 249, 0.95));
+            color: #64748b;
+        }
+
+        .planner-time-grid__times-header--leading {
+            justify-content: flex-end;
+            left: 0;
+        }
+
+        .planner-time-grid__times-header--trailing {
+            justify-content: flex-start;
+            right: 0;
+        }
+
         .planner-time-grid__header-cell[data-weekend="true"] .planner-time-grid__header-label {
             background: linear-gradient(130deg, rgba(99, 102, 241, 0.12), rgba(14, 165, 233, 0.15));
         }
 
         .planner-time-grid__body {
             display: grid;
-            grid-template-columns: 80px repeat(
-                var(--planner-column-count, 1),
-                minmax(var(--planner-column-min, 180px), 1fr)
-            );
+            grid-template-columns:
+                80px repeat(
+                    var(--planner-column-count, 1),
+                    minmax(var(--planner-column-min, 180px), 1fr)
+                ) 80px;
             gap: 1rem;
-            min-width: calc(80px + var(--planner-column-count, 1) * var(--planner-column-min, 180px));
+            min-width: calc(160px + var(--planner-column-count, 1) * var(--planner-column-min, 180px));
         }
 
         .planner-time-grid__times {
             display: flex;
             flex-direction: column;
-            align-items: flex-end;
             color: #94a3b8;
             font-size: 0.75rem;
-            position: relative;
+            position: sticky;
+            top: 0;
+            z-index: 4;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(241, 245, 249, 0.92));
+        }
+
+        .planner-time-grid__times--leading {
+            left: 0;
+            align-items: flex-end;
+            padding-right: 0.75rem;
+            box-shadow: inset -1px 0 0 rgba(226, 232, 240, 0.9);
+        }
+
+        .planner-time-grid__times--trailing {
+            right: 0;
+            align-items: flex-start;
+            padding-left: 0.75rem;
+            box-shadow: inset 1px 0 0 rgba(226, 232, 240, 0.9);
         }
 
         .planner-time-grid__time-label {
             display: flex;
             align-items: flex-start;
             justify-content: flex-end;
-            padding-right: 0.75rem;
             box-sizing: border-box;
+        }
+
+        .planner-time-grid__times--leading .planner-time-grid__time-label {
+            padding-right: 0.75rem;
+        }
+
+        .planner-time-grid__times--trailing .planner-time-grid__time-label {
+            justify-content: flex-start;
+            padding-left: 0.75rem;
+        }
+
+        .planner-time-grid__times--trailing .planner-time-grid__time-label,
+        .planner-time-grid__times--trailing .planner-time-grid__time-label span {
+            width: 100%;
+            text-align: left;
         }
 
         .planner-time-grid__column {
@@ -480,6 +525,8 @@
             display: flex;
             flex-direction: column;
             gap: 1rem;
+            overflow-x: auto;
+            padding-bottom: 0.75rem;
         }
 
         .planner-month__header,
@@ -487,6 +534,7 @@
             display: grid;
             grid-template-columns: repeat(7, minmax(0, 1fr));
             gap: 0.75rem;
+            min-width: 980px;
         }
 
         .planner-month__header-cell {

@@ -495,7 +495,12 @@
             const columnCount = Math.max(1, columns.length || 0);
             container.style.setProperty('--planner-column-count', String(columnCount));
             const header = buildElement('div', 'planner-time-grid__header');
-            header.appendChild(buildElement('div', 'planner-time-grid__header-cell planner-time-grid__times-header'));
+            header.appendChild(
+                buildElement(
+                    'div',
+                    'planner-time-grid__header-cell planner-time-grid__times-header planner-time-grid__times-header--leading',
+                ),
+            );
             columns.forEach((column, index) => {
                 const label = showDayNames ? formatWeekday(column.date) : DATE_FORMATTER.format(column.date);
                 const headerCell = buildElement(
@@ -511,20 +516,29 @@
                 }
                 header.appendChild(headerCell);
             });
+            header.appendChild(
+                buildElement(
+                    'div',
+                    'planner-time-grid__header-cell planner-time-grid__times-header planner-time-grid__times-header--trailing',
+                ),
+            );
             container.appendChild(header);
 
             const body = buildElement('div', 'planner-time-grid__body');
-            const timesColumn = buildElement('div', 'planner-time-grid__times');
-            for (let hour = 0; hour < 24; hour += 1) {
-                const timeLabel = buildElement(
-                    'div',
-                    'planner-time-grid__time-label',
-                    `<span>${`${hour}`.padStart(2, '0')}:00</span>`,
-                );
-                timeLabel.style.height = `${MINUTE_HEIGHT * 60}px`;
-                timesColumn.appendChild(timeLabel);
-            }
-            body.appendChild(timesColumn);
+            const buildTimesColumn = (className) => {
+                const column = buildElement('div', `planner-time-grid__times ${className || ''}`.trim());
+                for (let hour = 0; hour < 24; hour += 1) {
+                    const timeLabel = buildElement(
+                        'div',
+                        'planner-time-grid__time-label',
+                        `<span>${`${hour}`.padStart(2, '0')}:00</span>`,
+                    );
+                    timeLabel.style.height = `${MINUTE_HEIGHT * 60}px`;
+                    column.appendChild(timeLabel);
+                }
+                return column;
+            };
+            body.appendChild(buildTimesColumn('planner-time-grid__times--leading'));
 
             columns.forEach((column, columnIndex) => {
                 const columnElement = buildElement('div', 'planner-time-grid__column');
@@ -575,6 +589,8 @@
 
                 body.appendChild(columnElement);
             });
+
+            body.appendChild(buildTimesColumn('planner-time-grid__times--trailing'));
 
             container.appendChild(body);
             return container;
@@ -688,7 +704,6 @@
                 activeMonthMeta: meta,
             };
             meta?.element?.setAttribute('data-drag-target', 'true');
-            evt.preventDefault();
         }
 
         handleMonthDragMove(evt) {
@@ -1069,7 +1084,6 @@
             if (meta?.element) {
                 meta.element.setAttribute('data-drag-target', 'true');
             }
-            evt.preventDefault();
         }
 
         handlePointerMove(evt) {
