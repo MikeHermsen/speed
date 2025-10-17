@@ -72,6 +72,7 @@ class EventController extends Controller
             'notify_guardian_phone' => ['nullable', 'boolean'],
             'location' => ['nullable', 'string'],
             'description' => ['nullable', 'string'],
+            'student_birth_date' => ['nullable', 'date'],
         ];
 
         if ($user->isAdmin()) {
@@ -81,6 +82,13 @@ class EventController extends Controller
         $data = $request->validate($rules);
 
         $student = Student::findOrFail($data['student_id']);
+
+        if (array_key_exists('student_birth_date', $data)) {
+            $student->birth_date = $data['student_birth_date'] ?: null;
+            if ($student->isDirty('birth_date')) {
+                $student->save();
+            }
+        }
 
         $instructorId = $user->isAdmin() ? $data['instructor_id'] : $user->id;
 
@@ -150,6 +158,7 @@ class EventController extends Controller
             'notify_guardian_phone' => ['nullable', 'boolean'],
             'location' => ['nullable', 'string'],
             'description' => ['nullable', 'string'],
+            'student_birth_date' => ['nullable', 'date'],
         ];
 
         if ($user->isAdmin()) {
@@ -159,6 +168,13 @@ class EventController extends Controller
         $data = $request->validate($rules);
 
         $student = Student::findOrFail($data['student_id']);
+
+        if (array_key_exists('student_birth_date', $data)) {
+            $student->birth_date = $data['student_birth_date'] ?: null;
+            if ($student->isDirty('birth_date')) {
+                $student->save();
+            }
+        }
 
         $event->fill([
             'instructor_id' => $user->isAdmin() ? $data['instructor_id'] : $event->instructor_id,

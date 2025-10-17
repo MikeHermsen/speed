@@ -721,26 +721,35 @@
                                 <label class="block text-sm font-medium text-slate-700">Leerling zoeken</label>
                                 <button type="button" data-open-student-modal class="text-xs font-semibold text-sky-600 transition hover:text-sky-700">Nieuwe leerling</button>
                             </div>
-                            <div class="mt-2 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                <input type="search" id="student-search" placeholder="Zoek op naam of e-mail" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
-                                <div id="student-results" class="mt-3 max-h-52 space-y-2 overflow-y-auto"></div>
+                            <div class="mt-2 space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                                <input type="search" id="student-search" placeholder="Zoek op naam, e-mail of telefoon" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
                                 <div
                                     id="selected-student"
-                                    class="mt-3 hidden rounded-2xl bg-white/90 px-4 py-4 text-sm text-slate-700 shadow-lg shadow-slate-200"
+                                    class="hidden cursor-pointer rounded-2xl border border-sky-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm transition hover:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-300"
+                                    tabindex="0"
+                                    role="button"
+                                    aria-label="Geen leerling geselecteerd"
                                 >
-                                    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                                        <div id="selected-student-details" class="space-y-1"></div>
-                                        <div class="flex items-center gap-2">
-                                            <button
-                                                type="button"
-                                                id="delete-student"
-                                                class="fancy-chip rounded-full border border-transparent bg-rose-500/90 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white shadow-sm transition hover:bg-rose-600"
-                                            >
-                                                Leerling verwijderen
-                                            </button>
+                                    <div class="flex items-center gap-3">
+                                        <span class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-sky-500 text-white">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5">
+                                                <path
+                                                    fill-rule="evenodd"
+                                                    d="M16.704 5.29a1 1 0 0 1 .006 1.414l-7.07 7.127a1 1 0 0 1-1.427.007L3.29 9.91a1 1 0 0 1 1.414-1.414l4.01 4.01 6.364-6.364a1 1 0 0 1 1.414-.007z"
+                                                    clip-rule="evenodd"
+                                                />
+                                            </svg>
+                                        </span>
+                                        <div class="min-w-0 flex-1">
+                                            <p id="selected-student-name" class="truncate text-sm font-semibold text-slate-900"></p>
+                                            <p class="text-xs text-slate-500">Klik om een andere leerling te kiezen</p>
                                         </div>
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 text-slate-400">
+                                            <path fill-rule="evenodd" d="M7.22 3.22a.75.75 0 0 1 1.06 0l5.25 5.25a.75.75 0 0 1 0 1.06l-5.25 5.25a.75.75 0 1 1-1.06-1.06L11.44 9.5 7.22 5.28a.75.75 0 0 1 0-1.06z" clip-rule="evenodd" />
+                                        </svg>
                                     </div>
                                 </div>
+                                <div id="student-results" class="max-h-52 space-y-2 overflow-y-auto"></div>
                             </div>
                         </div>
 
@@ -755,8 +764,14 @@
                                 </select>
                             </div>
                             <div>
-                                <label for="vehicle" class="block text-sm font-medium text-slate-700">Voertuig</label>
-                                <input id="vehicle" name="vehicle" type="text" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                                <label for="vehicle" class="block text-sm font-medium text-slate-700">Type voertuig</label>
+                                <select id="vehicle" name="vehicle" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200">
+                                    <option value="">Selecteer type</option>
+                                    <option value="Automaat auto">Automaat auto</option>
+                                    <option value="Brommer">Brommer</option>
+                                    <option value="Motor">Motor</option>
+                                    <option value="Aanhanger">Aanhanger</option>
+                                </select>
                             </div>
                             <div>
                                 <label for="package" class="block text-sm font-medium text-slate-700">Pakket</label>
@@ -770,6 +785,10 @@
 
                         <div class="space-y-6">
                             <div class="grid gap-4 sm:grid-cols-2">
+                                <div>
+                                    <label for="selected_student_birth_date" class="block text-sm font-medium text-slate-700">Geboortedatum</label>
+                                    <input id="selected_student_birth_date" name="student_birth_date" type="date" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                                </div>
                                 <div>
                                     <label class="block text-sm font-medium text-slate-700">E-mail leerling</label>
                                     <div class="mt-2 space-y-2">
@@ -857,20 +876,20 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Contact</p>
-                            <ul class="mt-3 space-y-2 text-sm text-slate-600">
-                                <li class="flex items-center justify-between"><span class="text-slate-500">Student</span><span id="summary-student" class="font-medium text-slate-800">-</span></li>
-                                <li class="flex items-center justify-between"><span class="text-slate-500">Instructeur</span><span id="summary-instructor" class="font-medium text-slate-800">-</span></li>
-                                <li class="flex items-center justify-between"><span class="text-slate-500">Status</span><span id="summary-status" class="font-medium text-slate-800">-</span></li>
-                                <li class="flex items-center justify-between"><span class="text-slate-500">Locatie</span><span id="summary-location" class="font-medium text-slate-800">-</span></li>
-                            </ul>
-                        </div>
                     </div>
                 </div>
-                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
-                    <button type="button" data-close-modal class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-slate-300">Annuleren</button>
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <button
+                        type="button"
+                        id="delete-student"
+                        class="hidden rounded-xl border border-rose-200 bg-white px-4 py-2 text-sm font-semibold text-rose-600 shadow-sm transition hover:border-rose-300 hover:text-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-200"
+                    >
+                        Leerling verwijderen
+                    </button>
+                    <div class="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:justify-end sm:gap-4">
+                        <button type="button" data-close-modal class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-slate-300">Annuleren</button>
                     <button type="submit" class="rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-sky-200 transition hover:from-sky-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2">Opslaan</button>
+                    </div>
                 </div>
             </form>
         </div>

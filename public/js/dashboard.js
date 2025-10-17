@@ -1134,7 +1134,7 @@
         const studentSearch = document.getElementById('student-search');
         const studentResults = document.getElementById('student-results');
         const selectedStudent = document.getElementById('selected-student');
-        const selectedStudentDetails = document.getElementById('selected-student-details');
+        const selectedStudentName = document.getElementById('selected-student-name');
         const deleteStudentButton = document.getElementById('delete-student');
         const eventIdInput = document.getElementById('event_id');
         const studentIdInput = document.getElementById('student_id');
@@ -1145,14 +1145,11 @@
         const descriptionInput = document.getElementById('description');
         const startInput = document.getElementById('start_time');
         const endInput = document.getElementById('end_time');
+        const studentBirthDateInput = document.getElementById('selected_student_birth_date');
         const instructorSelect = document.getElementById('instructor_id');
         const instructorFilter = document.getElementById('instructor-filter');
         const statusFilter = document.getElementById('status-filter');
         const modalTitle = document.getElementById('event-modal-title');
-        const summaryStudent = document.getElementById('summary-student');
-        const summaryInstructor = document.getElementById('summary-instructor');
-        const summaryStatus = document.getElementById('summary-status');
-        const summaryLocation = document.getElementById('summary-location');
         const quickCreateButton = document.getElementById('quick-create-event');
         const openStudentButtons = document.querySelectorAll('[data-open-student-modal]');
         const closeModalButtons = modal.querySelectorAll('[data-close-modal]');
@@ -1356,6 +1353,10 @@
             modalForm.reset();
             eventIdInput.value = '';
             planner.unselect();
+            setSelectedStudent(null, { clearForm: true });
+            if (studentResults) {
+                studentResults.innerHTML = '';
+            }
         }
 
         function openStudentModal() {
@@ -1377,7 +1378,7 @@
             const now = new Date();
             now.setMinutes(Math.ceil(now.getMinutes() / 30) * 30, 0, 0);
             const end = new Date(now.getTime() + 60 * 60 * 1000);
-            setSelectedStudent(null);
+            setSelectedStudent(null, { clearForm: true });
             populateEventForm({
                 start: now,
                 end,
@@ -1395,39 +1396,103 @@
             }
             openModal();
         });
-        function refreshSummary() {
-            summaryStudent.textContent = selectedStudentData?.full_name ?? '-';
-            summaryStatus.textContent = STATUS_CONFIG[statusSelect.value]?.label ?? statusSelect.value ?? '-';
-            summaryLocation.textContent = locationInput.value || '-';
-            if (config.userRole === 'admin' && summaryInstructor) {
-                summaryInstructor.textContent = instructorSelect.value
-                    ? instructorSelect.options[instructorSelect.selectedIndex]?.textContent ?? '-'
-                    : '-';
+        function clearStudentFormFields() {
+            contactEditors.studentEmail?.setValue('');
+            contactEditors.studentPhone?.setValue('');
+            contactEditors.guardianEmail?.setValue('');
+            contactEditors.guardianPhone?.setValue('');
+            notifyStudentEmailInput.checked = true;
+            notifyStudentPhoneInput.checked = true;
+            notifyGuardianEmailInput.checked = false;
+            notifyGuardianPhoneInput.checked = false;
+            hasGuardianInput.checked = false;
+            updateGuardianVisibility();
+            if (studentBirthDateInput) {
+                studentBirthDateInput.value = '';
             }
         }
 
-        function setSelectedStudent(student) {
-            selectedStudentData = student;
+        function setSelectedStudent(student, { applyDefaults = false, clearForm = false } = {}) {
+            if (clearForm) {
+                clearStudentFormFields();
+            }
+            selectedStudentData = student || null;
             if (!student) {
                 studentIdInput.value = '';
-                selectedStudent.classList.add('hidden');
-                selectedStudentDetails.innerHTML = '';
-                refreshSummary();
+                if (selectedStudent) {
+                    selectedStudent.classList.add('hidden');
+                    selectedStudent.setAttribute('aria-label', 'Geen leerling geselecteerd');
+                }
+                if (selectedStudentName) {
+                    selectedStudentName.textContent = '';
+                }
+                deleteStudentButton?.classList.add('hidden');
+                if (studentSearch) {
+                    studentSearch.classList.remove('hidden');
+                    studentSearch.value = '';
+                }
+                if (studentBirthDateInput) {
+                    studentBirthDateInput.value = '';
+                }
+                if (studentResults) {
+                    studentResults.innerHTML = '';
+                }
                 return;
             }
+
             studentIdInput.value = student.id;
-            selectedStudent.classList.remove('hidden');
-            selectedStudentDetails.innerHTML = `
-                <h4 class="text-sm font-semibold text-slate-900">${escapeHtml(student.full_name)}</h4>
-                <p class="text-xs text-slate-500">${buildContactSummaryHtml(student.email, student.phone)}</p>
-            `;
-            refreshSummary();
+            if (studentBirthDateInput) {
+                studentBirthDateInput.value = student.birth_date ?? '';
+            }
+            if (selectedStudentName) {
+                selectedStudentName.textContent = student.full_name || '';
+            }
+            if (selectedStudent) {
+                selectedStudent.classList.remove('hidden');
+                selectedStudent.setAttribute(
+                    'aria-label',
+                    `Leerling ${student.full_name || ''} geselecteerd. Klik om een andere leerling te kiezen.`,
+                );
+            }
+            if (studentSearch) {
+                studentSearch.classList.add('hidden');
+                studentSearch.value = '';
+            }
+            if (studentResults) {
+                studentResults.innerHTML = '';
+            }
+            deleteStudentButton?.classList.remove('hidden');
+
+            if (applyDefaults) {
+                contactEditors.studentEmail?.setValue(student.email || '');
+                contactEditors.studentPhone?.setValue(student.phone || '');
+
+                const hasGuardian = Boolean(student.has_guardian);
+                hasGuardianInput.checked = hasGuardian;
+                contactEditors.guardianEmail?.setValue(hasGuardian ? student.guardian_email || '' : '');
+                contactEditors.guardianPhone?.setValue(hasGuardian ? student.guardian_phone || '' : '');
+
+                notifyStudentEmailInput.checked = student.notify_student_email ?? true;
+                notifyStudentPhoneInput.checked = student.notify_student_phone ?? true;
+                notifyGuardianEmailInput.checked = hasGuardian ? Boolean(student.notify_guardian_email) : false;
+                notifyGuardianPhoneInput.checked = hasGuardian ? Boolean(student.notify_guardian_phone) : false;
+                updateGuardianVisibility();
+            }
         }
 
         function populateEventForm(event) {
             eventIdInput.value = event?.id ?? '';
             statusSelect.value = event?.status ?? 'les';
-            vehicleInput.value = event?.vehicle ?? '';
+            if (vehicleInput?.tagName === 'SELECT') {
+                const incoming = event?.vehicle ?? '';
+                const hasOption = Array.from(vehicleInput.options).some((option) => option.value === incoming);
+                if (incoming && !hasOption) {
+                    vehicleInput.add(new Option(incoming, incoming, true, true));
+                }
+                vehicleInput.value = incoming;
+            } else if (vehicleInput) {
+                vehicleInput.value = event?.vehicle ?? '';
+            }
             packageInput.value = event?.package ?? '';
             locationInput.value = event?.location ?? '';
             descriptionInput.value = event?.description ?? '';
@@ -1443,10 +1508,12 @@
             contactEditors.studentPhone?.setValue(event?.phone ?? '');
             contactEditors.guardianEmail?.setValue(event?.guardian_email ?? '');
             contactEditors.guardianPhone?.setValue(event?.guardian_phone ?? '');
+            if (studentBirthDateInput) {
+                studentBirthDateInput.value = event?.student_birth_date ?? '';
+            }
             if (config.userRole === 'admin' && instructorSelect) {
                 instructorSelect.value = event?.instructor_id ?? '';
             }
-            refreshSummary();
         }
 
         function openModalForEvent(event) {
@@ -1457,18 +1524,29 @@
                 end: new Date(event.end_time || event.end),
             };
             populateEventForm(enriched);
-            setSelectedStudent({
+            setSelectedStudent(
+                {
                 id: event.student_id,
                 full_name: event.student_name,
                 email: event.student_email,
                 phone: event.student_phone,
-            });
+                birth_date: event.student_birth_date,
+                has_guardian: event.student_has_guardian,
+                guardian_email: event.student_guardian_email,
+                guardian_phone: event.student_guardian_phone,
+                notify_student_email: event.student_notify_student_email,
+                notify_student_phone: event.student_notify_student_phone,
+                notify_guardian_email: event.student_notify_guardian_email,
+                notify_guardian_phone: event.student_notify_guardian_phone,
+            },
+                { applyDefaults: false },
+            );
             openModal();
         }
 
         function handleSelect({ start, end, instructorId }) {
             modalTitle.textContent = 'Nieuwe afspraak';
-            setSelectedStudent(null);
+            setSelectedStudent(null, { clearForm: true });
             populateEventForm({ start, end });
             if (config.userRole === 'admin' && instructorSelect && instructorId) {
                 instructorSelect.value = String(instructorId);
@@ -1513,19 +1591,19 @@
             studentResults.innerHTML = '';
             if (!students.length) {
                 studentResults.innerHTML =
-                    '<li class="px-4 py-2 text-sm text-slate-500">Geen leerlingen gevonden.</li>';
+                    '<div class="rounded-xl bg-white px-4 py-2 text-sm text-slate-500">Geen leerlingen gevonden.</div>';
                 return;
             }
             const fragment = document.createDocumentFragment();
             students.forEach((student) => {
                 const item = buildElement(
-                    'li',
-                    'cursor-pointer px-4 py-2 text-sm hover:bg-slate-100',
+                    'div',
+                    'cursor-pointer rounded-xl border border-transparent px-4 py-2 text-sm transition hover:border-sky-200 hover:bg-slate-100',
                     `<div class="font-semibold text-slate-800">${escapeHtml(student.full_name)}</div>` +
                         `<div class="text-xs text-slate-500">${buildContactSummaryHtml(student.email, student.phone)}</div>`,
                 );
                 item.addEventListener('click', () => {
-                    setSelectedStudent(student);
+                    setSelectedStudent(student, { applyDefaults: true });
                     studentResults.innerHTML = '';
                 });
                 fragment.appendChild(item);
@@ -1564,12 +1642,32 @@
                     },
                     body: formData,
                 });
-                setSelectedStudent(student);
+                setSelectedStudent(student, { applyDefaults: true });
                 studentSearch.value = '';
                 studentResults.innerHTML = '';
                 closeStudentModal();
             } catch (error) {
                 alert(error.message || 'Kon leerling niet opslaan.');
+            }
+        });
+
+        function reopenStudentSearch() {
+            setSelectedStudent(null, { clearForm: true });
+            if (studentResults) {
+                studentResults.innerHTML = '';
+            }
+            if (studentSearch) {
+                studentSearch.classList.remove('hidden');
+                studentSearch.focus();
+                studentSearch.dispatchEvent(new Event('focus'));
+            }
+        }
+
+        selectedStudent?.addEventListener('click', reopenStudentSearch);
+        selectedStudent?.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar' || event.key === 'Space') {
+                event.preventDefault();
+                reopenStudentSearch();
             }
         });
 
@@ -1583,11 +1681,10 @@
             try {
                 deleteStudentButton.disabled = true;
                 deleteStudentButton.textContent = 'Verwijderen...';
-                await deleteStudent(selectedStudentData.id);
-                setSelectedStudent(null);
-                planner.setEvents(
-                    planner.events.filter((event) => event.student_id !== selectedStudentData.id),
-                );
+                const removedId = selectedStudentData.id;
+                await deleteStudent(removedId);
+                setSelectedStudent(null, { clearForm: true });
+                planner.setEvents(planner.events.filter((event) => event.student_id !== removedId));
                 refreshEvents();
             } catch (error) {
                 alert(error.message || 'Kon leerling niet verwijderen.');
@@ -1628,6 +1725,7 @@
                 notify_student_phone: notifyStudentPhoneInput.checked,
                 notify_guardian_email: hasGuardianInput.checked ? notifyGuardianEmailInput.checked : false,
                 notify_guardian_phone: hasGuardianInput.checked ? notifyGuardianPhoneInput.checked : false,
+                student_birth_date: studentBirthDateInput?.value || null,
             };
             if (config.userRole === 'admin' && instructorSelect) {
                 if (!instructorSelect.value) {
