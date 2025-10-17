@@ -191,15 +191,19 @@
         return value.replace(/[^0-9+]/g, '');
     }
 
-    function buildContactSummaryHtml(email, phone) {
+    function buildContactSummaryHtml(email, phone, { clickable = true } = {}) {
         const safeEmail = email ? escapeHtml(email) : null;
         const safePhone = phone ? escapeHtml(phone) : null;
         const emailLink = safeEmail
-            ? `<a href="mailto:${encodeURIComponent(email)}" class="text-sky-600 hover:underline">${safeEmail}</a>`
+            ? clickable
+                ? `<a href="mailto:${encodeURIComponent(email)}" class="text-sky-600 hover:underline">${safeEmail}</a>`
+                : `<span class="text-sky-600">${safeEmail}</span>`
             : 'Geen e-mail';
         const normalisedPhone = phone ? normalisePhoneForTel(phone) : '';
         const phoneLink = normalisedPhone
-            ? `<a href="tel:${normalisedPhone}" class="text-sky-600 hover:underline">${safePhone}</a>`
+            ? clickable
+                ? `<a href="tel:${normalisedPhone}" class="text-sky-600 hover:underline">${safePhone}</a>`
+                : `<span class="text-sky-600">${safePhone}</span>`
             : 'Geen telefoon';
         return `${emailLink} • ${phoneLink}`;
     }
@@ -1724,7 +1728,7 @@
                     'div',
                     'cursor-pointer rounded-xl border border-transparent px-4 py-2 text-sm transition hover:border-sky-200 hover:bg-slate-100',
                     `<div class="font-semibold text-slate-800">${escapeHtml(student.full_name)}</div>` +
-                        `<div class="text-xs text-slate-500">${buildContactSummaryHtml(student.email, student.phone)}</div>`,
+                        `<div class="text-xs text-slate-500">${buildContactSummaryHtml(student.email, student.phone, { clickable: false })}</div>`,
                 );
                 item.addEventListener('click', () => {
                     setSelectedStudent(student, { applyDefaults: true });
