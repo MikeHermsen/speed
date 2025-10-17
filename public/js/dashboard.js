@@ -24,7 +24,7 @@
 
     const DATE_FORMATTER = new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'long' });
     const MONTH_FORMATTER = new Intl.DateTimeFormat('nl-NL', { month: 'long', year: 'numeric' });
-    const WEEKDAY_FORMATTER = new Intl.DateTimeFormat('nl-NL', { weekday: 'short', day: 'numeric' });
+    const WEEKDAY_FORMATTER = new Intl.DateTimeFormat('nl-NL', { weekday: 'long', day: 'numeric' });
     const TIME_FORMATTER = new Intl.DateTimeFormat('nl-NL', { hour: '2-digit', minute: '2-digit' });
 
     function cloneDate(date) {
@@ -119,8 +119,15 @@
         return element;
     }
 
+    function capitalize(text) {
+        if (!text) {
+            return text;
+        }
+        return text.charAt(0).toUpperCase() + text.slice(1);
+    }
+
     function formatWeekday(date) {
-        return WEEKDAY_FORMATTER.format(date);
+        return capitalize(WEEKDAY_FORMATTER.format(date));
     }
 
     function formatTime(date) {
@@ -308,13 +315,18 @@
             header.appendChild(buildElement('div', 'planner-time-grid__header-cell planner-time-grid__times-header'));
             columns.forEach((column, index) => {
                 const label = showDayNames ? formatWeekday(column.date) : DATE_FORMATTER.format(column.date);
-                header.appendChild(
-                    buildElement(
-                        'div',
-                        'planner-time-grid__header-cell',
-                        `<div class="planner-time-grid__header-label">${label}</div>`,
-                    ),
+                const headerCell = buildElement(
+                    'div',
+                    'planner-time-grid__header-cell',
+                    `<div class="planner-time-grid__header-label">${label}</div>`,
                 );
+                if (showDayNames) {
+                    const day = column.date.getDay();
+                    if (day === 0 || day === 6) {
+                        headerCell.dataset.weekend = 'true';
+                    }
+                }
+                header.appendChild(headerCell);
                 this.columnsMeta.push({ index, date: column.date, instructorId: column.instructorId ?? null });
             });
             container.appendChild(header);
@@ -338,6 +350,10 @@
                 columnElement.dataset.date = column.date.toISOString();
                 if (column.instructorId !== null) {
                     columnElement.dataset.instructorId = String(column.instructorId);
+                }
+                const day = column.date.getDay();
+                if (day === 0 || day === 6) {
+                    columnElement.dataset.weekend = 'true';
                 }
 
                 const backdrop = buildElement('div', 'planner-time-grid__background');
@@ -377,8 +393,22 @@
         renderMonthView(start, end) {
             const container = buildElement('div', 'planner-month');
             const header = buildElement('div', 'planner-month__header');
-            ['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'].forEach((weekday) => {
-                header.appendChild(buildElement('div', 'planner-month__header-cell', weekday));
+            const monthWeekdays = [
+                { label: 'Ma', title: 'Maandag' },
+                { label: 'Di', title: 'Dinsdag' },
+                { label: 'Wo', title: 'Woensdag' },
+                { label: 'Do', title: 'Donderdag' },
+                { label: 'Vr', title: 'Vrijdag' },
+                { label: 'Za', title: 'Zaterdag', weekend: true },
+                { label: 'Zo', title: 'Zondag', weekend: true },
+            ];
+            monthWeekdays.forEach((weekday) => {
+                const cell = buildElement('div', 'planner-month__header-cell', weekday.label);
+                cell.setAttribute('title', weekday.title);
+                if (weekday.weekend) {
+                    cell.dataset.weekend = 'true';
+                }
+                header.appendChild(cell);
             });
             container.appendChild(header);
 
@@ -393,6 +423,10 @@
                 );
                 if (cursor.getMonth() !== this.currentDate.getMonth()) {
                     cell.classList.add('planner-month__cell--muted');
+                }
+                const weekday = cursor.getDay();
+                if (weekday === 0 || weekday === 6) {
+                    cell.dataset.weekend = 'true';
                 }
                 cell.appendChild(cellHeader);
 
@@ -515,6 +549,23 @@
             element.style.setProperty('--planner-event-bg', status.bg);
             element.dataset.eventId = String(event.id);
             element.dataset.columnIndex = String(columnIndex);
+
+            const tooltipLines = [
+                `${formatTime(event.start)} – ${formatTime(event.end)}`,
+                event.title,
+            ];
+            if (event.location) {
+                tooltipLines.push(`Locatie: ${event.location}`);
+            }
+            tooltipLines.push(`Type: ${status.label}`);
+            element.setAttribute('title', tooltipLines.join('\n'));
+
+            if (height < 110) {
+                element.classList.add('planner-event--condensed');
+            }
+            if (height < 80) {
+                element.classList.add('planner-event--minimal');
+            }
 
             element.addEventListener('click', (evt) => {
                 if (this.dragState) {
