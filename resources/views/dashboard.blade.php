@@ -1099,7 +1099,6 @@
                     <div id="planner-filters-panel" class="planner-filters-card mt-3 w-full lg:mt-0 lg:w-80">
                         <div class="planner-filters-card__header">
                             <span class="planner-filters-card__title">Filters</span>
-                            <span class="planner-filters-card__subtitle">Stel je planning makkelijk samen</span>
                         </div>
                         <div class="planner-filters-card__body">
                             @if ($user->isAdmin())
