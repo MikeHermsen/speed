@@ -326,34 +326,6 @@
             color: #0ea5e9;
         }
 
-        .planner-instructor {
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-        }
-
-        .planner-instructor__section {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .planner-instructor__header {
-            display: flex;
-            align-items: baseline;
-            justify-content: space-between;
-        }
-
-        .planner-instructor__title {
-            font-weight: 600;
-            color: #0f172a;
-        }
-
-        .planner-instructor__subtitle {
-            font-size: 0.8rem;
-            color: #64748b;
-        }
-
         .planner-empty {
             text-align: center;
             font-size: 0.9rem;
@@ -399,9 +371,6 @@
                                 <button type="button" class="rounded-full px-3 py-1 transition" data-calendar-view="timeGridDay">Dag</button>
                                 <button type="button" class="rounded-full px-3 py-1 transition" data-calendar-view="timeGridWeek">Week</button>
                                 <button type="button" class="rounded-full px-3 py-1 transition" data-calendar-view="dayGridMonth">Maand</button>
-                                @if ($user->isAdmin())
-                                    <button type="button" class="rounded-full px-3 py-1 transition" data-calendar-view="resourceTimeGridWeek">Per instructeur</button>
-                                @endif
                             </div>
                             <button
                                 type="button"

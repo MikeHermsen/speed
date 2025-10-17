@@ -10,14 +10,12 @@
         timeGridWeek: 'week',
         timeGridDay: 'day',
         dayGridMonth: 'month',
-        resourceTimeGridWeek: 'instructor',
     };
 
     const REVERSE_VIEW_MAP = {
         week: 'timeGridWeek',
         day: 'timeGridDay',
         month: 'dayGridMonth',
-        instructor: 'resourceTimeGridWeek',
     };
 
     const SLOT_MINUTES = 15;
@@ -135,8 +133,6 @@
             this.view = VIEW_MAP[options.initialView] || 'week';
             this.currentDate = options.initialDate ? new Date(options.initialDate) : new Date();
             this.events = [];
-            this.instructors = options.instructors || [];
-            this.activeInstructorIds = options.activeInstructorIds || (() => []);
             this.onSelect = options.onSelect || (() => {});
             this.onEventClick = options.onEventClick || (() => {});
             this.onEventMove = options.onEventMove || (() => {});
@@ -161,8 +157,7 @@
                     const start = startOfDay(this.currentDate);
                     return { start, end: addMinutes(start, 24 * 60) };
                 }
-                case 'week':
-                case 'instructor': {
+                case 'week': {
                     const start = startOfWeek(this.currentDate);
                     return { start, end: endOfWeek(this.currentDate) };
                 }
@@ -212,7 +207,6 @@
                     this.currentDate.setDate(this.currentDate.getDate() + 1);
                     break;
                 case 'week':
-                case 'instructor':
                     this.currentDate.setDate(this.currentDate.getDate() + 7);
                     break;
                 case 'month':
@@ -231,7 +225,6 @@
                     this.currentDate.setDate(this.currentDate.getDate() - 1);
                     break;
                 case 'week':
-                case 'instructor':
                     this.currentDate.setDate(this.currentDate.getDate() - 7);
                     break;
                 case 'month':
@@ -266,9 +259,6 @@
                         columns: this.buildWeekColumns(range.start),
                         showDayNames: true,
                     }));
-                    break;
-                case 'instructor':
-                    wrapper.appendChild(this.renderInstructorView(range.start));
                     break;
                 case 'month':
                 default:
@@ -380,48 +370,6 @@
 
             container.appendChild(body);
             return container;
-        }
-
-        renderInstructorView(start) {
-            const wrapper = buildElement('div', 'planner-instructor');
-            const activeInstructorIds = this.activeInstructorIds();
-            const weekStart = startOfWeek(start);
-            this.instructors
-                .filter((instructor) =>
-                    !activeInstructorIds.length || activeInstructorIds.includes(Number(instructor.id)),
-                )
-                .forEach((instructor) => {
-                    const section = buildElement('section', 'planner-instructor__section');
-                    section.appendChild(
-                        buildElement(
-                            'header',
-                            'planner-instructor__header',
-                            `<div class="planner-instructor__title">${instructor.name}</div>` +
-                                `<div class="planner-instructor__subtitle">${formatDateRange(
-                                    weekStart,
-                                    addMinutes(endOfWeek(weekStart), -1),
-                                )}</div>`,
-                        ),
-                    );
-                    const columns = [];
-                    for (let i = 0; i < 7; i += 1) {
-                        const date = new Date(weekStart.getTime() + i * 86400000);
-                        columns.push(this.buildColumnData(date, instructor.id));
-                    }
-                    section.appendChild(
-                        this.renderTimeGrid({
-                            columns,
-                            showDayNames: true,
-                        }),
-                    );
-                    wrapper.appendChild(section);
-                });
-            if (!wrapper.childElementCount) {
-                wrapper.appendChild(
-                    buildElement('p', 'planner-empty', 'Geen instructeurs geselecteerd voor deze periode.'),
-                );
-            }
-            return wrapper;
         }
 
         renderMonthView(start, end) {
@@ -913,8 +861,6 @@
         const planner = new PlannerCalendar(calendarElement, {
             initialView: config.initialView || 'timeGridWeek',
             initialDate: config.initialDate || new Date().toISOString(),
-            instructors: config.instructors || [],
-            activeInstructorIds: getActiveInstructorIds,
             onSelect: handleSelect,
             onEventClick: ({ event }) => openModalForEvent(event),
             onEventMove: handleEventMove,
@@ -961,6 +907,7 @@
 
         function handleRangeChange() {
             updateRangeLabel();
+            updateViewButtons();
             refreshEvents();
         }
 
@@ -1099,7 +1046,7 @@
 
         async function saveEvent(eventId, payload) {
             const url = eventId ? `/events/${eventId}` : '/events';
-            const method = eventId ? 'PUT' : 'POST';
+            const method = eventId ? 'PATCH' : 'POST';
             return fetchJson(url, {
                 method,
                 headers: {
@@ -1127,7 +1074,7 @@
             if (initial) {
                 params.set('initial', '1');
             }
-            return fetchJson(`/students?${params.toString()}`);
+            return fetchJson(`/students/search?${params.toString()}`);
         }
 
         function renderStudentResults(students) {
@@ -1324,22 +1271,26 @@
             });
         });
 
+        function updateViewButtons() {
+            const activeType = planner.getViewInfo().type;
+            document.querySelectorAll('[data-calendar-view]').forEach((button) => {
+                const isActive = button.dataset.calendarView === activeType;
+                ['bg-white', 'text-sky-600', 'shadow-sm'].forEach((klass) => {
+                    button.classList.toggle(klass, isActive);
+                });
+                button.classList.toggle('text-slate-500', !isActive);
+            });
+        }
+
         document.querySelectorAll('[data-calendar-view]').forEach((button) => {
             button.addEventListener('click', () => {
                 const view = button.dataset.calendarView;
                 planner.changeView(view);
-                document.querySelectorAll('[data-calendar-view]').forEach((other) => {
-                    other.classList.toggle('bg-white text-sky-600 shadow-sm', other === button);
-                    other.classList.toggle('text-slate-500', other !== button);
-                });
-                button.classList.add('bg-white', 'text-sky-600', 'shadow-sm');
+                updateViewButtons();
             });
         });
 
-        const initialViewButton = document.querySelector(
-            `[data-calendar-view="${planner.getViewInfo().type}"]`,
-        );
-        initialViewButton?.classList.add('bg-white', 'text-sky-600', 'shadow-sm');
+        updateViewButtons();
 
         function updateFilterButton(button, active) {
             button.dataset.active = active ? 'true' : 'false';
