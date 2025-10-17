@@ -173,6 +173,35 @@
         return text.charAt(0).toUpperCase() + text.slice(1);
     }
 
+    function escapeHtml(value) {
+        if (value === null || value === undefined) {
+            return '';
+        }
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function normalisePhoneForTel(value = '') {
+        return value.replace(/[^0-9+]/g, '');
+    }
+
+    function buildContactSummaryHtml(email, phone) {
+        const safeEmail = email ? escapeHtml(email) : null;
+        const safePhone = phone ? escapeHtml(phone) : null;
+        const emailLink = safeEmail
+            ? `<a href="mailto:${encodeURIComponent(email)}" class="text-sky-600 hover:underline">${safeEmail}</a>`
+            : 'Geen e-mail';
+        const normalisedPhone = phone ? normalisePhoneForTel(phone) : '';
+        const phoneLink = normalisedPhone
+            ? `<a href="tel:${normalisedPhone}" class="text-sky-600 hover:underline">${safePhone}</a>`
+            : 'Geen telefoon';
+        return `${emailLink} • ${phoneLink}`;
+    }
+
     function formatWeekday(date) {
         return capitalize(WEEKDAY_FORMATTER.format(date));
     }
@@ -1203,7 +1232,7 @@
                     linkId: 'phone-link',
                     toggleId: 'toggle-phone-edit',
                     emptyLabel: 'Geen telefoonnummer',
-                    hrefFormatter: (value) => `tel:${value.replace(/[^0-9+]/g, '')}`,
+                    hrefFormatter: (value) => `tel:${normalisePhoneForTel(value)}`,
                 }),
                 guardianEmail: createContactEditor({
                     inputId: 'guardian_email',
@@ -1219,7 +1248,7 @@
                     linkId: 'guardian-phone-link',
                     toggleId: 'toggle-guardian-phone-edit',
                     emptyLabel: 'Geen voogd telefoon',
-                    hrefFormatter: (value) => `tel:${value.replace(/[^0-9+]/g, '')}`,
+                    hrefFormatter: (value) => `tel:${normalisePhoneForTel(value)}`,
                 }),
             };
         }
@@ -1387,10 +1416,8 @@
             studentIdInput.value = student.id;
             selectedStudent.classList.remove('hidden');
             selectedStudentDetails.innerHTML = `
-                <h4 class="text-sm font-semibold text-slate-900">${student.full_name}</h4>
-                <p class="text-xs text-slate-500">${student.email || 'Geen e-mail'} • ${
-                    student.phone || 'Geen telefoon'
-                }</p>
+                <h4 class="text-sm font-semibold text-slate-900">${escapeHtml(student.full_name)}</h4>
+                <p class="text-xs text-slate-500">${buildContactSummaryHtml(student.email, student.phone)}</p>
             `;
             refreshSummary();
         }
@@ -1492,10 +1519,8 @@
                 const item = buildElement(
                     'li',
                     'cursor-pointer px-4 py-2 text-sm hover:bg-slate-100',
-                    `<div class="font-semibold text-slate-800">${student.full_name}</div>` +
-                        `<div class="text-xs text-slate-500">${student.email || 'Geen e-mail'} • ${
-                            student.phone || 'Geen telefoon'
-                        }</div>`,
+                    `<div class="font-semibold text-slate-800">${escapeHtml(student.full_name)}</div>` +
+                        `<div class="text-xs text-slate-500">${buildContactSummaryHtml(student.email, student.phone)}</div>`,
                 );
                 item.addEventListener('click', () => {
                     setSelectedStudent(student);
