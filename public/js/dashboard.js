@@ -516,12 +516,6 @@
                 }
                 header.appendChild(headerCell);
             });
-            header.appendChild(
-                buildElement(
-                    'div',
-                    'planner-time-grid__header-cell planner-time-grid__times-header planner-time-grid__times-header--trailing',
-                ),
-            );
             container.appendChild(header);
 
             const body = buildElement('div', 'planner-time-grid__body');
@@ -589,8 +583,6 @@
 
                 body.appendChild(columnElement);
             });
-
-            body.appendChild(buildTimesColumn('planner-time-grid__times--trailing'));
 
             container.appendChild(body);
             return container;

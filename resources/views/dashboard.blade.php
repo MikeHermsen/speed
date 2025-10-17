@@ -127,18 +127,22 @@
         .planner-time-grid {
             --planner-column-count: 1;
             --planner-column-min: 180px;
+            --planner-time-width: 72px;
         }
 
         .planner-time-grid__header {
             display: grid;
             grid-template-columns:
-                80px repeat(
+                var(--planner-time-width, 72px) repeat(
                     var(--planner-column-count, 1),
                     minmax(var(--planner-column-min, 180px), 1fr)
-                ) 80px;
+                );
             gap: 1rem;
             align-items: end;
-            min-width: calc(160px + var(--planner-column-count, 1) * var(--planner-column-min, 180px));
+            min-width: calc(
+                var(--planner-time-width, 72px) +
+                    var(--planner-column-count, 1) * var(--planner-column-min, 180px)
+            );
         }
 
         .planner-time-grid__header-cell {
@@ -176,11 +180,6 @@
             left: 0;
         }
 
-        .planner-time-grid__times-header--trailing {
-            justify-content: flex-start;
-            right: 0;
-        }
-
         .planner-time-grid__header-cell[data-weekend="true"] .planner-time-grid__header-label {
             background: linear-gradient(130deg, rgba(99, 102, 241, 0.12), rgba(14, 165, 233, 0.15));
         }
@@ -188,12 +187,15 @@
         .planner-time-grid__body {
             display: grid;
             grid-template-columns:
-                80px repeat(
+                var(--planner-time-width, 72px) repeat(
                     var(--planner-column-count, 1),
                     minmax(var(--planner-column-min, 180px), 1fr)
-                ) 80px;
+                );
             gap: 1rem;
-            min-width: calc(160px + var(--planner-column-count, 1) * var(--planner-column-min, 180px));
+            min-width: calc(
+                var(--planner-time-width, 72px) +
+                    var(--planner-column-count, 1) * var(--planner-column-min, 180px)
+            );
         }
 
         .planner-time-grid__times {
@@ -214,13 +216,6 @@
             box-shadow: inset -1px 0 0 rgba(226, 232, 240, 0.9);
         }
 
-        .planner-time-grid__times--trailing {
-            right: 0;
-            align-items: flex-start;
-            padding-left: 0.75rem;
-            box-shadow: inset 1px 0 0 rgba(226, 232, 240, 0.9);
-        }
-
         .planner-time-grid__time-label {
             display: flex;
             align-items: flex-start;
@@ -230,17 +225,6 @@
 
         .planner-time-grid__times--leading .planner-time-grid__time-label {
             padding-right: 0.75rem;
-        }
-
-        .planner-time-grid__times--trailing .planner-time-grid__time-label {
-            justify-content: flex-start;
-            padding-left: 0.75rem;
-        }
-
-        .planner-time-grid__times--trailing .planner-time-grid__time-label,
-        .planner-time-grid__times--trailing .planner-time-grid__time-label span {
-            width: 100%;
-            text-align: left;
         }
 
         .planner-time-grid__column {
@@ -409,7 +393,8 @@
 
         @media (max-width: 1024px) {
             .planner-time-grid {
-                --planner-column-min: 150px;
+                --planner-column-min: 140px;
+                --planner-time-width: 68px;
             }
 
             .planner-header {
@@ -431,7 +416,8 @@
 
         @media (max-width: 768px) {
             .planner-time-grid {
-                --planner-column-min: 135px;
+                --planner-column-min: 110px;
+                --planner-time-width: 64px;
             }
 
             .planner-event {
@@ -470,12 +456,19 @@
 
         @media (max-width: 640px) {
             .planner-time-grid {
-                --planner-column-min: 120px;
+                --planner-column-min: 0px;
+                --planner-time-width: 56px;
+            }
+
+            .planner-time-grid__header,
+            .planner-time-grid__body {
+                gap: 0.4rem;
+                min-width: 100%;
             }
 
             .planner-time-grid__column {
-                min-height: 52rem;
-                padding: 0.65rem;
+                min-height: 48rem;
+                padding: 0.6rem;
             }
 
             .planner-event__time {
@@ -488,7 +481,13 @@
 
             .planner-month__header,
             .planner-month__grid {
-                gap: 0.5rem;
+                gap: 0.4rem;
+                min-width: 100%;
+            }
+
+            .planner-month__cell {
+                padding: 0.75rem;
+                min-height: 120px;
             }
 
             #instructor-filter,
@@ -505,19 +504,25 @@
 
         @media (max-width: 480px) {
             .planner-time-grid {
-                --planner-column-min: 105px;
+                --planner-time-width: 48px;
             }
 
-            .planner-time-grid__header {
-                gap: 0.5rem;
-            }
-
+            .planner-time-grid__header,
             .planner-time-grid__body {
-                gap: 0.5rem;
+                gap: 0.3rem;
             }
 
             .planner-time-grid__column {
-                min-height: 48rem;
+                min-height: 44rem;
+            }
+
+            .planner-month__cell {
+                min-height: 110px;
+                padding: 0.65rem;
+            }
+
+            .planner-month__events {
+                gap: 0.25rem;
             }
         }
 
@@ -534,7 +539,8 @@
             display: grid;
             grid-template-columns: repeat(7, minmax(0, 1fr));
             gap: 0.75rem;
-            min-width: 980px;
+            width: 100%;
+            min-width: 100%;
         }
 
         .planner-month__header-cell {
