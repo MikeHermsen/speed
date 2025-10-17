@@ -771,13 +771,12 @@
         const summaryInstructor = document.getElementById('summary-instructor');
         const summaryStatus = document.getElementById('summary-status');
         const summaryLocation = document.getElementById('summary-location');
+        const quickCreateButton = document.getElementById('quick-create-event');
         const openStudentButtons = document.querySelectorAll('[data-open-student-modal]');
         const closeModalButtons = modal.querySelectorAll('[data-close-modal]');
         const closeStudentButtons = studentModal.querySelectorAll('[data-close-student-modal]');
         const notifyStudentEmailInput = document.getElementById('notify-student-email');
         const notifyStudentPhoneInput = document.getElementById('notify-student-phone');
-        const notifyParentEmailInput = document.getElementById('notify-parent-email');
-        const notifyParentPhoneInput = document.getElementById('notify-parent-phone');
         const notifyGuardianEmailInput = document.getElementById('notify-guardian-email');
         const notifyGuardianPhoneInput = document.getElementById('notify-guardian-phone');
         const hasGuardianInput = document.getElementById('has_guardian');
@@ -853,22 +852,6 @@
                     linkId: 'phone-link',
                     toggleId: 'toggle-phone-edit',
                     emptyLabel: 'Geen telefoonnummer',
-                    hrefFormatter: (value) => `tel:${value.replace(/[^0-9+]/g, '')}`,
-                }),
-                parentEmail: createContactEditor({
-                    inputId: 'parent_email',
-                    displayId: 'parent-email-display',
-                    linkId: 'parent-email-link',
-                    toggleId: 'toggle-parent-email-edit',
-                    emptyLabel: 'Geen ouder e-mail',
-                    hrefFormatter: (value) => `mailto:${value}`,
-                }),
-                parentPhone: createContactEditor({
-                    inputId: 'parent_phone',
-                    displayId: 'parent-phone-display',
-                    linkId: 'parent-phone-link',
-                    toggleId: 'toggle-parent-phone-edit',
-                    emptyLabel: 'Geen ouder telefoon',
                     hrefFormatter: (value) => `tel:${value.replace(/[^0-9+]/g, '')}`,
                 }),
                 guardianEmail: createContactEditor({
@@ -1008,6 +991,29 @@
         closeModalButtons.forEach((button) => button.addEventListener('click', closeModal));
         closeStudentButtons.forEach((button) => button.addEventListener('click', closeStudentModal));
         openStudentButtons.forEach((button) => button.addEventListener('click', openStudentModal));
+        quickCreateButton?.addEventListener('click', () => {
+            modalTitle.textContent = 'Nieuwe afspraak';
+            const now = new Date();
+            now.setMinutes(Math.ceil(now.getMinutes() / 30) * 30, 0, 0);
+            const end = new Date(now.getTime() + 60 * 60 * 1000);
+            setSelectedStudent(null);
+            populateEventForm({
+                start: now,
+                end,
+                status: 'les',
+                notify_student_email: true,
+                notify_student_phone: true,
+            });
+            if (config.userRole === 'admin' && instructorSelect) {
+                const active = getActiveInstructorIds();
+                if (active.length === 1) {
+                    instructorSelect.value = String(active[0]);
+                } else if (!instructorSelect.value && config.instructors?.length === 1) {
+                    instructorSelect.value = String(config.instructors[0].id);
+                }
+            }
+            openModal();
+        });
         function refreshSummary() {
             summaryStudent.textContent = selectedStudentData?.full_name ?? '-';
             summaryStatus.textContent = STATUS_CONFIG[statusSelect.value]?.label ?? statusSelect.value ?? '-';
@@ -1050,16 +1056,12 @@
             endInput.value = event?.end ? event.end.toISOString().slice(0, 16) : '';
             notifyStudentEmailInput.checked = Boolean(event?.notify_student_email ?? true);
             notifyStudentPhoneInput.checked = Boolean(event?.notify_student_phone ?? false);
-            notifyParentEmailInput.checked = Boolean(event?.notify_parent_email ?? false);
-            notifyParentPhoneInput.checked = Boolean(event?.notify_parent_phone ?? false);
             notifyGuardianEmailInput.checked = Boolean(event?.notify_guardian_email ?? false);
             notifyGuardianPhoneInput.checked = Boolean(event?.notify_guardian_phone ?? false);
             hasGuardianInput.checked = Boolean(event?.has_guardian ?? false);
             updateGuardianVisibility();
             contactEditors.studentEmail?.setValue(event?.email ?? '');
             contactEditors.studentPhone?.setValue(event?.phone ?? '');
-            contactEditors.parentEmail?.setValue(event?.parent_email ?? '');
-            contactEditors.parentPhone?.setValue(event?.parent_phone ?? '');
             contactEditors.guardianEmail?.setValue(event?.guardian_email ?? '');
             contactEditors.guardianPhone?.setValue(event?.guardian_phone ?? '');
             if (config.userRole === 'admin' && instructorSelect) {
@@ -1236,8 +1238,6 @@
                 description: descriptionInput.value || null,
                 email: contactEditors.studentEmail?.getValue() || null,
                 phone: contactEditors.studentPhone?.getValue() || null,
-                parent_email: contactEditors.parentEmail?.getValue() || null,
-                parent_phone: contactEditors.parentPhone?.getValue() || null,
                 has_guardian: hasGuardianInput.checked,
                 guardian_email: hasGuardianInput.checked
                     ? contactEditors.guardianEmail?.getValue() || null
@@ -1247,8 +1247,6 @@
                     : null,
                 notify_student_email: notifyStudentEmailInput.checked,
                 notify_student_phone: notifyStudentPhoneInput.checked,
-                notify_parent_email: notifyParentEmailInput.checked,
-                notify_parent_phone: notifyParentPhoneInput.checked,
                 notify_guardian_email: hasGuardianInput.checked ? notifyGuardianEmailInput.checked : false,
                 notify_guardian_phone: hasGuardianInput.checked ? notifyGuardianPhoneInput.checked : false,
             };
@@ -1285,15 +1283,11 @@
                 description: event.description,
                 email: event.email,
                 phone: event.phone,
-                parent_email: event.parent_email,
-                parent_phone: event.parent_phone,
                 has_guardian: event.has_guardian,
                 guardian_email: event.guardian_email,
                 guardian_phone: event.guardian_phone,
                 notify_student_email: event.notify_student_email,
                 notify_student_phone: event.notify_student_phone,
-                notify_parent_email: event.notify_parent_email,
-                notify_parent_phone: event.notify_parent_phone,
                 notify_guardian_email: event.notify_guardian_email,
                 notify_guardian_phone: event.notify_guardian_phone,
             };

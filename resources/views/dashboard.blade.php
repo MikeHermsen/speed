@@ -410,6 +410,13 @@
                             >
                                 Nieuwe leerling toevoegen
                             </button>
+                            <button
+                                type="button"
+                                id="quick-create-event"
+                                class="fancy-chip rounded-full bg-gradient-to-r from-emerald-500 to-green-600 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white shadow-lg shadow-emerald-200 transition hover:from-emerald-600 hover:to-green-700"
+                            >
+                                Afspraak plannen
+                            </button>
                         </div>
                         <div>
                             <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Datum bereik</p>
@@ -587,36 +594,7 @@
                                     </label>
                                 </div>
                             </div>
-                            <div class="grid gap-4 sm:grid-cols-2">
-                                <div>
-                                    <label class="block text-sm font-medium text-slate-700">E-mail ouder/verzorger</label>
-                                    <div class="mt-2 space-y-2">
-                                        <div id="parent-email-display" class="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                                            <a id="parent-email-link" href="#" data-empty-label="Geen e-mail" class="flex-1 truncate text-sm font-medium text-slate-400" target="_blank" rel="noopener">Geen e-mail</a>
-                                            <button type="button" id="toggle-parent-email-edit" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-sky-400 hover:text-sky-600">Bewerk</button>
-                                        </div>
-                                        <input id="parent_email" name="parent_email" type="email" class="hidden w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
-                                    </div>
-                                    <label class="mt-2 flex items-center gap-2 text-xs font-medium text-slate-600">
-                                        <input id="notify-parent-email" name="notify_parent_email" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
-                                        <span>Ouder ontvangt e-mails</span>
-                                    </label>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-slate-700">Telefoon ouder/verzorger</label>
-                                    <div class="mt-2 space-y-2">
-                                        <div id="parent-phone-display" class="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                                            <a id="parent-phone-link" href="#" data-empty-label="Geen telefoon" class="flex-1 truncate text-sm font-medium text-slate-400">Geen telefoon</a>
-                                            <button type="button" id="toggle-parent-phone-edit" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-sky-400 hover:text-sky-600">Bewerk</button>
-                                        </div>
-                                        <input id="parent_phone" name="parent_phone" type="tel" class="hidden w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
-                                    </div>
-                                    <label class="mt-2 flex items-center gap-2 text-xs font-medium text-slate-600">
-                                        <input id="notify-parent-phone" name="notify_parent_phone" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
-                                        <span>Ouder ontvangt telefoontjes</span>
-                                    </label>
-                                </div>
-                            </div>
+                            <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Contactvoorkeuren</p>
                             <div class="pt-2">
                                 <label class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
                                     <input id="has_guardian" name="has_guardian" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
@@ -749,16 +727,6 @@
                         <input id="student_package" name="package" type="text" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
                     </div>
                 </div>
-                <div class="grid gap-4 sm:grid-cols-2">
-                    <div>
-                        <label for="student_parent_email" class="block text-sm font-medium text-slate-700">E-mail ouder/verzorger</label>
-                        <input id="student_parent_email" name="parent_email" type="email" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
-                    </div>
-                    <div>
-                        <label for="student_parent_phone" class="block text-sm font-medium text-slate-700">Telefoon ouder/verzorger</label>
-                        <input id="student_parent_phone" name="parent_phone" type="tel" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
-                    </div>
-                </div>
                 <div class="pt-2">
                     <label class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
                         <input id="student_has_guardian" name="has_guardian" type="checkbox" value="1" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
@@ -783,14 +751,6 @@
                     <label class="flex items-center gap-2">
                         <input type="checkbox" name="notify_student_phone" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" checked />
                         <span>Student telefoon</span>
-                    </label>
-                    <label class="flex items-center gap-2">
-                        <input type="checkbox" name="notify_parent_email" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
-                        <span>Ouder e-mail</span>
-                    </label>
-                    <label class="flex items-center gap-2">
-                        <input type="checkbox" name="notify_parent_phone" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
-                        <span>Ouder telefoon</span>
                     </label>
                     <label class="flex items-center gap-2 hidden" data-student-guardian-pref>
                         <input type="checkbox" id="student_notify_guardian_email" name="notify_guardian_email" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />

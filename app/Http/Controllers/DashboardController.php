@@ -27,6 +27,7 @@ class DashboardController extends Controller
                 'csrfToken' => csrf_token(),
                 'userRole' => $user->role,
                 'instructors' => $instructorOptions,
+                'statuses' => ['les', 'proefles', 'examen', 'ziek'],
             ],
         ]);
     }

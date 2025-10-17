@@ -33,8 +33,6 @@ class StudentController extends Controller
                         ->orWhere('last_name', 'like', "%{$query}%")
                         ->orWhere('email', 'like', "%{$query}%")
                         ->orWhere('phone', 'like', "%{$query}%")
-                        ->orWhere('parent_email', 'like', "%{$query}%")
-                        ->orWhere('parent_phone', 'like', "%{$query}%")
                         ->orWhere('guardian_email', 'like', "%{$query}%")
                         ->orWhere('guardian_phone', 'like', "%{$query}%");
                 });
@@ -47,8 +45,6 @@ class StudentController extends Controller
                         ->orWhereRaw($this->normalizedColumn('last_name') . ' LIKE ?', [$like])
                         ->orWhereRaw($this->normalizedColumn('email') . ' LIKE ?', [$like])
                         ->orWhereRaw($this->normalizedColumn('phone') . ' LIKE ?', [$like])
-                        ->orWhereRaw($this->normalizedColumn('parent_email') . ' LIKE ?', [$like])
-                        ->orWhereRaw($this->normalizedColumn('parent_phone') . ' LIKE ?', [$like])
                         ->orWhereRaw($this->normalizedColumn('guardian_email') . ' LIKE ?', [$like])
                         ->orWhereRaw($this->normalizedColumn('guardian_phone') . ' LIKE ?', [$like]);
                 }
@@ -62,8 +58,6 @@ class StudentController extends Controller
                             ->orWhereRaw($this->normalizedColumn("CONCAT(last_name, first_name)") . ' LIKE ?', [$tokenLike])
                             ->orWhereRaw($this->normalizedColumn('email') . ' LIKE ?', [$tokenLike])
                             ->orWhereRaw($this->normalizedColumn('phone') . ' LIKE ?', [$tokenLike])
-                            ->orWhereRaw($this->normalizedColumn('parent_email') . ' LIKE ?', [$tokenLike])
-                            ->orWhereRaw($this->normalizedColumn('parent_phone') . ' LIKE ?', [$tokenLike])
                             ->orWhereRaw($this->normalizedColumn('guardian_email') . ' LIKE ?', [$tokenLike])
                             ->orWhereRaw($this->normalizedColumn('guardian_phone') . ' LIKE ?', [$tokenLike]);
                     });
@@ -103,16 +97,12 @@ class StudentController extends Controller
             'birth_date' => ['nullable', 'date'],
             'email' => ['nullable', 'email', 'max:255', Rule::unique('students', 'email')],
             'phone' => ['nullable', 'string', 'max:255'],
-            'parent_email' => ['nullable', 'email', 'max:255'],
-            'parent_phone' => ['nullable', 'string', 'max:255'],
             'has_guardian' => ['nullable', 'boolean'],
             'guardian_email' => ['nullable', 'email', 'max:255'],
             'guardian_phone' => ['nullable', 'string', 'max:255'],
             'notify_student_email' => ['nullable', 'boolean'],
-            'notify_parent_email' => ['nullable', 'boolean'],
             'notify_guardian_email' => ['nullable', 'boolean'],
             'notify_student_phone' => ['nullable', 'boolean'],
-            'notify_parent_phone' => ['nullable', 'boolean'],
             'notify_guardian_phone' => ['nullable', 'boolean'],
             'package' => ['nullable', 'string', 'max:255'],
             'vehicle' => ['nullable', 'string', 'max:255'],
@@ -125,26 +115,18 @@ class StudentController extends Controller
             'birth_date' => $data['birth_date'] ?? null,
             'email' => $data['email'] ?? null,
             'phone' => $data['phone'] ?? null,
-            'parent_email' => $data['parent_email'] ?? null,
-            'parent_phone' => $data['parent_phone'] ?? null,
             'has_guardian' => array_key_exists('has_guardian', $data) ? (bool) $data['has_guardian'] : false,
             'guardian_email' => $data['guardian_email'] ?? null,
             'guardian_phone' => $data['guardian_phone'] ?? null,
             'notify_student_email' => array_key_exists('notify_student_email', $data)
                 ? (bool) $data['notify_student_email']
                 : true,
-            'notify_parent_email' => array_key_exists('notify_parent_email', $data)
-                ? (bool) $data['notify_parent_email']
-                : false,
             'notify_guardian_email' => array_key_exists('notify_guardian_email', $data)
                 ? (bool) $data['notify_guardian_email']
                 : false,
             'notify_student_phone' => array_key_exists('notify_student_phone', $data)
                 ? (bool) $data['notify_student_phone']
                 : true,
-            'notify_parent_phone' => array_key_exists('notify_parent_phone', $data)
-                ? (bool) $data['notify_parent_phone']
-                : false,
             'notify_guardian_phone' => array_key_exists('notify_guardian_phone', $data)
                 ? (bool) $data['notify_guardian_phone']
                 : false,
@@ -173,16 +155,12 @@ class StudentController extends Controller
             'birth_date' => $student->birth_date?->toDateString(),
             'email' => $student->email,
             'phone' => $student->phone,
-            'parent_email' => $student->parent_email,
-            'parent_phone' => $student->parent_phone,
             'has_guardian' => $student->has_guardian,
             'guardian_email' => $student->guardian_email,
             'guardian_phone' => $student->guardian_phone,
             'notify_student_email' => $student->notify_student_email,
-            'notify_parent_email' => $student->notify_parent_email,
             'notify_guardian_email' => $student->notify_guardian_email,
             'notify_student_phone' => $student->notify_student_phone,
-            'notify_parent_phone' => $student->notify_parent_phone,
             'notify_guardian_phone' => $student->notify_guardian_phone,
             'package' => $student->package,
             'vehicle' => $student->vehicle,
@@ -205,8 +183,6 @@ class StudentController extends Controller
             trim($student->last_name . ' ' . $student->first_name),
             $student->email,
             $student->phone,
-            $student->parent_email,
-            $student->parent_phone,
             $student->guardian_email,
             $student->guardian_phone,
             $student->birth_date?->format('Y-m-d'),
@@ -251,10 +227,8 @@ class StudentController extends Controller
             $this->normalizeValue($student->full_name) => 0,
             $this->normalizeValue($student->email) => 2,
             $this->normalizeValue($student->phone) => 4,
-            $this->normalizeValue($student->parent_email) => 6,
-            $this->normalizeValue($student->parent_phone) => 8,
-            $this->normalizeValue($student->guardian_email) => 10,
-            $this->normalizeValue($student->guardian_phone) => 12,
+            $this->normalizeValue($student->guardian_email) => 6,
+            $this->normalizeValue($student->guardian_phone) => 8,
             optional($student->birth_date)->format('dmY') => 3,
         ];
 
