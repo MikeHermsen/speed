@@ -15,12 +15,19 @@ class DashboardController extends Controller
             ? User::instructors()->orderBy('name')->get()
             : collect([$user]);
 
+        $instructorOptions = $instructors->map(fn ($instructor) => [
+            'id' => $instructor->id,
+            'name' => $instructor->name,
+        ])->values();
+
         return view('dashboard', [
             'user' => $user,
-            'instructors' => $instructors->map(fn ($instructor) => [
-                'id' => $instructor->id,
-                'name' => $instructor->name,
-            ])->values(),
+            'instructors' => $instructorOptions,
+            'planningConfig' => [
+                'csrfToken' => csrf_token(),
+                'userRole' => $user->role,
+                'instructors' => $instructorOptions,
+            ],
         ]);
     }
 }

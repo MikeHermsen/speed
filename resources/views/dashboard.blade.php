@@ -155,11 +155,7 @@
                     <div
                         id="calendar"
                         class="min-h-[700px]"
-                        data-planning-config="@json([
-                            'csrfToken' => csrf_token(),
-                            'userRole' => $user->role,
-                            'instructors' => $instructors,
-                        ])"
+                        data-planning-config='{{ e(json_encode($planningConfig, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) }}'
                     ></div>
                 </div>
                 <p
