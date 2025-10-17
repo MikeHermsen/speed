@@ -455,9 +455,102 @@
         }
 
         @media (max-width: 640px) {
+            .planner-header {
+                gap: 0.75rem;
+                align-items: stretch;
+            }
+
+            .planner-header > div:last-child {
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .planner-header form {
+                width: 100%;
+            }
+
+            .planner-header form button {
+                width: 100%;
+                padding-top: 0.55rem;
+                padding-bottom: 0.55rem;
+            }
+
+            .planner-toolbar {
+                flex-direction: row;
+                gap: 0.65rem;
+                overflow-x: auto;
+                padding-bottom: 0.25rem;
+                margin: 0 -0.75rem;
+                padding-left: 0.75rem;
+                padding-right: 0.75rem;
+                scroll-snap-type: x proximity;
+            }
+
+            .planner-toolbar::-webkit-scrollbar {
+                display: none;
+            }
+
+            .planner-toolbar > * {
+                width: auto;
+                flex-shrink: 0;
+                scroll-snap-align: start;
+            }
+
+            .planner-toolbar .filter-chip,
+            .planner-toolbar .fancy-chip {
+                font-size: 0.65rem;
+                padding: 0.4rem 0.75rem;
+            }
+
+            .planner-toolbar > div {
+                padding: 0.35rem 0.5rem;
+                border-radius: 9999px;
+            }
+
+            .planner-toolbar > div button {
+                font-size: 0.65rem;
+                padding: 0.35rem 0.6rem;
+            }
+
+            .planner-root {
+                padding: 1.25rem;
+                border-radius: 1.75rem;
+            }
+
+            .planner-root input,
+            .planner-root select,
+            .planner-root textarea {
+                padding: 0.55rem 0.75rem;
+                font-size: 0.85rem;
+                border-radius: 0.95rem;
+            }
+
+            .planner-root label {
+                font-size: 0.8rem;
+            }
+
+            .planner-root .text-xs {
+                font-size: 0.7rem;
+            }
+
+            .planner-root .text-sm {
+                font-size: 0.85rem;
+            }
+
+            .planner-root .gap-6 {
+                gap: 1.1rem;
+            }
+
+            .planner-root .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+                margin-top: 1.25rem;
+            }
+
             .planner-time-grid {
                 --planner-column-min: clamp(42px, 14vw, 80px);
                 --planner-time-width: 52px;
+                gap: 1rem;
             }
 
             .planner-time-grid__header,
@@ -467,16 +560,31 @@
             }
 
             .planner-time-grid__column {
-                min-height: 48rem;
-                padding: 0.55rem;
+                min-height: 44rem;
+                padding: 0.6rem;
+                border-radius: 1.25rem;
+            }
+
+            .planner-event {
+                padding: 0.65rem 0.75rem;
+                gap: 0.25rem;
+                border-radius: 0.95rem;
             }
 
             .planner-event__time {
-                font-size: 0.7rem;
+                font-size: 0.68rem;
             }
 
             .planner-event__title {
                 font-size: 0.85rem;
+            }
+
+            .planner-event__meta {
+                font-size: 0.75rem;
+            }
+
+            .planner-month {
+                gap: 0.75rem;
             }
 
             .planner-month__header,
@@ -488,6 +596,11 @@
             .planner-month__cell {
                 padding: 0.75rem;
                 min-height: 120px;
+                border-radius: 1.25rem;
+            }
+
+            .planner-month__events {
+                gap: 0.25rem;
             }
 
             #instructor-filter,
@@ -499,6 +612,24 @@
             #status-filter .filter-chip {
                 width: 100%;
                 justify-content: center;
+            }
+
+            .planner-modal {
+                padding: 1rem;
+            }
+
+            .planner-modal__panel {
+                margin: 1.5rem auto;
+                padding: 1.5rem;
+                border-radius: 1.5rem;
+            }
+
+            .planner-modal__panel input,
+            .planner-modal__panel select,
+            .planner-modal__panel textarea {
+                padding: 0.55rem 0.75rem;
+                font-size: 0.85rem;
+                border-radius: 0.95rem;
             }
         }
 
@@ -678,16 +809,17 @@
 <x-layouts.app title="Planning">
     <div class="flex min-h-screen flex-col">
         <header class="sticky top-0 z-10 border-b border-slate-200 bg-white/90 backdrop-blur">
-            <div class="planner-header mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
+            <div class="planner-header mx-auto flex w-full max-w-6xl items-center justify-between px-3 py-2.5 sm:px-5 sm:py-3 lg:px-6 lg:py-4">
                 <div>
-                    <h1 class="text-xl font-semibold text-slate-900">Planningsoverzicht</h1>
+                    <h1 class="text-lg font-semibold text-slate-900 sm:text-xl">Planningsoverzicht</h1>
                     <p class="text-sm text-slate-500">Beheer afspraken met een Google Agenda-achtige ervaring.</p>
                 </div>
-                <div class="flex items-center gap-4">
+                <div class="flex items-center gap-3 sm:gap-4">
                     <span class="hidden text-sm text-slate-600 sm:block">Ingelogd als <strong>{{ $user->name }}</strong> ({{ $user->role }})</span>
+                    <span class="text-xs text-slate-500 sm:hidden">{{ $user->name }} · {{ $user->role }}</span>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <button type="submit" class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:border-sky-400 hover:text-sky-600">
+                        <button type="submit" class="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:border-sky-400 hover:text-sky-600 sm:px-4">
                             Uitloggen
                         </button>
                     </form>
@@ -695,17 +827,17 @@
             </div>
         </header>
 
-        <main class="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
-            <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl">
-                <div class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-                    <div class="flex flex-col gap-4">
-                        <div class="planner-toolbar flex flex-wrap items-center gap-3">
-                            <div class="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm">
-                                <button type="button" class="rounded-full bg-gradient-to-r from-sky-500 to-blue-600 px-3 py-1 text-xs font-semibold text-white shadow-sm transition hover:from-sky-600 hover:to-blue-700" data-calendar-nav="prev">Vorige</button>
-                                <button type="button" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 transition hover:border-sky-400 hover:text-sky-600" data-calendar-nav="today">Vandaag</button>
-                                <button type="button" class="rounded-full bg-gradient-to-r from-sky-500 to-blue-600 px-3 py-1 text-xs font-semibold text-white shadow-sm transition hover:from-sky-600 hover:to-blue-700" data-calendar-nav="next">Volgende</button>
+        <main class="mx-auto w-full max-w-6xl flex-1 px-3 py-6 sm:px-6 sm:py-8 lg:px-8">
+            <div class="planner-root rounded-3xl border border-slate-200 bg-white p-4 shadow-xl sm:p-6">
+                <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between sm:gap-6">
+                    <div class="flex flex-col gap-3 sm:gap-4">
+                        <div class="planner-toolbar flex flex-wrap items-center gap-2.5 sm:gap-3">
+                            <div class="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 shadow-sm sm:text-sm">
+                                <button type="button" class="rounded-full bg-gradient-to-r from-sky-500 to-blue-600 px-3 py-1 text-[0.65rem] font-semibold text-white shadow-sm transition hover:from-sky-600 hover:to-blue-700 sm:text-xs" data-calendar-nav="prev">Vorige</button>
+                                <button type="button" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-[0.65rem] font-semibold text-slate-700 transition hover:border-sky-400 hover:text-sky-600 sm:text-xs" data-calendar-nav="today">Vandaag</button>
+                                <button type="button" class="rounded-full bg-gradient-to-r from-sky-500 to-blue-600 px-3 py-1 text-[0.65rem] font-semibold text-white shadow-sm transition hover:from-sky-600 hover:to-blue-700 sm:text-xs" data-calendar-nav="next">Volgende</button>
                             </div>
-                            <div class="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-2 text-xs font-medium uppercase tracking-wide text-slate-500">
+                            <div class="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-2 text-[0.65rem] font-medium uppercase tracking-wide text-slate-500 sm:text-xs">
                                 <button type="button" class="rounded-full px-3 py-1 transition" data-calendar-view="timeGridDay">Dag</button>
                                 <button type="button" class="rounded-full px-3 py-1 transition" data-calendar-view="timeGridWeek">Week</button>
                                 <button type="button" class="rounded-full px-3 py-1 transition" data-calendar-view="dayGridMonth">Maand</button>
@@ -713,14 +845,14 @@
                             <button
                                 type="button"
                                 data-open-student-modal
-                                class="fancy-chip rounded-full bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-sky-600 shadow-lg shadow-sky-100 transition hover:text-sky-700"
+                                class="fancy-chip rounded-full bg-white/80 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-sky-600 shadow-lg shadow-sky-100 transition hover:text-sky-700 sm:px-4"
                             >
                                 Nieuwe leerling toevoegen
                             </button>
                             <button
                                 type="button"
                                 id="quick-create-event"
-                                class="fancy-chip rounded-full bg-gradient-to-r from-emerald-500 to-green-600 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white shadow-lg shadow-emerald-200 transition hover:from-emerald-600 hover:to-green-700"
+                                class="fancy-chip rounded-full bg-gradient-to-r from-emerald-500 to-green-600 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-white shadow-lg shadow-emerald-200 transition hover:from-emerald-600 hover:to-green-700 sm:px-4"
                             >
                                 Afspraak plannen
                             </button>
@@ -736,7 +868,7 @@
                             <span class="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1"><span class="h-2.5 w-2.5 rounded-full bg-rose-400"></span>Ziek</span>
                         </div>
                     </div>
-                    <div class="flex w-full flex-col gap-4 lg:w-80">
+                    <div class="flex w-full flex-col gap-3 sm:gap-4 lg:w-80">
                         @if ($user->isAdmin())
                             <div>
                                 <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Instructeurs filteren</p>
@@ -777,7 +909,7 @@
                 </div>
                 <p
                     id="calendar-error"
-                    class="mt-4 hidden rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
+                    class="mt-4 hidden rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2.5 sm:px-4 sm:py-3 text-sm text-rose-700"
                 >
                     Kon afspraken niet laden. Vernieuw de pagina of probeer het later opnieuw.
                 </p>
@@ -812,7 +944,7 @@
                         @if ($user->isAdmin())
                             <div>
                                 <label for="instructor_id" class="block text-sm font-medium text-slate-700">Instructeur</label>
-                                <select id="instructor_id" name="instructor_id" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200">
+                                <select id="instructor_id" name="instructor_id" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 sm:px-4 sm:py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200">
                                     <option value="">Selecteer instructeur</option>
                                     @foreach ($instructors as $instructor)
                                         <option value="{{ $instructor['id'] }}">{{ $instructor['name'] }}</option>
@@ -830,7 +962,7 @@
                                 <input type="search" id="student-search" placeholder="Zoek op naam, e-mail of telefoon" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
                                 <div
                                     id="selected-student"
-                                    class="hidden cursor-pointer rounded-2xl border border-sky-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm transition hover:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-300"
+                                    class="hidden cursor-pointer rounded-2xl border border-sky-200 bg-white px-3 py-2.5 sm:px-4 sm:py-3 text-sm text-slate-700 shadow-sm transition hover:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-300"
                                     tabindex="0"
                                     role="button"
                                     aria-label="Geen leerling geselecteerd"
@@ -861,7 +993,7 @@
                         <div class="grid gap-4 sm:grid-cols-2">
                             <div>
                                 <label for="status" class="block text-sm font-medium text-slate-700">Status</label>
-                                <select id="status" name="status" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200">
+                                <select id="status" name="status" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 sm:px-4 sm:py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200">
                                     <option value="les">Les</option>
                                     <option value="proefles">Proefles</option>
                                     <option value="examen">Examen</option>
@@ -870,7 +1002,7 @@
                             </div>
                             <div>
                                 <label for="vehicle" class="block text-sm font-medium text-slate-700">Type voertuig</label>
-                                <select id="vehicle" name="vehicle" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200">
+                                <select id="vehicle" name="vehicle" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 sm:px-4 sm:py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200">
                                     <option value="">Selecteer type</option>
                                     <option value="Automaat auto">Automaat auto</option>
                                     <option value="Brommer">Brommer</option>
@@ -880,17 +1012,17 @@
                             </div>
                             <div>
                                 <label for="package" class="block text-sm font-medium text-slate-700">Pakket</label>
-                                <input id="package" name="package" type="text" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                                <input id="package" name="package" type="text" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 sm:px-4 sm:py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
                             </div>
                             <div>
                                 <label for="location" class="block text-sm font-medium text-slate-700">Exacte locatie</label>
-                                <input id="location" name="location" type="text" placeholder="Bijvoorbeeld: Stationsstraat 12, Utrecht" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                                <input id="location" name="location" type="text" placeholder="Bijvoorbeeld: Stationsstraat 12, Utrecht" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 sm:px-4 sm:py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
                             </div>
                         </div>
 
-                        <div class="space-y-6">
-                            <div class="grid gap-6 sm:grid-cols-2">
-                                <div class="space-y-3">
+                        <div class="space-y-5 sm:space-y-6">
+                            <div class="grid gap-4 sm:grid-cols-2 sm:gap-6">
+                                <div class="space-y-2.5 sm:space-y-3">
                                     <div class="flex items-center justify-between gap-3">
                                         <label class="block text-sm font-medium text-slate-700">E-mail leerling</label>
                                         <label class="flex items-center gap-2 text-xs font-medium text-slate-600">
@@ -899,14 +1031,14 @@
                                         </label>
                                     </div>
                                     <div class="space-y-2">
-                                        <div id="email-display" class="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                                        <div id="email-display" class="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 sm:px-4 sm:py-3">
                                             <a id="email-link" href="#" data-empty-label="Geen e-mail" class="flex-1 truncate text-sm font-medium text-slate-400" target="_blank" rel="noopener">Geen e-mail</a>
                                             <button type="button" id="toggle-email-edit" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-sky-400 hover:text-sky-600">Bewerk</button>
                                         </div>
-                                        <input id="email" name="email" type="email" class="hidden w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                                        <input id="email" name="email" type="email" class="hidden w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 sm:px-4 sm:py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
                                     </div>
                                 </div>
-                                <div class="space-y-3">
+                                <div class="space-y-2.5 sm:space-y-3">
                                     <div class="flex items-center justify-between gap-3">
                                         <label class="block text-sm font-medium text-slate-700">Telefoon leerling</label>
                                         <label class="flex items-center gap-2 text-xs font-medium text-slate-600">
@@ -915,21 +1047,21 @@
                                         </label>
                                     </div>
                                     <div class="space-y-2">
-                                        <div id="phone-display" class="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                                        <div id="phone-display" class="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 sm:px-4 sm:py-3">
                                             <a id="phone-link" href="#" data-empty-label="Geen telefoon" class="flex-1 truncate text-sm font-medium text-slate-400">Geen telefoon</a>
                                             <button type="button" id="toggle-phone-edit" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-sky-400 hover:text-sky-600">Bewerk</button>
                                         </div>
-                                        <input id="phone" name="phone" type="tel" class="hidden w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                                        <input id="phone" name="phone" type="tel" class="hidden w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 sm:px-4 sm:py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
                                     </div>
                                 </div>
                             </div>
-                            <div class="pt-4 space-y-4">
+                            <div class="pt-3 space-y-4 sm:pt-4">
                                 <label class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
                                     <input id="has_guardian" name="has_guardian" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
                                     <span>Voogd-contact toevoegen</span>
                                 </label>
-                                <div id="guardian-section" class="hidden grid gap-6 sm:grid-cols-2">
-                                    <div class="space-y-3">
+                                <div id="guardian-section" class="hidden grid gap-4 sm:grid-cols-2 sm:gap-6">
+                                    <div class="space-y-2.5 sm:space-y-3">
                                         <div class="flex items-center justify-between gap-3">
                                             <label class="block text-sm font-medium text-slate-700">E-mail voogd</label>
                                             <label class="flex items-center gap-2 text-xs font-medium text-slate-600">
@@ -938,14 +1070,14 @@
                                             </label>
                                         </div>
                                         <div class="space-y-2">
-                                            <div id="guardian-email-display" class="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                                            <div id="guardian-email-display" class="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 sm:px-4 sm:py-3">
                                                 <a id="guardian-email-link" href="#" data-empty-label="Geen e-mail" class="flex-1 truncate text-sm font-medium text-slate-400" target="_blank" rel="noopener">Geen e-mail</a>
                                                 <button type="button" id="toggle-guardian-email-edit" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-sky-400 hover:text-sky-600">Bewerk</button>
                                             </div>
-                                            <input id="guardian_email" name="guardian_email" type="email" class="hidden w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                                            <input id="guardian_email" name="guardian_email" type="email" class="hidden w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 sm:px-4 sm:py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
                                         </div>
                                     </div>
-                                    <div class="space-y-3">
+                                    <div class="space-y-2.5 sm:space-y-3">
                                         <div class="flex items-center justify-between gap-3">
                                             <label class="block text-sm font-medium text-slate-700">Telefoon voogd</label>
                                             <label class="flex items-center gap-2 text-xs font-medium text-slate-600">
@@ -954,11 +1086,11 @@
                                             </label>
                                         </div>
                                         <div class="space-y-2">
-                                            <div id="guardian-phone-display" class="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                                            <div id="guardian-phone-display" class="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 sm:px-4 sm:py-3">
                                                 <a id="guardian-phone-link" href="#" data-empty-label="Geen telefoon" class="flex-1 truncate text-sm font-medium text-slate-400">Geen telefoon</a>
                                                 <button type="button" id="toggle-guardian-phone-edit" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-sky-400 hover:text-sky-600">Bewerk</button>
                                             </div>
-                                            <input id="guardian_phone" name="guardian_phone" type="tel" class="hidden w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                                            <input id="guardian_phone" name="guardian_phone" type="tel" class="hidden w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 sm:px-4 sm:py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
                                         </div>
                                     </div>
                                 </div>
@@ -967,13 +1099,13 @@
 
                         <div>
                             <label for="description" class="block text-sm font-medium text-slate-700">Omschrijving</label>
-                            <textarea id="description" name="description" rows="3" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200"></textarea>
+                            <textarea id="description" name="description" rows="3" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 sm:px-4 sm:py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200"></textarea>
                         </div>
                     </div>
-                    <div class="space-y-6">
-                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <div class="space-y-5 sm:space-y-6">
+                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-3.5 sm:p-4">
                             <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Tijd</p>
-                            <div class="mt-3 space-y-3">
+                            <div class="mt-2.5 space-y-3 sm:mt-3">
                                 <div>
                                     <label for="start_time" class="block text-xs font-medium text-slate-500">Start</label>
                                     <input id="start_time" name="start_time" type="datetime-local" step="900" class="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
@@ -986,7 +1118,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div class="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                     <button
                         type="button"
                         id="delete-student"
@@ -994,9 +1126,9 @@
                     >
                         Leerling verwijderen
                     </button>
-                    <div class="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:justify-end sm:gap-4">
-                        <button type="button" data-close-modal class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-slate-300">Annuleren</button>
-                    <button type="submit" class="rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-sky-200 transition hover:from-sky-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2">Opslaan</button>
+                    <div class="flex flex-1 flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-end sm:gap-4">
+                        <button type="button" data-close-modal class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 transition hover:border-slate-300 sm:w-auto sm:px-4">Annuleren</button>
+                        <button type="submit" class="w-full rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-sky-200 transition hover:from-sky-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2 sm:w-auto sm:px-5 sm:py-2">Opslaan</button>
                     </div>
                 </div>
             </form>
@@ -1007,7 +1139,7 @@
         id="student-modal"
         class="planner-modal fixed inset-0 z-50 hidden bg-slate-900/40 p-4 sm:flex sm:items-center sm:justify-center"
     >
-        <div class="planner-modal__panel w-full max-w-xl rounded-3xl bg-white p-6 shadow-2xl">
+        <div class="planner-modal__panel w-full max-w-xl rounded-3xl bg-white p-5 shadow-2xl sm:p-6">
             <div class="flex items-start justify-between gap-4">
                 <div>
                     <h3 class="text-lg font-semibold text-slate-900">Nieuwe leerling</h3>
@@ -1020,46 +1152,46 @@
                     </svg>
                 </button>
             </div>
-            <form id="student-form" class="mt-6 space-y-4">
+            <form id="student-form" class="mt-5 space-y-4 sm:mt-6">
                 @csrf
                 <div class="grid gap-4 sm:grid-cols-2">
                     <div>
                         <label for="student_first_name" class="block text-sm font-medium text-slate-700">Voornaam</label>
-                        <input id="student_first_name" name="first_name" type="text" required class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                        <input id="student_first_name" name="first_name" type="text" required class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 sm:px-4 sm:py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
                     </div>
                     <div>
                         <label for="student_last_name" class="block text-sm font-medium text-slate-700">Achternaam</label>
-                        <input id="student_last_name" name="last_name" type="text" required class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                        <input id="student_last_name" name="last_name" type="text" required class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 sm:px-4 sm:py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
                     </div>
                 </div>
                 <div class="grid gap-4 sm:grid-cols-2">
                     <div>
                         <label for="student_birth_date" class="block text-sm font-medium text-slate-700">Geboortedatum</label>
-                        <input id="student_birth_date" name="birth_date" type="date" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                        <input id="student_birth_date" name="birth_date" type="date" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 sm:px-4 sm:py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
                     </div>
                     <div>
                         <label for="student_location" class="block text-sm font-medium text-slate-700">Exacte locatie</label>
-                        <input id="student_location" name="location" type="text" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                        <input id="student_location" name="location" type="text" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 sm:px-4 sm:py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
                     </div>
                 </div>
                 <div class="grid gap-4 sm:grid-cols-2">
                     <div>
                         <label for="student_email" class="block text-sm font-medium text-slate-700">E-mail</label>
-                        <input id="student_email" name="email" type="email" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                        <input id="student_email" name="email" type="email" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 sm:px-4 sm:py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
                     </div>
                     <div>
                         <label for="student_phone" class="block text-sm font-medium text-slate-700">Telefoon</label>
-                        <input id="student_phone" name="phone" type="text" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                        <input id="student_phone" name="phone" type="text" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 sm:px-4 sm:py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
                     </div>
                 </div>
                 <div class="grid gap-4 sm:grid-cols-2">
                     <div>
                         <label for="student_vehicle" class="block text-sm font-medium text-slate-700">Voertuig</label>
-                        <input id="student_vehicle" name="vehicle" type="text" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                        <input id="student_vehicle" name="vehicle" type="text" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 sm:px-4 sm:py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
                     </div>
                     <div>
                         <label for="student_package" class="block text-sm font-medium text-slate-700">Pakket</label>
-                        <input id="student_package" name="package" type="text" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                        <input id="student_package" name="package" type="text" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 sm:px-4 sm:py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
                     </div>
                 </div>
                 <div class="pt-2">
@@ -1070,11 +1202,11 @@
                     <div id="student-guardian-fields" class="mt-3 hidden grid gap-4 sm:grid-cols-2">
                         <div>
                             <label for="student_guardian_email" class="block text-sm font-medium text-slate-700">E-mail voogd</label>
-                            <input id="student_guardian_email" name="guardian_email" type="email" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                            <input id="student_guardian_email" name="guardian_email" type="email" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 sm:px-4 sm:py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
                         </div>
                         <div>
                             <label for="student_guardian_phone" class="block text-sm font-medium text-slate-700">Telefoon voogd</label>
-                            <input id="student_guardian_phone" name="guardian_phone" type="tel" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                            <input id="student_guardian_phone" name="guardian_phone" type="tel" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 sm:px-4 sm:py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
                         </div>
                     </div>
                 </div>
