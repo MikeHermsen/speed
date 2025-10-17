@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Illuminate\Support\Carbon;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
@@ -28,6 +29,10 @@ class DashboardController extends Controller
                 'userRole' => $user->role,
                 'instructors' => $instructorOptions,
                 'statuses' => ['les', 'proefles', 'examen', 'ziek'],
+                'initialView' => 'dayGridMonth',
+                'initialDate' => Carbon::create(2025, 9, 1, 0, 0, 0, config('app.timezone'))->toIso8601String(),
+                'canManageStudents' => $user->isAdmin(),
+                'canCreateEvents' => $user->isAdmin() || $user->isInstructor(),
             ],
         ]);
     }

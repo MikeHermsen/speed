@@ -778,7 +778,7 @@
             }
 
             .planner-toolbar [data-open-student-modal],
-            .planner-toolbar #quick-create-event {
+            .planner-toolbar [data-quick-create-event] {
                 width: 100%;
                 display: flex;
                 align-items: center;
@@ -1081,14 +1081,18 @@
                                     class="rounded-full px-3 py-1 transition hover:bg-white hover:text-sky-600 hover:shadow-sm"
                                     data-calendar-view="dayGridMonth">Maand</button>
                             </div>
-                            <button type="button" data-open-student-modal
-                                class="fancy-chip rounded-full bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-sky-600 shadow-lg shadow-sky-100 transition hover:text-sky-700">
-                                Nieuwe leerling toevoegen
-                            </button>
-                            <button type="button" id="quick-create-event"
-                                class="fancy-chip rounded-full bg-gradient-to-r from-emerald-500 to-green-600 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white shadow-lg shadow-emerald-200 transition hover:from-emerald-600 hover:to-green-700">
-                                Afspraak plannen
-                            </button>
+                            @if ($user->isAdmin())
+                                <button type="button" data-open-student-modal
+                                    class="fancy-chip rounded-full bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-sky-600 shadow-lg shadow-sky-100 transition hover:text-sky-700">
+                                    Nieuwe leerling toevoegen
+                                </button>
+                            @endif
+                            @if ($user->isAdmin() || $user->isInstructor())
+                                <button type="button" data-quick-create-event
+                                    class="fancy-chip rounded-full bg-gradient-to-r from-emerald-500 to-green-600 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white shadow-lg shadow-emerald-200 transition hover:from-emerald-600 hover:to-green-700">
+                                    Afspraak plannen
+                                </button>
+                            @endif
                         </div>
                         <div>
                             <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Datum bereik</p>
@@ -1171,6 +1175,20 @@
                             class="rounded-full px-3 py-1 transition hover:bg-white hover:text-sky-600 hover:shadow-sm"
                             data-calendar-view="dayGridMonth">Maand</button>
                     </div>
+                    @if ($user->isAdmin() || $user->isInstructor())
+                        <div class="flex flex-col gap-2 sm:flex-row">
+                            @if ($user->isAdmin())
+                                <button type="button" data-open-student-modal
+                                    class="fancy-chip w-full rounded-full bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-sky-600 shadow-lg shadow-sky-100 transition hover:text-sky-700">
+                                    Nieuwe leerling toevoegen
+                                </button>
+                            @endif
+                            <button type="button" data-quick-create-event
+                                class="fancy-chip w-full rounded-full bg-gradient-to-r from-emerald-500 to-green-600 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white shadow-lg shadow-emerald-200 transition hover:from-emerald-600 hover:to-green-700">
+                                Afspraak plannen
+                            </button>
+                        </div>
+                    @endif
                 </div>
 
                 <div class="planner-calendar mt-6 overflow-hidden rounded-3xl">
@@ -1226,9 +1244,11 @@
                         <div>
                             <div class="flex items-center justify-between gap-3">
                                 <label class="block text-sm font-medium text-slate-700">Leerling zoeken</label>
-                                <button type="button" data-open-student-modal
-                                    class="text-xs font-semibold text-sky-600 transition hover:text-sky-700">Nieuwe
-                                    leerling</button>
+                                @if ($user->isAdmin())
+                                    <button type="button" data-open-student-modal
+                                        class="text-xs font-semibold text-sky-600 transition hover:text-sky-700">Nieuwe
+                                        leerling</button>
+                                @endif
                             </div>
                             <div class="mt-2 space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
                                 <input type="search" id="student-search"
@@ -1320,8 +1340,10 @@
                                             <a id="email-link" href="#" data-empty-label="Geen e-mail"
                                                 class="flex-1 truncate text-sm font-medium text-slate-400"
                                                 target="_blank" rel="noopener">Geen e-mail</a>
-                                            <button type="button" id="toggle-email-edit"
-                                                class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-sky-400 hover:text-sky-600">Bewerk</button>
+                                            @if ($user->isAdmin())
+                                                <button type="button" id="toggle-email-edit"
+                                                    class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-sky-400 hover:text-sky-600">Bewerk</button>
+                                            @endif
                                         </div>
                                         <input id="email" name="email" type="email"
                                             class="hidden w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
@@ -1345,8 +1367,10 @@
                                             <a id="phone-link" href="#" data-empty-label="Geen telefoon"
                                                 class="flex-1 truncate text-sm font-medium text-slate-400">Geen
                                                 telefoon</a>
-                                            <button type="button" id="toggle-phone-edit"
-                                                class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-sky-400 hover:text-sky-600">Bewerk</button>
+                                            @if ($user->isAdmin())
+                                                <button type="button" id="toggle-phone-edit"
+                                                    class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-sky-400 hover:text-sky-600">Bewerk</button>
+                                            @endif
                                         </div>
                                         <input id="phone" name="phone" type="tel"
                                             class="hidden w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
@@ -1379,8 +1403,10 @@
                                                     data-empty-label="Geen e-mail"
                                                     class="flex-1 truncate text-sm font-medium text-slate-400"
                                                     target="_blank" rel="noopener">Geen e-mail</a>
-                                                <button type="button" id="toggle-guardian-email-edit"
-                                                    class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-sky-400 hover:text-sky-600">Bewerk</button>
+                                                @if ($user->isAdmin())
+                                                    <button type="button" id="toggle-guardian-email-edit"
+                                                        class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-sky-400 hover:text-sky-600">Bewerk</button>
+                                                @endif
                                             </div>
                                             <input id="guardian_email" name="guardian_email" type="email"
                                                 class="hidden w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
@@ -1404,8 +1430,10 @@
                                                     data-empty-label="Geen telefoon"
                                                     class="flex-1 truncate text-sm font-medium text-slate-400">Geen
                                                     telefoon</a>
-                                                <button type="button" id="toggle-guardian-phone-edit"
-                                                    class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-sky-400 hover:text-sky-600">Bewerk</button>
+                                                @if ($user->isAdmin())
+                                                    <button type="button" id="toggle-guardian-phone-edit"
+                                                        class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-sky-400 hover:text-sky-600">Bewerk</button>
+                                                @endif
                                             </div>
                                             <input id="guardian_phone" name="guardian_phone" type="tel"
                                                 class="hidden w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
@@ -1443,10 +1471,12 @@
                     </div>
                 </div>
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <button type="button" id="delete-student"
-                        class="hidden rounded-xl border border-rose-200 bg-white px-4 py-2 text-sm font-semibold text-rose-600 shadow-sm transition hover:border-rose-300 hover:text-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-200">
-                        Leerling verwijderen
-                    </button>
+                    @if ($user->isAdmin())
+                        <button type="button" id="delete-student"
+                            class="hidden rounded-xl border border-rose-200 bg-white px-4 py-2 text-sm font-semibold text-rose-600 shadow-sm transition hover:border-rose-300 hover:text-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-200">
+                            Leerling verwijderen
+                        </button>
+                    @endif
                     <div class="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:justify-end sm:gap-4">
                         <button type="button" data-close-modal
                             class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-slate-300">Annuleren</button>
@@ -1458,131 +1488,134 @@
         </div>
     </div>
 
-    <div id="student-modal"
-        class="planner-modal fixed inset-0 z-50 hidden bg-slate-900/40 p-4 sm:flex sm:items-center sm:justify-center">
-        <div class="planner-modal__panel w-full max-w-xl rounded-3xl bg-white p-6 shadow-2xl">
-            <div class="flex items-start justify-between gap-4">
-                <div>
-                    <h3 class="text-lg font-semibold text-slate-900">Nieuwe leerling</h3>
-                    <p class="text-sm text-slate-500">Voeg een leerling toe om direct in te plannen.</p>
+    @if ($user->isAdmin())
+        <div id="student-modal"
+            class="planner-modal fixed inset-0 z-50 hidden bg-slate-900/40 p-4 sm:flex sm:items-center sm:justify-center">
+            <div class="planner-modal__panel w-full max-w-xl rounded-3xl bg-white p-6 shadow-2xl">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <h3 class="text-lg font-semibold text-slate-900">Nieuwe leerling</h3>
+                        <p class="text-sm text-slate-500">Voeg een leerling toe om direct in te plannen.</p>
+                    </div>
+                    <button type="button" class="rounded-full p-2 text-slate-400 transition hover:bg-slate-100"
+                        data-close-student-modal>
+                        <span class="sr-only">Sluiten</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                            class="h-5 w-5">
+                            <path fill-rule="evenodd"
+                                d="M10 8.586 4.757 3.343 3.343 4.757 8.586 10l-5.243 5.243 1.414 1.414L10 11.414l5.243 5.243 1.414-1.414L11.414 10l5.243-5.243-1.414-1.414z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </button>
                 </div>
-                <button type="button" class="rounded-full p-2 text-slate-400 transition hover:bg-slate-100"
-                    data-close-student-modal>
-                    <span class="sr-only">Sluiten</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5">
-                        <path fill-rule="evenodd"
-                            d="M10 8.586 4.757 3.343 3.343 4.757 8.586 10l-5.243 5.243 1.414 1.414L10 11.414l5.243 5.243 1.414-1.414L11.414 10l5.243-5.243-1.414-1.414z"
-                            clip-rule="evenodd" />
-                    </svg>
-                </button>
+                <form id="student-form" class="mt-6 space-y-4">
+                    @csrf
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div>
+                            <label for="student_first_name"
+                                class="block text-sm font-medium text-slate-700">Voornaam</label>
+                            <input id="student_first_name" name="first_name" type="text" required
+                                class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                        </div>
+                        <div>
+                            <label for="student_last_name"
+                                class="block text-sm font-medium text-slate-700">Achternaam</label>
+                            <input id="student_last_name" name="last_name" type="text" required
+                                class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                        </div>
+                    </div>
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div>
+                            <label for="student_birth_date"
+                                class="block text-sm font-medium text-slate-700">Geboortedatum</label>
+                            <input id="student_birth_date" name="birth_date" type="date"
+                                class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                        </div>
+                        <div>
+                            <label for="student_location" class="block text-sm font-medium text-slate-700">Exacte
+                                locatie</label>
+                            <input id="student_location" name="location" type="text"
+                                class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                        </div>
+                    </div>
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div>
+                            <label for="student_email" class="block text-sm font-medium text-slate-700">E-mail</label>
+                            <input id="student_email" name="email" type="email"
+                                class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                        </div>
+                        <div>
+                            <label for="student_phone" class="block text-sm font-medium text-slate-700">Telefoon</label>
+                            <input id="student_phone" name="phone" type="text"
+                                class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                        </div>
+                    </div>
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div>
+                            <label for="student_vehicle" class="block text-sm font-medium text-slate-700">Voertuig</label>
+                            <input id="student_vehicle" name="vehicle" type="text"
+                                class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                        </div>
+                        <div>
+                            <label for="student_package" class="block text-sm font-medium text-slate-700">Pakket</label>
+                            <input id="student_package" name="package" type="text"
+                                class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                        </div>
+                    </div>
+                    <div class="pt-2">
+                        <label
+                            class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                            <input id="student_has_guardian" name="has_guardian" type="checkbox" value="1"
+                                class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                            <span>Voogd-contact toevoegen</span>
+                        </label>
+                        <div id="student-guardian-fields" class="mt-3 hidden grid gap-4 sm:grid-cols-2">
+                            <div>
+                                <label for="student_guardian_email"
+                                    class="block text-sm font-medium text-slate-700">E-mail voogd</label>
+                                <input id="student_guardian_email" name="guardian_email" type="email"
+                                    class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                            </div>
+                            <div>
+                                <label for="student_guardian_phone"
+                                    class="block text-sm font-medium text-slate-700">Telefoon voogd</label>
+                                <input id="student_guardian_phone" name="guardian_phone" type="tel"
+                                    class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-4 text-xs font-medium text-slate-600">
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" name="notify_student_email"
+                                class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" checked />
+                            <span>Student e-mail</span>
+                        </label>
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" name="notify_student_phone"
+                                class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" checked />
+                            <span>Student telefoon</span>
+                        </label>
+                        <label class="flex items-center gap-2 hidden" data-student-guardian-pref>
+                            <input type="checkbox" id="student_notify_guardian_email" name="notify_guardian_email"
+                                class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                            <span>Voogd e-mail</span>
+                        </label>
+                        <label class="flex items-center gap-2 hidden" data-student-guardian-pref>
+                            <input type="checkbox" id="student_notify_guardian_phone" name="notify_guardian_phone"
+                                class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                            <span>Voogd telefoon</span>
+                        </label>
+                    </div>
+                    <div class="flex items-center justify-end gap-3">
+                        <button type="button" data-close-student-modal
+                            class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-slate-300">Annuleren</button>
+                        <button type="submit"
+                            class="rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-200 transition hover:from-emerald-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2">Opslaan</button>
+                    </div>
+                </form>
             </div>
-            <form id="student-form" class="mt-6 space-y-4">
-                @csrf
-                <div class="grid gap-4 sm:grid-cols-2">
-                    <div>
-                        <label for="student_first_name"
-                            class="block text-sm font-medium text-slate-700">Voornaam</label>
-                        <input id="student_first_name" name="first_name" type="text" required
-                            class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
-                    </div>
-                    <div>
-                        <label for="student_last_name"
-                            class="block text-sm font-medium text-slate-700">Achternaam</label>
-                        <input id="student_last_name" name="last_name" type="text" required
-                            class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
-                    </div>
-                </div>
-                <div class="grid gap-4 sm:grid-cols-2">
-                    <div>
-                        <label for="student_birth_date"
-                            class="block text-sm font-medium text-slate-700">Geboortedatum</label>
-                        <input id="student_birth_date" name="birth_date" type="date"
-                            class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
-                    </div>
-                    <div>
-                        <label for="student_location" class="block text-sm font-medium text-slate-700">Exacte
-                            locatie</label>
-                        <input id="student_location" name="location" type="text"
-                            class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
-                    </div>
-                </div>
-                <div class="grid gap-4 sm:grid-cols-2">
-                    <div>
-                        <label for="student_email" class="block text-sm font-medium text-slate-700">E-mail</label>
-                        <input id="student_email" name="email" type="email"
-                            class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
-                    </div>
-                    <div>
-                        <label for="student_phone" class="block text-sm font-medium text-slate-700">Telefoon</label>
-                        <input id="student_phone" name="phone" type="text"
-                            class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
-                    </div>
-                </div>
-                <div class="grid gap-4 sm:grid-cols-2">
-                    <div>
-                        <label for="student_vehicle" class="block text-sm font-medium text-slate-700">Voertuig</label>
-                        <input id="student_vehicle" name="vehicle" type="text"
-                            class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
-                    </div>
-                    <div>
-                        <label for="student_package" class="block text-sm font-medium text-slate-700">Pakket</label>
-                        <input id="student_package" name="package" type="text"
-                            class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
-                    </div>
-                </div>
-                <div class="pt-2">
-                    <label
-                        class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                        <input id="student_has_guardian" name="has_guardian" type="checkbox" value="1"
-                            class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
-                        <span>Voogd-contact toevoegen</span>
-                    </label>
-                    <div id="student-guardian-fields" class="mt-3 hidden grid gap-4 sm:grid-cols-2">
-                        <div>
-                            <label for="student_guardian_email"
-                                class="block text-sm font-medium text-slate-700">E-mail voogd</label>
-                            <input id="student_guardian_email" name="guardian_email" type="email"
-                                class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
-                        </div>
-                        <div>
-                            <label for="student_guardian_phone"
-                                class="block text-sm font-medium text-slate-700">Telefoon voogd</label>
-                            <input id="student_guardian_phone" name="guardian_phone" type="tel"
-                                class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
-                        </div>
-                    </div>
-                </div>
-                <div class="flex flex-wrap gap-4 text-xs font-medium text-slate-600">
-                    <label class="flex items-center gap-2">
-                        <input type="checkbox" name="notify_student_email"
-                            class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" checked />
-                        <span>Student e-mail</span>
-                    </label>
-                    <label class="flex items-center gap-2">
-                        <input type="checkbox" name="notify_student_phone"
-                            class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" checked />
-                        <span>Student telefoon</span>
-                    </label>
-                    <label class="flex items-center gap-2 hidden" data-student-guardian-pref>
-                        <input type="checkbox" id="student_notify_guardian_email" name="notify_guardian_email"
-                            class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
-                        <span>Voogd e-mail</span>
-                    </label>
-                    <label class="flex items-center gap-2 hidden" data-student-guardian-pref>
-                        <input type="checkbox" id="student_notify_guardian_phone" name="notify_guardian_phone"
-                            class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
-                        <span>Voogd telefoon</span>
-                    </label>
-                </div>
-                <div class="flex items-center justify-end gap-3">
-                    <button type="button" data-close-student-modal
-                        class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-slate-300">Annuleren</button>
-                    <button type="submit"
-                        class="rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-200 transition hover:from-emerald-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2">Opslaan</button>
-                </div>
-            </form>
         </div>
-    </div>
+    @endif
 
     @push('scripts')
         <script id="planning-config" type="application/json">

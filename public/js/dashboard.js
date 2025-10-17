@@ -615,6 +615,11 @@
             }
         }
 
+        const isAdmin = config.userRole === 'admin';
+        const isInstructor = config.userRole === 'instructeur';
+        const canManageStudents = Boolean(config.canManageStudents ?? isAdmin);
+        const canCreateEvents = Boolean(config.canCreateEvents ?? (isAdmin || isInstructor));
+
         const rangeLabel = document.getElementById('calendar-range');
         const calendarError = document.getElementById('calendar-error');
         const modal = document.getElementById('event-modal');
@@ -640,11 +645,11 @@
         const statusFilter = document.getElementById('status-filter');
         const studentDependentSections = document.querySelectorAll('[data-student-dependent]');
         const modalTitle = document.getElementById('event-modal-title');
-        const quickCreateButton = document.getElementById('quick-create-event');
+        const quickCreateButtons = document.querySelectorAll('[data-quick-create-event]');
         const studentBirthDateInput = document.getElementById('student_birth_date');
         const openStudentButtons = document.querySelectorAll('[data-open-student-modal]');
-        const closeModalButtons = modal.querySelectorAll('[data-close-modal]');
-        const closeStudentButtons = studentModal.querySelectorAll('[data-close-student-modal]');
+        const closeModalButtons = modal ? modal.querySelectorAll('[data-close-modal]') : [];
+        const closeStudentButtons = studentModal ? studentModal.querySelectorAll('[data-close-student-modal]') : [];
         const notifyStudentEmailInput = document.getElementById('notify-student-email');
         const notifyStudentPhoneInput = document.getElementById('notify-student-phone');
         const notifyGuardianEmailInput = document.getElementById('notify-guardian-email');
@@ -653,11 +658,11 @@
         const guardianSection = document.getElementById('guardian-section');
         const studentHasGuardianInput = document.getElementById('student_has_guardian');
         const studentGuardianFields = document.getElementById('student-guardian-fields');
-        const studentGuardianPrefToggles = studentModal.querySelectorAll('[data-student-guardian-pref]');
+        const studentGuardianPrefToggles = studentModal ? studentModal.querySelectorAll('[data-student-guardian-pref]') : [];
         const studentNotifyGuardianEmailInput = document.getElementById('student_notify_guardian_email');
         const studentNotifyGuardianPhoneInput = document.getElementById('student_notify_guardian_phone');
-        const studentNotifyStudentEmailInput = studentForm.querySelector('[name="notify_student_email"]');
-        const studentNotifyStudentPhoneInput = studentForm.querySelector('[name="notify_student_phone"]');
+        const studentNotifyStudentEmailInput = studentForm?.querySelector('[name="notify_student_email"]') ?? null;
+        const studentNotifyStudentPhoneInput = studentForm?.querySelector('[name="notify_student_phone"]') ?? null;
 
         let selectedStudentData = null;
         let searchTimeout = null;
@@ -679,8 +684,11 @@
                 const display = document.getElementById(displayId);
                 const link = document.getElementById(linkId);
                 const toggle = document.getElementById(toggleId);
-                if (!input || !display || !link || !toggle) {
+                if (!input || !display || !link) {
                     return null;
+                }
+                if (!canManageStudents) {
+                    input.setAttribute('readonly', 'readonly');
                 }
                 let editing = false;
                 function apply(value) {
@@ -691,24 +699,32 @@
                     link.classList.toggle('text-sky-600', hasValue);
                     link.classList.toggle('text-slate-400', !hasValue);
                 }
-                toggle.addEventListener('click', (event) => {
-                    event.preventDefault();
-                    editing = !editing;
-                    input.classList.toggle('hidden', !editing);
-                    display.classList.toggle('hidden', editing);
-                    toggle.textContent = editing ? 'Opslaan' : 'Wijzig';
-                    if (!editing) {
-                        apply(input.value);
-                    } else {
-                        input.focus();
-                    }
-                });
+                if (toggle) {
+                    toggle.addEventListener('click', (event) => {
+                        event.preventDefault();
+                        if (!canManageStudents) {
+                            return;
+                        }
+                        editing = !editing;
+                        input.classList.toggle('hidden', !editing);
+                        display.classList.toggle('hidden', editing);
+                        toggle.textContent = editing ? 'Opslaan' : 'Wijzig';
+                        if (!editing) {
+                            apply(input.value);
+                        } else {
+                            input.focus();
+                        }
+                    });
+                } else {
+                    input.classList.add('hidden');
+                    display.classList.remove('hidden');
+                }
                 apply(input.value || '');
                 return {
                     setValue(value) {
                         input.value = value || '';
                         apply(input.value);
-                        if (editing) {
+                        if (toggle && editing) {
                             toggle.click();
                         }
                     },
@@ -887,11 +903,17 @@
 
         // Modal functies
         function openModal() {
+            if (!modal) {
+                return;
+            }
             modal.classList.remove('hidden');
             modal.setAttribute('aria-hidden', 'false');
         }
 
         function closeModal() {
+            if (!modal) {
+                return;
+            }
             modal.classList.add('hidden');
             modal.setAttribute('aria-hidden', 'true');
             modalForm.reset();
@@ -904,67 +926,82 @@
         }
 
         function openStudentModal() {
+            if (!studentModal || !canManageStudents) {
+                return;
+            }
             studentModal.classList.remove('hidden');
             studentModal.setAttribute('aria-hidden', 'false');
         }
 
         function closeStudentModal() {
+            if (!studentModal || !studentForm) {
+                return;
+            }
             studentModal.classList.add('hidden');
             studentModal.setAttribute('aria-hidden', 'true');
             studentForm.reset();
         }
 
         closeModalButtons.forEach((button) => button.addEventListener('click', closeModal));
-        closeStudentButtons.forEach((button) => button.addEventListener('click', closeStudentModal));
-        openStudentButtons.forEach((button) => button.addEventListener('click', openStudentModal));
+        if (studentModal && canManageStudents) {
+            closeStudentButtons.forEach((button) => button.addEventListener('click', closeStudentModal));
+            openStudentButtons.forEach((button) => button.addEventListener('click', openStudentModal));
+        }
 
         // ESC key support voor modals
         document.addEventListener('keydown', (event) => {
             if (event.key === 'Escape') {
-                if (!modal.classList.contains('hidden')) {
+                if (modal && !modal.classList.contains('hidden')) {
                     closeModal();
                 }
-                if (!studentModal.classList.contains('hidden')) {
+                if (studentModal && !studentModal.classList.contains('hidden')) {
                     closeStudentModal();
                 }
             }
         });
 
         // Click outside modal support
-        modal.addEventListener('click', (event) => {
-            if (event.target === modal) {
+        modal?.addEventListener('click', (event) => {
+            if (event.target === modal && !modal.classList.contains('hidden')) {
                 closeModal();
             }
         });
 
-        studentModal.addEventListener('click', (event) => {
-            if (event.target === studentModal) {
-                closeStudentModal();
-            }
-        });
-        quickCreateButton?.addEventListener('click', () => {
-            modalTitle.textContent = 'Nieuwe afspraak';
-            const now = new Date();
-            now.setMinutes(Math.ceil(now.getMinutes() / 30) * 30, 0, 0);
-            const end = new Date(now.getTime() + 60 * 60 * 1000);
-            setSelectedStudent(null, { clearForm: true });
-            populateEventForm({
-                start: now,
-                end,
-                status: 'les',
-                notify_student_email: true,
-                notify_student_phone: true,
-            });
-            if (config.userRole === 'admin' && instructorSelect) {
-                const active = getActiveInstructorIds();
-                if (active.length === 1) {
-                    instructorSelect.value = String(active[0]);
-                } else if (!instructorSelect.value && config.instructors?.length === 1) {
-                    instructorSelect.value = String(config.instructors[0].id);
+        if (studentModal) {
+            studentModal.addEventListener('click', (event) => {
+                if (event.target === studentModal) {
+                    closeStudentModal();
                 }
-            }
-            openModal();
-        });
+            });
+        }
+
+        if (canCreateEvents) {
+            quickCreateButtons.forEach((button) => {
+                button.addEventListener('click', () => {
+                    modalTitle.textContent = 'Nieuwe afspraak';
+                    const now = new Date();
+                    now.setMinutes(Math.ceil(now.getMinutes() / 30) * 30, 0, 0);
+                    const end = new Date(now.getTime() + 60 * 60 * 1000);
+                    setSelectedStudent(null, { clearForm: true });
+                    populateEventForm({
+                        start: now,
+                        end,
+                        status: 'les',
+                        notify_student_email: true,
+                        notify_student_phone: true,
+                    });
+                    if (config.userRole === 'admin' && instructorSelect) {
+                        const active = getActiveInstructorIds();
+                        if (active.length === 1) {
+                            instructorSelect.value = String(active[0]);
+                        } else if (!instructorSelect.value && config.instructors?.length === 1) {
+                            instructorSelect.value = String(config.instructors[0].id);
+                        }
+                    }
+                    openModal();
+                });
+            });
+        }
         function clearStudentFormFields() {
             contactEditors.studentEmail?.setValue('');
             contactEditors.studentPhone?.setValue('');
@@ -1112,6 +1149,9 @@
         }
 
         function handleSelect({ start, end, instructorId }) {
+            if (!canCreateEvents) {
+                return;
+            }
             modalTitle.textContent = 'Nieuwe afspraak';
             setSelectedStudent(null, { clearForm: true });
             populateEventForm({ start, end });
@@ -1202,38 +1242,40 @@
             }, 250);
         });
 
-        studentForm.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const formData = new FormData(studentForm);
-            formData.set('has_guardian', studentHasGuardianInput?.checked ? '1' : '0');
-            if (studentNotifyStudentEmailInput) {
-                formData.set('notify_student_email', studentNotifyStudentEmailInput.checked ? '1' : '0');
-            }
-            if (studentNotifyStudentPhoneInput) {
-                formData.set('notify_student_phone', studentNotifyStudentPhoneInput.checked ? '1' : '0');
-            }
-            if (studentNotifyGuardianEmailInput) {
-                formData.set('notify_guardian_email', studentNotifyGuardianEmailInput.checked ? '1' : '0');
-            }
-            if (studentNotifyGuardianPhoneInput) {
-                formData.set('notify_guardian_phone', studentNotifyGuardianPhoneInput.checked ? '1' : '0');
-            }
-            try {
-                const student = await fetchJson('/students', {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': config.csrfToken,
-                    },
-                    body: formData,
-                });
-                setSelectedStudent(student, { applyDefaults: true });
-                studentSearch.value = '';
-                studentResults.innerHTML = '';
-                closeStudentModal();
-            } catch (error) {
-                alert(error.message || 'Kon leerling niet opslaan.');
-            }
-        });
+        if (studentForm && canManageStudents) {
+            studentForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const formData = new FormData(studentForm);
+                formData.set('has_guardian', studentHasGuardianInput?.checked ? '1' : '0');
+                if (studentNotifyStudentEmailInput) {
+                    formData.set('notify_student_email', studentNotifyStudentEmailInput.checked ? '1' : '0');
+                }
+                if (studentNotifyStudentPhoneInput) {
+                    formData.set('notify_student_phone', studentNotifyStudentPhoneInput.checked ? '1' : '0');
+                }
+                if (studentNotifyGuardianEmailInput) {
+                    formData.set('notify_guardian_email', studentNotifyGuardianEmailInput.checked ? '1' : '0');
+                }
+                if (studentNotifyGuardianPhoneInput) {
+                    formData.set('notify_guardian_phone', studentNotifyGuardianPhoneInput.checked ? '1' : '0');
+                }
+                try {
+                    const student = await fetchJson('/students', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': config.csrfToken,
+                        },
+                        body: formData,
+                    });
+                    setSelectedStudent(student, { applyDefaults: true });
+                    studentSearch.value = '';
+                    studentResults.innerHTML = '';
+                    closeStudentModal();
+                } catch (error) {
+                    alert(error.message || 'Kon leerling niet opslaan.');
+                }
+            });
+        }
 
         function reopenStudentSearch() {
             setSelectedStudent(null, { clearForm: true });
