@@ -242,8 +242,24 @@
             color: #881337;
         }
 
-        /* Week view mobile optimalisaties */
+        /* Mobile optimalisaties */
         @media (max-width: 768px) {
+            /* Verberg tijd in month view op mobile */
+            .fc-daygrid-event .fc-event-time {
+                display: none !important;
+            }
+            
+            /* Maak events in month view compacter */
+            .fc-daygrid-event {
+                padding: 0.25rem 0.4rem !important;
+            }
+            
+            .fc-daygrid-event .fc-event-title {
+                font-size: 0.75rem !important;
+                line-height: 1.2;
+            }
+            
+            /* Week/day view optimalisaties */
             .fc .fc-timegrid-axis {
                 width: 60px !important;
             }
