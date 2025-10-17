@@ -1,5 +1,5 @@
 @push('head')
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css">
     <style>
         body {
             background: radial-gradient(circle at top, rgba(59, 130, 246, 0.15), transparent 55%),
@@ -152,7 +152,15 @@
                 </div>
 
                 <div class="mt-6 overflow-hidden rounded-3xl border border-slate-200 shadow-inner">
-                    <div id="calendar" class="min-h-[700px]"></div>
+                    <div
+                        id="calendar"
+                        class="min-h-[700px]"
+                        data-planning-config='@json([
+                            'csrfToken' => csrf_token(),
+                            'userRole' => $user->role,
+                            'instructors' => $instructors,
+                        ])'
+                    ></div>
                 </div>
                 <p
                     id="calendar-error"
@@ -442,16 +450,6 @@
         </div>
     </div>
 
-    <script>
-        window.planningConfig = {
-            csrfToken: '{{ csrf_token() }}',
-            userRole: '{{ $user->role }}',
-            instructors: @json($instructors),
-        };
-    </script>
-</x-layouts.app>
-
-@push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.8/index.global.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/timegrid@6.1.8/index.global.min.js"></script>
@@ -459,12 +457,15 @@
     <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/resource-timegrid@6.1.8/index.global.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const config = window.planningConfig;
+            const calendarElement = document.getElementById('calendar');
+            if (!calendarElement) {
+                return;
+            }
+            const config = JSON.parse(calendarElement.getAttribute('data-planning-config') || '{}');
             if (!window.FullCalendar || !FullCalendar.Calendar) {
                 console.error('FullCalendar kon niet geladen worden.');
                 return;
             }
-            const calendarElement = document.getElementById('calendar');
             const rangeLabel = document.getElementById('calendar-range');
             const modal = document.getElementById('event-modal');
             const studentModal = document.getElementById('student-modal');
@@ -1450,4 +1451,4 @@
             });
         });
     </script>
-@endpush
+</x-layouts.app>
