@@ -54,6 +54,14 @@
             position: relative;
         }
 
+        .planner-header {
+            gap: 1.5rem;
+        }
+
+        .planner-toolbar > * {
+            flex-shrink: 0;
+        }
+
         .planner-view {
             display: flex;
             flex-direction: column;
@@ -217,6 +225,7 @@
             cursor: pointer;
             transition: transform 120ms ease, box-shadow 150ms ease;
             overflow: hidden;
+            touch-action: none;
         }
 
         .planner-event::before {
@@ -309,6 +318,22 @@
             .planner-time-grid {
                 --planner-column-min: 150px;
             }
+
+            .planner-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 1rem;
+            }
+
+            .planner-header form {
+                width: 100%;
+                display: flex;
+                justify-content: flex-end;
+            }
+
+            .planner-header form button {
+                width: 100%;
+            }
         }
 
         @media (max-width: 768px) {
@@ -320,11 +345,44 @@
                 border-radius: 1rem;
                 padding: 0.75rem;
             }
+
+            .planner-toolbar {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.75rem;
+            }
+
+            .planner-toolbar > * {
+                width: 100%;
+            }
+
+            .planner-toolbar > div {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .planner-toolbar [data-calendar-nav],
+            .planner-toolbar [data-calendar-view] {
+                flex: 1 1 0;
+            }
+
+            .planner-toolbar [data-open-student-modal],
+            .planner-toolbar #quick-create-event {
+                width: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
         }
 
         @media (max-width: 640px) {
             .planner-time-grid {
                 --planner-column-min: 120px;
+            }
+
+            .planner-time-grid__column {
+                min-height: 52rem;
+                padding: 0.65rem;
             }
 
             .planner-event__time {
@@ -333,6 +391,40 @@
 
             .planner-event__title {
                 font-size: 0.85rem;
+            }
+
+            .planner-month__header,
+            .planner-month__grid {
+                gap: 0.5rem;
+            }
+
+            #instructor-filter,
+            #status-filter {
+                width: 100%;
+            }
+
+            #instructor-filter .filter-chip,
+            #status-filter .filter-chip {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .planner-time-grid {
+                --planner-column-min: 105px;
+            }
+
+            .planner-time-grid__header {
+                gap: 0.5rem;
+            }
+
+            .planner-time-grid__body {
+                gap: 0.5rem;
+            }
+
+            .planner-time-grid__column {
+                min-height: 48rem;
             }
         }
 
@@ -484,7 +576,7 @@
 <x-layouts.app title="Planning">
     <div class="flex min-h-screen flex-col">
         <header class="sticky top-0 z-10 border-b border-slate-200 bg-white/90 backdrop-blur">
-            <div class="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
+            <div class="planner-header mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
                 <div>
                     <h1 class="text-xl font-semibold text-slate-900">Planningsoverzicht</h1>
                     <p class="text-sm text-slate-500">Beheer afspraken met een Google Agenda-achtige ervaring.</p>
@@ -505,7 +597,7 @@
             <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl">
                 <div class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
                     <div class="flex flex-col gap-4">
-                        <div class="flex flex-wrap items-center gap-3">
+                        <div class="planner-toolbar flex flex-wrap items-center gap-3">
                             <div class="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm">
                                 <button type="button" class="rounded-full bg-gradient-to-r from-sky-500 to-blue-600 px-3 py-1 text-xs font-semibold text-white shadow-sm transition hover:from-sky-600 hover:to-blue-700" data-calendar-nav="prev">Vorige</button>
                                 <button type="button" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 transition hover:border-sky-400 hover:text-sky-600" data-calendar-nav="today">Vandaag</button>

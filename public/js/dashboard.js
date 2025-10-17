@@ -50,13 +50,10 @@
 
     function formatForServer(date) {
         const safeDate = normaliseDate(date);
-        const year = safeDate.getFullYear();
-        const month = padNumber(safeDate.getMonth() + 1);
-        const day = padNumber(safeDate.getDate());
-        const hours = padNumber(safeDate.getHours());
-        const minutes = padNumber(safeDate.getMinutes());
-        const seconds = padNumber(safeDate.getSeconds());
-        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        const trimmed = new Date(safeDate.getTime());
+        trimmed.setSeconds(trimmed.getSeconds(), 0);
+        trimmed.setMilliseconds(0);
+        return trimmed.toISOString();
     }
 
     function parseLocalDate(value) {
@@ -906,6 +903,8 @@
             const pointerOffsetMinutes = Math.round((evt.clientY - eventRect.top) / MINUTE_HEIGHT);
             const duration = Math.max(SLOT_MINUTES, differenceInMinutes(event.end, event.start));
 
+            const baseColumnDate = meta?.date ? startOfDay(meta.date) : startOfDay(columnDate);
+
             this.updateColumnRects();
 
             this.dragState = {
@@ -913,7 +912,7 @@
                 type,
                 event,
                 columnIndex: meta?.index ?? columnIndex,
-                columnDate: meta?.date ?? columnDate,
+                columnDate: baseColumnDate,
                 columnElement: meta?.element ?? columnElement,
                 pointerId: evt.pointerId,
                 originalStart: new Date(event.start.getTime()),
@@ -941,6 +940,8 @@
                 return;
             }
 
+            this.updateColumnRects();
+
             const currentMeta = this.columnsMeta.find((meta) => meta.index === drag.columnIndex) || null;
             const activeMeta =
                 drag.type === 'move'
@@ -950,7 +951,7 @@
             if (activeMeta?.element && activeMeta.element !== drag.columnElement) {
                 drag.columnElement = activeMeta.element;
                 drag.columnIndex = activeMeta.index;
-                drag.columnDate = activeMeta.date;
+                drag.columnDate = startOfDay(activeMeta.date);
                 drag.columnPaddingTop = Number.parseFloat(
                     window.getComputedStyle(activeMeta.element).paddingTop,
                 ) || 0;
@@ -1044,6 +1045,7 @@
 
             drag.previewStart = newStart;
             drag.previewEnd = newEnd;
+            evt.preventDefault();
         }
 
         handlePointerUp(evt) {
