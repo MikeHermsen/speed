@@ -1,5 +1,6 @@
 @push('head')
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fullcalendar/resource-timegrid@6.1.8/main.min.css">
     <style>
         body {
             background: radial-gradient(circle at top, rgba(59, 130, 246, 0.15), transparent 55%),
@@ -155,7 +156,6 @@
                     <div
                         id="calendar"
                         class="min-h-[700px]"
-                        data-planning-config='{{ e(json_encode($planningConfig, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) }}'
                     ></div>
                 </div>
                 <p
@@ -446,10 +446,14 @@
         </div>
     </div>
 
+    <script id="planning-config" type="application/json">
+        @json($planningConfig, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.8/index.global.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/timegrid@6.1.8/index.global.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/interaction@6.1.8/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/resource@6.1.8/index.global.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/resource-timegrid@6.1.8/index.global.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -457,7 +461,15 @@
             if (!calendarElement) {
                 return;
             }
-            const config = JSON.parse(calendarElement.getAttribute('data-planning-config') || '{}');
+            let config = {};
+            const configScript = document.getElementById('planning-config');
+            if (configScript) {
+                try {
+                    config = JSON.parse(configScript.textContent || '{}');
+                } catch (error) {
+                    console.error('Kon planningconfiguratie niet laden:', error);
+                }
+            }
             if (!window.FullCalendar || !FullCalendar.Calendar) {
                 console.error('FullCalendar kon niet geladen worden.');
                 return;
@@ -518,15 +530,16 @@
             const dayGridPlugin = FullCalendar?.dayGridPlugin || FullCalendar?.DayGrid;
             const timeGridPlugin = FullCalendar?.timeGridPlugin || FullCalendar?.TimeGrid;
             const interactionPlugin = FullCalendar?.interactionPlugin || FullCalendar?.Interaction;
+            const resourcePlugin = FullCalendar?.resourcePlugin || FullCalendar?.Resource;
             const resourceTimeGridPlugin = FullCalendar?.resourceTimeGridPlugin || FullCalendar?.ResourceTimeGrid;
-            const hasResourceSupport = Boolean(resourceTimeGridPlugin);
+            const hasResourceSupport = Boolean(resourcePlugin && resourceTimeGridPlugin);
 
             const plugins = [];
             if (dayGridPlugin) plugins.push(dayGridPlugin);
             if (timeGridPlugin) plugins.push(timeGridPlugin);
             if (interactionPlugin) plugins.push(interactionPlugin);
-            if (config.userRole === 'admin' && hasResourceSupport && resourceTimeGridPlugin) {
-                plugins.push(resourceTimeGridPlugin);
+            if (config.userRole === 'admin' && hasResourceSupport) {
+                plugins.push(resourcePlugin, resourceTimeGridPlugin);
             }
 
             if (config.userRole === 'admin' && !hasResourceSupport) {

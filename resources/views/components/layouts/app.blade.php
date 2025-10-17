@@ -10,7 +10,7 @@
             rel="stylesheet"
             href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap"
         >
-        <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+        <link rel="stylesheet" href="{{ asset('css/app.css') }}">
         <style>
             :root {
                 color-scheme: light;
@@ -24,6 +24,7 @@
     </head>
     <body class="min-h-screen bg-slate-100 font-sans text-slate-900">
         {{ $slot }}
+        <script src="{{ asset('js/app.js') }}" defer></script>
         @stack('scripts')
     </body>
 </html>
