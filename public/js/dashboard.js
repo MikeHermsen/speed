@@ -638,8 +638,6 @@
         const instructorSelect = document.getElementById('instructor_id');
         const instructorFilter = document.getElementById('instructor-filter');
         const statusFilter = document.getElementById('status-filter');
-        const filtersToggle = document.getElementById('planner-filters-toggle');
-        const filtersPanel = document.getElementById('planner-filters-panel');
         const modalTitle = document.getElementById('event-modal-title');
         const quickCreateButton = document.getElementById('quick-create-event');
         const studentBirthDateInput = document.getElementById('student_birth_date');
@@ -765,47 +763,6 @@
         studentHasGuardianInput?.addEventListener('change', updateStudentGuardianVisibility);
         updateGuardianVisibility();
         updateStudentGuardianVisibility();
-
-        if (filtersToggle && filtersPanel) {
-            const largeScreenMedia = window.matchMedia('(min-width: 1024px)');
-            const openLabel = filtersToggle.dataset.openLabel || 'Filters tonen';
-            const closeLabel = filtersToggle.dataset.closeLabel || 'Filters verbergen';
-            const toggleLabelElement = filtersToggle.querySelector('[data-toggle-label]');
-            const toggleIconElement = filtersToggle.querySelector('[data-toggle-icon]');
-            let mobileFiltersExpanded = filtersToggle.dataset.defaultOpen === 'true';
-
-            function updateFiltersToggleState(expanded) {
-                filtersToggle.setAttribute('aria-expanded', String(expanded));
-                if (toggleLabelElement) {
-                    toggleLabelElement.textContent = expanded ? closeLabel : openLabel;
-                }
-                if (toggleIconElement) {
-                    toggleIconElement.setAttribute('data-rotated', expanded ? 'true' : 'false');
-                }
-            }
-
-            function applyResponsiveFilters() {
-                if (largeScreenMedia.matches) {
-                    filtersPanel.dataset.expanded = 'true';
-                    updateFiltersToggleState(true);
-                } else {
-                    filtersPanel.dataset.expanded = String(mobileFiltersExpanded);
-                    updateFiltersToggleState(mobileFiltersExpanded);
-                }
-            }
-
-            filtersToggle.addEventListener('click', () => {
-                if (largeScreenMedia.matches) {
-                    return;
-                }
-                mobileFiltersExpanded = !mobileFiltersExpanded;
-                filtersPanel.dataset.expanded = String(mobileFiltersExpanded);
-                updateFiltersToggleState(mobileFiltersExpanded);
-            });
-
-            largeScreenMedia.addEventListener('change', applyResponsiveFilters);
-            applyResponsiveFilters();
-        }
 
         function getActiveInstructorIds() {
             if (!instructorFilter) {
@@ -1433,6 +1390,7 @@
         function updateFilterButton(button, active) {
             button.dataset.active = active ? 'true' : 'false';
             button.classList.toggle('active', active);
+            button.setAttribute('aria-pressed', active ? 'true' : 'false');
         }
 
         function bindFilterButtons(container) {

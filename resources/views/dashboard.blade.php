@@ -33,25 +33,141 @@
         }
 
         .filter-chip {
+            position: relative;
             display: inline-flex;
             align-items: center;
-            gap: 0.45rem;
+            gap: 0.6rem;
             border-radius: 9999px;
-            padding: 0.35rem 0.85rem;
+            padding: 0.55rem 1rem;
             font-size: 0.75rem;
             font-weight: 600;
             letter-spacing: 0.04em;
-            border: 1px solid rgba(148, 163, 184, 0.45);
-            background: rgba(255, 255, 255, 0.78);
-            color: #475569;
-            transition: all 120ms ease;
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            background: rgba(255, 255, 255, 0.9);
+            color: #0f172a;
+            transition:
+                transform 160ms ease,
+                box-shadow 200ms ease,
+                border-color 160ms ease,
+                background 200ms ease;
+        }
+
+        .filter-chip:hover,
+        .filter-chip:focus-visible {
+            transform: translateY(-1px);
+            border-color: rgba(14, 165, 233, 0.5);
+            box-shadow: 0 22px 44px -32px rgba(14, 165, 233, 0.55);
+        }
+
+        .filter-chip:focus-visible {
+            outline: 2px solid rgba(14, 165, 233, 0.45);
+            outline-offset: 3px;
+        }
+
+        .filter-chip .filter-chip__dot {
+            width: 0.7rem;
+            height: 0.7rem;
+            border-radius: 9999px;
+            box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
+        }
+
+        .filter-chip .filter-chip__label {
+            font-weight: 700;
+            color: inherit;
+        }
+
+        .filter-chip .filter-chip__check {
+            width: 1.4rem;
+            height: 1.4rem;
+            border-radius: 9999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(14, 165, 233, 0.12);
+            color: #0284c7;
+            transition: opacity 160ms ease, transform 160ms ease;
+            opacity: 0;
+            transform: scale(0.8);
+        }
+
+        .filter-chip .filter-chip__check svg {
+            width: 0.85rem;
+            height: 0.85rem;
         }
 
         .filter-chip.active {
-            border-color: rgba(14, 165, 233, 0.6);
+            border-color: rgba(14, 165, 233, 0.55);
+            background: linear-gradient(120deg, rgba(224, 242, 254, 0.95), rgba(191, 219, 254, 0.92));
+            box-shadow: 0 26px 52px -34px rgba(14, 116, 144, 0.65);
+        }
+
+        .filter-chip.active .filter-chip__check {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .planner-filters-card {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            border-radius: 1.9rem;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            background: linear-gradient(140deg, rgba(255, 255, 255, 0.94), rgba(224, 242, 254, 0.9));
+            padding: 1.75rem 1.5rem;
+            box-shadow: 0 30px 60px -36px rgba(15, 118, 110, 0.45);
+            transition: box-shadow 200ms ease, transform 180ms ease;
+        }
+
+        .planner-filters-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 36px 68px -34px rgba(14, 116, 144, 0.5);
+        }
+
+        .planner-filters-card__header {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .planner-filters-card__title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
             color: #0369a1;
-            background: rgba(224, 242, 254, 0.85);
-            box-shadow: 0 6px 16px -14px rgba(14, 116, 144, 0.6);
+        }
+
+        .planner-filters-card__subtitle {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .planner-filters-card__body {
+            display: flex;
+            flex-direction: column;
+            gap: 1.35rem;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .filter-group__label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #475569;
+        }
+
+        .filter-group__chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.65rem;
         }
 
         .planner-root {
@@ -69,48 +185,6 @@
         .planner-card {
             position: relative;
             transition: padding 180ms ease, border-radius 180ms ease, box-shadow 220ms ease;
-        }
-
-        .planner-mobile-toggle {
-            border-radius: 1.25rem;
-            border: 1px solid rgba(148, 163, 184, 0.45);
-            background: linear-gradient(120deg, rgba(255, 255, 255, 0.96), rgba(241, 245, 249, 0.92));
-            padding: 0.75rem 1rem;
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: #0f172a;
-            box-shadow: 0 18px 36px -28px rgba(15, 23, 42, 0.35);
-            transition: all 180ms ease;
-        }
-
-        .planner-mobile-toggle:hover {
-            border-color: rgba(14, 165, 233, 0.45);
-            color: #0369a1;
-        }
-
-        .planner-mobile-toggle:focus-visible {
-            outline: 2px solid rgba(14, 165, 233, 0.5);
-            outline-offset: 3px;
-        }
-
-        .planner-toggle__icon {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 1.75rem;
-            height: 1.75rem;
-            border-radius: 9999px;
-            background: rgba(14, 165, 233, 0.12);
-            color: #0284c7;
-            transition: transform 180ms ease;
-        }
-
-        .planner-toggle__icon[data-rotated="true"] {
-            transform: rotate(180deg);
-        }
-
-        .planner-filters {
-            transition: opacity 180ms ease, transform 200ms ease;
         }
 
         .planner-calendar {
@@ -775,15 +849,13 @@
                 min-height: 120px;
             }
 
-            #instructor-filter,
-            #status-filter {
+            .filter-group__chips {
                 width: 100%;
             }
 
-            #instructor-filter .filter-chip,
-            #status-filter .filter-chip {
+            .filter-group__chips .filter-chip {
                 width: 100%;
-                justify-content: center;
+                justify-content: space-between;
             }
         }
 
@@ -1023,62 +1095,51 @@
                             <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Datum bereik</p>
                             <p id="calendar-range" class="text-lg font-semibold text-slate-900">&nbsp;</p>
                         </div>
-                        <div class="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                            <span class="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1"><span class="h-2.5 w-2.5 rounded-full bg-emerald-400"></span>Les</span>
-                            <span class="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1"><span class="h-2.5 w-2.5 rounded-full bg-sky-400"></span>Proefles</span>
-                            <span class="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1"><span class="h-2.5 w-2.5 rounded-full bg-amber-400"></span>Examen</span>
-                            <span class="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1"><span class="h-2.5 w-2.5 rounded-full bg-rose-400"></span>Ziek</span>
-                        </div>
-                        <button
-                            type="button"
-                            id="planner-filters-toggle"
-                            class="planner-mobile-toggle mt-2 flex w-full items-center justify-between gap-3 text-left text-sm font-semibold text-slate-700 transition lg:hidden"
-                            aria-controls="planner-filters-panel"
-                            aria-expanded="false"
-                            data-open-label="Filters tonen"
-                            data-close-label="Filters verbergen"
-                            data-default-open="false"
-                        >
-                            <span data-toggle-label>Filters tonen</span>
-                            <span class="planner-toggle__icon" aria-hidden="true" data-toggle-icon>
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4">
-                                    <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.937a.75.75 0 1 1 1.08 1.04l-4.24 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .01-1.06z" clip-rule="evenodd" />
-                                </svg>
-                            </span>
-                        </button>
                     </div>
-                    <div
-                        id="planner-filters-panel"
-                        class="planner-filters mt-3 flex w-full flex-col gap-4 rounded-3xl border border-slate-200 bg-slate-50 p-4 lg:mt-0 lg:w-80 lg:border-none lg:bg-transparent lg:p-0"
-                        data-expanded="false"
-                    >
-                        @if ($user->isAdmin())
-                            <div>
-                                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Instructeurs filteren</p>
-                                <div id="instructor-filter" class="mt-2 flex flex-wrap gap-2">
-                                    @foreach ($instructors as $instructor)
-                                        <button type="button" data-instructor-filter="{{ $instructor['id'] }}" data-active="true" class="filter-chip fancy-chip active">
-                                            <span class="h-2.5 w-2.5 rounded-full bg-gradient-to-br from-sky-400 to-blue-500"></span>
-                                            <span>{{ $instructor['name'] }}</span>
+                    <div id="planner-filters-panel" class="planner-filters-card mt-3 w-full lg:mt-0 lg:w-80">
+                        <div class="planner-filters-card__header">
+                            <span class="planner-filters-card__title">Filters</span>
+                            <span class="planner-filters-card__subtitle">Stel je planning makkelijk samen</span>
+                        </div>
+                        <div class="planner-filters-card__body">
+                            @if ($user->isAdmin())
+                                <div class="filter-group">
+                                    <p class="filter-group__label">Instructeurs</p>
+                                    <div id="instructor-filter" class="filter-group__chips">
+                                        @foreach ($instructors as $instructor)
+                                            <button type="button" data-instructor-filter="{{ $instructor['id'] }}" data-active="true" aria-pressed="true" class="filter-chip active">
+                                                <span class="filter-chip__dot bg-gradient-to-br from-sky-400 to-blue-500"></span>
+                                                <span class="filter-chip__label">{{ $instructor['name'] }}</span>
+                                                <span class="filter-chip__check" aria-hidden="true">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                        <path fill-rule="evenodd" d="M16.704 5.29a1 1 0 0 1 .006 1.414l-7.07 7.127a1 1 0 0 1-1.427.007L3.29 9.91a1 1 0 0 1 1.414-1.414l4.01 4.01 6.364-6.364a1 1 0 0 1 1.414-.007z" clip-rule="evenodd" />
+                                                    </svg>
+                                                </span>
+                                            </button>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+                            <div class="filter-group">
+                                <p class="filter-group__label">Statussen</p>
+                                <div id="status-filter" class="filter-group__chips">
+                                    @foreach ([
+                                        ['value' => 'les', 'label' => 'Les', 'color' => 'bg-emerald-500'],
+                                        ['value' => 'proefles', 'label' => 'Proefles', 'color' => 'bg-sky-500'],
+                                        ['value' => 'examen', 'label' => 'Examen', 'color' => 'bg-amber-500'],
+                                        ['value' => 'ziek', 'label' => 'Ziek', 'color' => 'bg-rose-500'],
+                                    ] as $status)
+                                        <button type="button" data-status-filter="{{ $status['value'] }}" data-active="true" aria-pressed="true" class="filter-chip active">
+                                            <span class="filter-chip__dot {{ $status['color'] }}"></span>
+                                            <span class="filter-chip__label">{{ $status['label'] }}</span>
+                                            <span class="filter-chip__check" aria-hidden="true">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fill-rule="evenodd" d="M16.704 5.29a1 1 0 0 1 .006 1.414l-7.07 7.127a1 1 0 0 1-1.427.007L3.29 9.91a1 1 0 0 1 1.414-1.414l4.01 4.01 6.364-6.364a1 1 0 0 1 1.414-.007z" clip-rule="evenodd" />
+                                                </svg>
+                                            </span>
                                         </button>
                                     @endforeach
                                 </div>
-                            </div>
-                        @endif
-                        <div>
-                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Statussen</p>
-                            <div id="status-filter" class="mt-2 flex flex-wrap gap-2">
-                                @foreach ([
-                                    ['value' => 'les', 'label' => 'Les', 'color' => 'bg-emerald-500'],
-                                    ['value' => 'proefles', 'label' => 'Proefles', 'color' => 'bg-sky-500'],
-                                    ['value' => 'examen', 'label' => 'Examen', 'color' => 'bg-amber-500'],
-                                    ['value' => 'ziek', 'label' => 'Ziek', 'color' => 'bg-rose-500'],
-                                ] as $status)
-                                    <button type="button" data-status-filter="{{ $status['value'] }}" data-active="true" class="filter-chip fancy-chip active">
-                                        <span class="h-2.5 w-2.5 rounded-full {{ $status['color'] }}"></span>
-                                        <span>{{ $status['label'] }}</span>
-                                    </button>
-                                @endforeach
                             </div>
                         </div>
                     </div>
