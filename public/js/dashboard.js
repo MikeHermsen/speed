@@ -860,8 +860,8 @@
                 'planner-event',
                 `
                     <div class="planner-event__title">${event.title}</div>
-                    ${event.location ? `<div class="planner-event__meta">${event.location}</div>` : ''}
                     <div class="planner-event__status" style="color:${status.color}">${status.label}</div>
+                    ${event.location ? `<div class="planner-event__meta">${event.location}</div>` : ''}
                     <div class="planner-event__time">${formatTime(event.start)} – ${formatTime(event.end)}</div>
                     <button class="planner-event__resize planner-event__resize--start" type="button"></button>
                     <button class="planner-event__resize planner-event__resize--end" type="button"></button>
