@@ -31,6 +31,9 @@ class StudentSeeder extends Seeder
 
         foreach ($students as $student) {
             $email = Str::slug($student['first_name'] . $student['last_name']) . '@leerling.test';
+            $hasGuardian = $faker->boolean(45);
+            $guardianEmail = $hasGuardian ? 'voogd+' . $email : null;
+            $guardianPhone = $hasGuardian ? '06' . $faker->numberBetween(10000000, 99999999) : null;
             Student::updateOrCreate(
                 ['email' => $email],
                 [
@@ -40,10 +43,15 @@ class StudentSeeder extends Seeder
                     'phone' => '06' . $faker->numberBetween(10000000, 99999999),
                     'parent_email' => 'ouder+' . $email,
                     'parent_phone' => '06' . $faker->numberBetween(10000000, 99999999),
+                    'has_guardian' => $hasGuardian,
+                    'guardian_email' => $guardianEmail,
+                    'guardian_phone' => $guardianPhone,
                     'notify_student_email' => true,
                     'notify_parent_email' => $faker->boolean(40),
+                    'notify_guardian_email' => $hasGuardian ? $faker->boolean(35) : false,
                     'notify_student_phone' => true,
                     'notify_parent_phone' => $faker->boolean(40),
+                    'notify_guardian_phone' => $hasGuardian ? $faker->boolean(35) : false,
                     'package' => Arr::random($packages),
                     'vehicle' => Arr::random($vehicles),
                     'location' => Arr::random($locations),

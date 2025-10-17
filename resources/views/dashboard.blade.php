@@ -314,6 +314,42 @@
                                     </label>
                                 </div>
                             </div>
+                            <div class="pt-2">
+                                <label class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                    <input id="has_guardian" name="has_guardian" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                                    <span>Voogd-contact toevoegen</span>
+                                </label>
+                                <div id="guardian-section" class="mt-4 hidden grid gap-4 sm:grid-cols-2">
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700">E-mail voogd</label>
+                                        <div class="mt-2 space-y-2">
+                                            <div id="guardian-email-display" class="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                                                <a id="guardian-email-link" href="#" data-empty-label="Geen e-mail" class="flex-1 truncate text-sm font-medium text-slate-400" target="_blank" rel="noopener">Geen e-mail</a>
+                                                <button type="button" id="toggle-guardian-email-edit" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-sky-400 hover:text-sky-600">Bewerk</button>
+                                            </div>
+                                            <input id="guardian_email" name="guardian_email" type="email" class="hidden w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                                        </div>
+                                        <label class="mt-2 flex items-center gap-2 text-xs font-medium text-slate-600">
+                                            <input id="notify-guardian-email" name="notify_guardian_email" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                                            <span>Voogd ontvangt e-mails</span>
+                                        </label>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700">Telefoon voogd</label>
+                                        <div class="mt-2 space-y-2">
+                                            <div id="guardian-phone-display" class="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                                                <a id="guardian-phone-link" href="#" data-empty-label="Geen telefoon" class="flex-1 truncate text-sm font-medium text-slate-400">Geen telefoon</a>
+                                                <button type="button" id="toggle-guardian-phone-edit" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-sky-400 hover:text-sky-600">Bewerk</button>
+                                            </div>
+                                            <input id="guardian_phone" name="guardian_phone" type="tel" class="hidden w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                                        </div>
+                                        <label class="mt-2 flex items-center gap-2 text-xs font-medium text-slate-600">
+                                            <input id="notify-guardian-phone" name="notify_guardian_phone" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                                            <span>Voogd ontvangt telefoontjes</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div>
@@ -420,6 +456,22 @@
                         <input id="student_parent_phone" name="parent_phone" type="tel" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
                     </div>
                 </div>
+                <div class="pt-2">
+                    <label class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        <input id="student_has_guardian" name="has_guardian" type="checkbox" value="1" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                        <span>Voogd-contact toevoegen</span>
+                    </label>
+                    <div id="student-guardian-fields" class="mt-3 hidden grid gap-4 sm:grid-cols-2">
+                        <div>
+                            <label for="student_guardian_email" class="block text-sm font-medium text-slate-700">E-mail voogd</label>
+                            <input id="student_guardian_email" name="guardian_email" type="email" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                        </div>
+                        <div>
+                            <label for="student_guardian_phone" class="block text-sm font-medium text-slate-700">Telefoon voogd</label>
+                            <input id="student_guardian_phone" name="guardian_phone" type="tel" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
+                        </div>
+                    </div>
+                </div>
                 <div class="flex flex-wrap gap-4 text-xs font-medium text-slate-600">
                     <label class="flex items-center gap-2">
                         <input type="checkbox" name="notify_student_email" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" checked />
@@ -436,6 +488,14 @@
                     <label class="flex items-center gap-2">
                         <input type="checkbox" name="notify_parent_phone" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
                         <span>Ouder telefoon</span>
+                    </label>
+                    <label class="flex items-center gap-2 hidden" data-student-guardian-pref>
+                        <input type="checkbox" id="student_notify_guardian_email" name="notify_guardian_email" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                        <span>Voogd e-mail</span>
+                    </label>
+                    <label class="flex items-center gap-2 hidden" data-student-guardian-pref>
+                        <input type="checkbox" id="student_notify_guardian_phone" name="notify_guardian_phone" class="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500" />
+                        <span>Voogd telefoon</span>
                     </label>
                 </div>
                 <div class="flex items-center justify-end gap-3">
@@ -509,10 +569,22 @@
             const parentPhoneDisplay = document.getElementById('parent-phone-display');
             const parentPhoneLink = document.getElementById('parent-phone-link');
             const toggleParentPhoneButton = document.getElementById('toggle-parent-phone-edit');
+            const hasGuardianInput = document.getElementById('has_guardian');
+            const guardianSection = document.getElementById('guardian-section');
+            const guardianEmailInput = document.getElementById('guardian_email');
+            const guardianEmailDisplay = document.getElementById('guardian-email-display');
+            const guardianEmailLink = document.getElementById('guardian-email-link');
+            const toggleGuardianEmailButton = document.getElementById('toggle-guardian-email-edit');
+            const guardianPhoneInput = document.getElementById('guardian_phone');
+            const guardianPhoneDisplay = document.getElementById('guardian-phone-display');
+            const guardianPhoneLink = document.getElementById('guardian-phone-link');
+            const toggleGuardianPhoneButton = document.getElementById('toggle-guardian-phone-edit');
             const notifyStudentEmailInput = document.getElementById('notify-student-email');
             const notifyStudentPhoneInput = document.getElementById('notify-student-phone');
             const notifyParentEmailInput = document.getElementById('notify-parent-email');
             const notifyParentPhoneInput = document.getElementById('notify-parent-phone');
+            const notifyGuardianEmailInput = document.getElementById('notify-guardian-email');
+            const notifyGuardianPhoneInput = document.getElementById('notify-guardian-phone');
             const descriptionInput = document.getElementById('description');
             const startInput = document.getElementById('start_time');
             const endInput = document.getElementById('end_time');
@@ -526,6 +598,13 @@
             const instructorFilter = document.getElementById('instructor-filter');
             const statusFilter = document.getElementById('status-filter');
             const instructorLookup = new Map((config.instructors || []).map((instructor) => [String(instructor.id), instructor.name]));
+            const studentHasGuardianInput = document.getElementById('student_has_guardian');
+            const studentGuardianFields = document.getElementById('student-guardian-fields');
+            const studentGuardianEmailInput = document.getElementById('student_guardian_email');
+            const studentGuardianPhoneInput = document.getElementById('student_guardian_phone');
+            const studentGuardianPrefToggles = studentModal.querySelectorAll('[data-student-guardian-pref]');
+            const studentNotifyGuardianEmailInput = document.getElementById('student_notify_guardian_email');
+            const studentNotifyGuardianPhoneInput = document.getElementById('student_notify_guardian_phone');
             let calendar;
             const dayGridPlugin = FullCalendar?.dayGridPlugin || FullCalendar?.DayGrid;
             const timeGridPlugin = FullCalendar?.timeGridPlugin || FullCalendar?.TimeGrid;
@@ -688,10 +767,94 @@
                 hrefFormatter: (value) => normalisePhoneHref(value),
             });
 
+            const guardianEmailEditor = createContactEditor({
+                input: guardianEmailInput,
+                display: guardianEmailDisplay,
+                link: guardianEmailLink,
+                toggleButton: toggleGuardianEmailButton,
+                editLabel: 'Bewerk',
+                saveLabel: 'Opslaan e-mail',
+                hrefFormatter: (value) => `mailto:${value}`,
+            });
+
+            const guardianPhoneEditor = createContactEditor({
+                input: guardianPhoneInput,
+                display: guardianPhoneDisplay,
+                link: guardianPhoneLink,
+                toggleButton: toggleGuardianPhoneButton,
+                editLabel: 'Bewerk',
+                saveLabel: 'Opslaan nummer',
+                hrefFormatter: (value) => normalisePhoneHref(value),
+            });
+
             studentEmailEditor.setValue('');
             studentPhoneEditor.setValue('');
             parentEmailEditor.setValue('');
             parentPhoneEditor.setValue('');
+            guardianEmailEditor.setValue('');
+            guardianPhoneEditor.setValue('');
+
+            function updateGuardianVisibility(clear = false) {
+                const enabled = hasGuardianInput?.checked ?? false;
+                if (guardianSection) {
+                    guardianSection.classList.toggle('hidden', !enabled);
+                }
+                [guardianEmailInput, guardianPhoneInput, notifyGuardianEmailInput, notifyGuardianPhoneInput].forEach((element) => {
+                    if (!element) {
+                        return;
+                    }
+                    element.disabled = !enabled;
+                    if (!enabled && clear) {
+                        if (element === notifyGuardianEmailInput || element === notifyGuardianPhoneInput) {
+                            element.checked = false;
+                        } else {
+                            element.value = '';
+                        }
+                    }
+                });
+                if (!enabled && clear) {
+                    guardianEmailEditor.setValue('');
+                    guardianPhoneEditor.setValue('');
+                } else {
+                    guardianEmailEditor.ensureView();
+                    guardianPhoneEditor.ensureView();
+                }
+            }
+
+            updateGuardianVisibility(true);
+
+            hasGuardianInput?.addEventListener('change', () => {
+                updateGuardianVisibility(!hasGuardianInput.checked);
+            });
+
+            function updateStudentGuardianVisibility(clear = false) {
+                const enabled = studentHasGuardianInput?.checked ?? false;
+                if (studentGuardianFields) {
+                    studentGuardianFields.classList.toggle('hidden', !enabled);
+                }
+                studentGuardianPrefToggles.forEach((label) => {
+                    label.classList.toggle('hidden', !enabled);
+                });
+                [studentGuardianEmailInput, studentGuardianPhoneInput, studentNotifyGuardianEmailInput, studentNotifyGuardianPhoneInput].forEach((element) => {
+                    if (!element) {
+                        return;
+                    }
+                    element.disabled = !enabled;
+                    if (!enabled && clear) {
+                        if (element === studentNotifyGuardianEmailInput || element === studentNotifyGuardianPhoneInput) {
+                            element.checked = false;
+                        } else {
+                            element.value = '';
+                        }
+                    }
+                });
+            }
+
+            updateStudentGuardianVisibility(true);
+
+            studentHasGuardianInput?.addEventListener('change', () => {
+                updateStudentGuardianVisibility(!studentHasGuardianInput.checked);
+            });
 
             function formatDisplayDate(dateString) {
                 if (!dateString) {
@@ -728,6 +891,16 @@
                 if (parentParts.length) {
                     metaParts.push(parentParts.join(' · '));
                 }
+                const guardianParts = [];
+                if (student.has_guardian && student.guardian_email) {
+                    guardianParts.push(`Voogd e-mail: ${student.guardian_email}`);
+                }
+                if (student.has_guardian && student.guardian_phone) {
+                    guardianParts.push(`Voogd tel: ${student.guardian_phone}`);
+                }
+                if (guardianParts.length) {
+                    metaParts.push(guardianParts.join(' · '));
+                }
 
                 selectedStudentDetails.innerHTML = `
                     <div class="font-semibold text-slate-800">${escapeHtml(student.full_name)}</div>
@@ -752,10 +925,18 @@
                         studentPhoneEditor.setValue(student.phone || '');
                         parentEmailEditor.setValue(student.parent_email || '');
                         parentPhoneEditor.setValue(student.parent_phone || '');
+                        hasGuardianInput.checked = student.has_guardian ?? false;
+                        updateGuardianVisibility();
+                        guardianEmailEditor.setValue(student.guardian_email || '');
+                        guardianPhoneEditor.setValue(student.guardian_phone || '');
                         notifyStudentEmailInput.checked = student.notify_student_email ?? true;
                         notifyStudentPhoneInput.checked = student.notify_student_phone ?? true;
                         notifyParentEmailInput.checked = student.notify_parent_email ?? false;
                         notifyParentPhoneInput.checked = student.notify_parent_phone ?? false;
+                        notifyGuardianEmailInput.checked = student.notify_guardian_email ?? false;
+                        notifyGuardianPhoneInput.checked = student.notify_guardian_phone ?? false;
+                    } else {
+                        updateGuardianVisibility();
                     }
                 } else {
                     studentIdInput.value = '';
@@ -768,10 +949,14 @@
                         studentPhoneEditor.setValue('');
                         parentEmailEditor.setValue('');
                         parentPhoneEditor.setValue('');
+                        hasGuardianInput.checked = false;
+                        updateGuardianVisibility(true);
                         notifyStudentEmailInput.checked = true;
                         notifyStudentPhoneInput.checked = true;
                         notifyParentEmailInput.checked = false;
                         notifyParentPhoneInput.checked = false;
+                        notifyGuardianEmailInput.checked = false;
+                        notifyGuardianPhoneInput.checked = false;
                     }
                 }
                 studentSearch.focus();
@@ -808,6 +993,8 @@
                 studentPhoneEditor.ensureView();
                 parentEmailEditor.ensureView();
                 parentPhoneEditor.ensureView();
+                guardianEmailEditor.ensureView();
+                guardianPhoneEditor.ensureView();
 
                 if (mode === 'create') {
                     modalTitle.textContent = 'Afspraak plannen';
@@ -868,10 +1055,18 @@
                     notifyStudentPhoneInput.checked = props.notify_student_phone ?? props.student_notify_student_phone ?? true;
                     notifyParentEmailInput.checked = props.notify_parent_email ?? props.student_notify_parent_email ?? false;
                     notifyParentPhoneInput.checked = props.notify_parent_phone ?? props.student_notify_parent_phone ?? false;
+                    hasGuardianInput.checked = props.has_guardian ?? props.student_has_guardian ?? false;
+                    updateGuardianVisibility();
+                    guardianEmailEditor.setValue(props.guardian_email ?? props.student_guardian_email ?? '');
+                    guardianPhoneEditor.setValue(props.guardian_phone ?? props.student_guardian_phone ?? '');
+                    notifyGuardianEmailInput.checked = props.notify_guardian_email ?? props.student_notify_guardian_email ?? false;
+                    notifyGuardianPhoneInput.checked = props.notify_guardian_phone ?? props.student_notify_guardian_phone ?? false;
                     studentEmailEditor.ensureView();
                     studentPhoneEditor.ensureView();
                     parentEmailEditor.ensureView();
                     parentPhoneEditor.ensureView();
+                    guardianEmailEditor.ensureView();
+                    guardianPhoneEditor.ensureView();
                 }
                 refreshSummary();
             }
@@ -895,6 +1090,7 @@
                 studentModal.classList.remove('hidden');
                 studentModal.classList.add('flex');
                 studentForm.reset();
+                updateStudentGuardianVisibility(true);
                 document.getElementById('student_first_name').focus();
             }
 
@@ -973,6 +1169,18 @@
                     }
                     if (student.parent_phone) {
                         detailParts.push(`Ouder tel: ${student.parent_phone}`);
+                    }
+                    if (student.has_guardian) {
+                        const guardianParts = [];
+                        if (student.guardian_email) {
+                            guardianParts.push(`Voogd e-mail: ${student.guardian_email}`);
+                        }
+                        if (student.guardian_phone) {
+                            guardianParts.push(`Voogd tel: ${student.guardian_phone}`);
+                        }
+                        if (guardianParts.length) {
+                            detailParts.push(guardianParts.join(' · '));
+                        }
                     }
                     const detailLine = detailParts.length
                         ? `<div class="text-[11px] text-slate-400">${escapeHtml(detailParts.join(' · '))}</div>`
@@ -1187,21 +1395,31 @@
                         student_phone: event.student_phone,
                         student_parent_email: event.student_parent_email,
                         student_parent_phone: event.student_parent_phone,
+                        student_has_guardian: event.student_has_guardian,
+                        student_guardian_email: event.student_guardian_email,
+                        student_guardian_phone: event.student_guardian_phone,
                         student_birth_date: event.student_birth_date,
                         student_notify_student_email: event.student_notify_student_email,
                         student_notify_parent_email: event.student_notify_parent_email,
+                        student_notify_guardian_email: event.student_notify_guardian_email,
                         student_notify_student_phone: event.student_notify_student_phone,
                         student_notify_parent_phone: event.student_notify_parent_phone,
+                        student_notify_guardian_phone: event.student_notify_guardian_phone,
                         vehicle: event.vehicle,
                         package: event.package,
                         email: event.email,
                         phone: event.phone,
                         parent_email: event.parent_email,
                         parent_phone: event.parent_phone,
+                        has_guardian: event.has_guardian,
+                        guardian_email: event.guardian_email,
+                        guardian_phone: event.guardian_phone,
                         notify_student_email: event.notify_student_email,
                         notify_parent_email: event.notify_parent_email,
+                        notify_guardian_email: event.notify_guardian_email,
                         notify_student_phone: event.notify_student_phone,
                         notify_parent_phone: event.notify_parent_phone,
+                        notify_guardian_phone: event.notify_guardian_phone,
                         location: event.location,
                         description: event.description,
                     },
@@ -1251,10 +1469,15 @@
                         phone: props.phone,
                         parent_email: props.parent_email,
                         parent_phone: props.parent_phone,
+                        has_guardian: props.has_guardian,
+                        guardian_email: props.guardian_email,
+                        guardian_phone: props.guardian_phone,
                         notify_student_email: props.notify_student_email,
                         notify_parent_email: props.notify_parent_email,
+                        notify_guardian_email: props.notify_guardian_email,
                         notify_student_phone: props.notify_student_phone,
                         notify_parent_phone: props.notify_parent_phone,
+                        notify_guardian_phone: props.notify_guardian_phone,
                         location: props.location,
                         description: props.description,
                     };
@@ -1436,10 +1659,15 @@
                     phone: studentPhoneEditor.getValue() || null,
                     parent_email: parentEmailEditor.getValue() || null,
                     parent_phone: parentPhoneEditor.getValue() || null,
+                    has_guardian: hasGuardianInput.checked,
+                    guardian_email: hasGuardianInput.checked ? guardianEmailEditor.getValue() || null : null,
+                    guardian_phone: hasGuardianInput.checked ? guardianPhoneEditor.getValue() || null : null,
                     notify_student_email: notifyStudentEmailInput.checked,
                     notify_parent_email: notifyParentEmailInput.checked,
+                    notify_guardian_email: hasGuardianInput.checked ? notifyGuardianEmailInput.checked : false,
                     notify_student_phone: notifyStudentPhoneInput.checked,
                     notify_parent_phone: notifyParentPhoneInput.checked,
+                    notify_guardian_phone: hasGuardianInput.checked ? notifyGuardianPhoneInput.checked : false,
                     description: descriptionInput.value || null,
                 };
                 if (config.userRole === 'admin' && instructorSelect) {
