@@ -51,9 +51,14 @@
     function formatForServer(date) {
         const safeDate = normaliseDate(date);
         const trimmed = new Date(safeDate.getTime());
-        trimmed.setSeconds(trimmed.getSeconds(), 0);
-        trimmed.setMilliseconds(0);
-        return trimmed.toISOString();
+        trimmed.setSeconds(0, 0);
+        const year = trimmed.getFullYear();
+        const month = padNumber(trimmed.getMonth() + 1);
+        const day = padNumber(trimmed.getDate());
+        const hours = padNumber(trimmed.getHours());
+        const minutes = padNumber(trimmed.getMinutes());
+        const seconds = padNumber(trimmed.getSeconds());
+        return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
     }
 
     function parseLocalDate(value) {
@@ -221,11 +226,33 @@
             this.columnsMeta = [];
             this.monthCellsMeta = [];
             this.dragState = null;
+            this.recentlyDragged = new Map();
             this.element.classList.add('planner-root');
             this.loadingOverlay = buildElement('div', 'planner-loading hidden', [
                 buildElement('div', 'planner-loading__spinner', ''),
             ]);
             this.element.appendChild(this.loadingOverlay);
+        }
+
+        markEventRecentlyDragged(eventId) {
+            if (!eventId) {
+                return;
+            }
+            const stamp = Date.now();
+            this.recentlyDragged.set(eventId, stamp);
+            window.setTimeout(() => {
+                if (this.recentlyDragged.get(eventId) === stamp) {
+                    this.recentlyDragged.delete(eventId);
+                }
+            }, 400);
+        }
+
+        shouldIgnoreClick(eventId) {
+            if (!eventId) {
+                return false;
+            }
+            const stamp = this.recentlyDragged.get(eventId);
+            return typeof stamp === 'number' && Date.now() - stamp < 400;
         }
 
         setLoading(active) {
@@ -621,6 +648,7 @@
             if (newStart.getTime() === drag.originalStart.getTime() && newEnd.getTime() === drag.originalEnd.getTime()) {
                 return;
             }
+            this.markEventRecentlyDragged(drag.event.id);
             this.onEventMove({ event: drag.event, start: newStart, end: newEnd });
         }
 
@@ -708,6 +736,9 @@
                 item.addEventListener('click', (evt) => {
                     evt.preventDefault();
                     evt.stopPropagation();
+                    if (this.shouldIgnoreClick(event.id)) {
+                        return;
+                    }
                     this.onEventClick({ event });
                 });
                 const moveHandler = (evt) => this.handlePointerMove(evt);
@@ -865,11 +896,11 @@
                 if (evt.target.classList.contains('planner-event__resize')) {
                     return;
                 }
+                if (this.shouldIgnoreClick(event.id)) {
+                    return;
+                }
                 this.onEventClick({ event });
             });
-
-            const moveHandler = (evt) => this.handlePointerMove(evt);
-            const upHandler = (evt) => this.handlePointerUp(evt);
 
             element.addEventListener('pointerdown', (evt) => {
                 if (evt.button !== 0) {
@@ -885,7 +916,10 @@
                 }
                 if (this.dragState) {
                     element.setPointerCapture(evt.pointerId);
+                    const moveHandler = (moveEvent) => this.handlePointerMove(moveEvent);
+                    element._plannerMoveHandler = moveHandler;
                     element.addEventListener('pointermove', moveHandler);
+                    const upHandler = (upEvent) => this.handlePointerUp(upEvent);
                     element.addEventListener('pointerup', upHandler, { once: true });
                     element.addEventListener('pointercancel', upHandler, { once: true });
                 }
@@ -905,6 +939,31 @@
 
             const baseColumnDate = meta?.date ? startOfDay(meta.date) : startOfDay(columnDate);
 
+            let placeholder = null;
+            let placeholderTime = null;
+            if (columnElement) {
+                placeholder = buildElement(
+                    'div',
+                    'planner-drop-placeholder',
+                    `<div class="planner-drop-placeholder__time">${formatTime(event.start)} – ${formatTime(
+                        event.end,
+                    )}</div>`,
+                );
+                placeholderTime = placeholder.querySelector('.planner-drop-placeholder__time');
+                columnElement.appendChild(placeholder);
+                const startMinutes = Math.max(0, differenceInMinutes(event.start, baseColumnDate));
+                const placeholderMinutes = Math.max(
+                    SLOT_MINUTES,
+                    Math.max(1, differenceInMinutes(event.end, event.start)),
+                );
+                placeholder.style.top = `${startMinutes * MINUTE_HEIGHT}px`;
+                placeholder.style.height = `${Math.max(
+                    MIN_EVENT_HEIGHT,
+                    placeholderMinutes * MINUTE_HEIGHT,
+                )}px`;
+                placeholder.dataset.visible = 'true';
+            }
+
             this.updateColumnRects();
 
             this.dragState = {
@@ -923,6 +982,8 @@
                 previewStart: new Date(event.start.getTime()),
                 previewEnd: new Date(event.end.getTime()),
                 activeColumnMeta: meta || null,
+                placeholder,
+                placeholderTime,
             };
             if (meta?.element) {
                 meta.element.setAttribute('data-drag-target', 'true');
@@ -955,6 +1016,9 @@
                 drag.columnPaddingTop = Number.parseFloat(
                     window.getComputedStyle(activeMeta.element).paddingTop,
                 ) || 0;
+                if (drag.placeholder && activeMeta.element && drag.placeholder.parentElement !== activeMeta.element) {
+                    activeMeta.element.appendChild(drag.placeholder);
+                }
             }
 
             if (activeMeta) {
@@ -1043,6 +1107,27 @@
                 node.classList.add('planner-event--dragging');
             });
 
+            if (drag.placeholder) {
+                const placeholderParent = drag.columnElement;
+                if (placeholderParent && drag.placeholder.parentElement !== placeholderParent) {
+                    placeholderParent.appendChild(drag.placeholder);
+                }
+                const placeholderStartMinutes = Math.max(0, differenceInMinutes(newStart, columnStart));
+                const placeholderEndMinutes = Math.max(
+                    placeholderStartMinutes + SLOT_MINUTES,
+                    differenceInMinutes(newEnd, columnStart),
+                );
+                drag.placeholder.style.top = `${placeholderStartMinutes * MINUTE_HEIGHT}px`;
+                drag.placeholder.style.height = `${Math.max(
+                    MIN_EVENT_HEIGHT,
+                    (placeholderEndMinutes - placeholderStartMinutes) * MINUTE_HEIGHT,
+                )}px`;
+                drag.placeholder.dataset.visible = 'true';
+                if (drag.placeholderTime) {
+                    drag.placeholderTime.textContent = `${formatTime(newStart)} – ${formatTime(newEnd)}`;
+                }
+            }
+
             drag.previewStart = newStart;
             drag.previewEnd = newEnd;
             evt.preventDefault();
@@ -1062,24 +1147,35 @@
             );
             eventElements.forEach((element) => {
                 element.classList.remove('planner-event--dragging');
-                element.releasePointerCapture(drag.pointerId);
-                element.removeEventListener('pointermove', this.handlePointerMove);
+                if (element.hasPointerCapture?.(drag.pointerId)) {
+                    element.releasePointerCapture(drag.pointerId);
+                }
+                if (element._plannerMoveHandler) {
+                    element.removeEventListener('pointermove', element._plannerMoveHandler);
+                    delete element._plannerMoveHandler;
+                }
             });
 
             if (drag.activeColumnMeta?.element) {
                 drag.activeColumnMeta.element.removeAttribute('data-drag-target');
             }
 
+            if (drag.placeholder?.parentElement) {
+                drag.placeholder.parentElement.removeChild(drag.placeholder);
+            }
+
             const newStart = drag.previewStart || drag.originalStart;
             const newEnd = drag.previewEnd || drag.originalEnd;
+            const changed =
+                newStart.getTime() !== drag.originalStart.getTime() ||
+                newEnd.getTime() !== drag.originalEnd.getTime();
             this.dragState = null;
 
-            if (
-                newStart.getTime() === drag.originalStart.getTime() &&
-                newEnd.getTime() === drag.originalEnd.getTime()
-            ) {
+            if (!changed) {
                 return;
             }
+
+            this.markEventRecentlyDragged(drag.event.id);
 
             if (drag.type === 'move') {
                 this.onEventMove({ event: drag.event, start: newStart, end: newEnd });
@@ -1099,14 +1195,40 @@
     }
 
     async function fetchJson(url, options = {}) {
-        const response = await fetch(url, options);
+        const response = await fetch(url, {
+            ...options,
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                ...(options.headers || {}),
+            },
+        });
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
+            let errorData = {};
+            try {
+                errorData = await response.json();
+            } catch (parseError) {
+                const fallback = await response.text().catch(() => '');
+                if (fallback) {
+                    errorData = { message: fallback };
+                }
+            }
             const error = new Error(errorData.message || 'Onbekende fout');
             error.status = response.status;
             throw error;
         }
-        return response.json();
+        if (response.status === 204) {
+            return null;
+        }
+        const text = await response.text();
+        if (!text) {
+            return null;
+        }
+        try {
+            return JSON.parse(text);
+        } catch (parseError) {
+            throw new Error('Onverwachte serverrespons.');
+        }
     }
 
     document.addEventListener('DOMContentLoaded', () => {

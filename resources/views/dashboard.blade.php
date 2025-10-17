@@ -198,6 +198,35 @@
             box-shadow: inset 0 0 0 2px rgba(14, 165, 233, 0.55);
         }
 
+        .planner-drop-placeholder {
+            position: absolute;
+            left: 0;
+            right: 0;
+            border-radius: 1.25rem;
+            border: 2px dashed rgba(14, 165, 233, 0.55);
+            background: rgba(224, 242, 254, 0.55);
+            padding: 0.75rem 1rem;
+            color: #0f172a;
+            font-size: 0.75rem;
+            font-weight: 600;
+            pointer-events: none;
+            opacity: 0;
+            transform: scaleY(0.96);
+            transition: opacity 140ms ease, transform 140ms ease;
+            z-index: 5;
+        }
+
+        .planner-drop-placeholder[data-visible="true"] {
+            opacity: 1;
+            transform: scaleY(1);
+        }
+
+        .planner-drop-placeholder__time {
+            display: block;
+            color: #0284c7;
+            letter-spacing: 0.05em;
+        }
+
         .planner-time-grid__background {
             position: absolute;
             inset: 0;
