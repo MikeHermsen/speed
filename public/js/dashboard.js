@@ -302,6 +302,8 @@
         }
         renderTimeGrid({ columns, showDayNames }) {
             const container = buildElement('div', 'planner-time-grid');
+            const columnCount = Math.max(1, columns.length || 0);
+            container.style.setProperty('--planner-column-count', String(columnCount));
             const header = buildElement('div', 'planner-time-grid__header');
             header.appendChild(buildElement('div', 'planner-time-grid__header-cell planner-time-grid__times-header'));
             columns.forEach((column, index) => {

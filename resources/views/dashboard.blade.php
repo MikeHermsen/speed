@@ -96,9 +96,13 @@
             gap: 1.5rem;
         }
 
+        .planner-time-grid {
+            --planner-column-count: 1;
+        }
+
         .planner-time-grid__header {
             display: grid;
-            grid-template-columns: 80px repeat(auto-fit, minmax(180px, 1fr));
+            grid-template-columns: 80px repeat(var(--planner-column-count, 1), minmax(180px, 1fr));
             gap: 1rem;
             align-items: end;
         }
@@ -132,7 +136,7 @@
 
         .planner-time-grid__body {
             display: grid;
-            grid-template-columns: 80px repeat(auto-fit, minmax(180px, 1fr));
+            grid-template-columns: 80px repeat(var(--planner-column-count, 1), minmax(180px, 1fr));
             gap: 1rem;
         }
 
