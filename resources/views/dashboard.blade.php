@@ -155,11 +155,11 @@
                     <div
                         id="calendar"
                         class="min-h-[700px]"
-                        data-planning-config='@json([
+                        data-planning-config="@json([
                             'csrfToken' => csrf_token(),
                             'userRole' => $user->role,
                             'instructors' => $instructors,
-                        ])'
+                        ])"
                     ></div>
                 </div>
                 <p
