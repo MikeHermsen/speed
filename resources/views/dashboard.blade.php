@@ -278,6 +278,7 @@
             color: #0f172a;
             letter-spacing: 0.04em;
             text-transform: uppercase;
+            margin-top: auto;
         }
 
         .planner-event__title {
