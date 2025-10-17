@@ -27,6 +27,53 @@
     const WEEKDAY_FORMATTER = new Intl.DateTimeFormat('nl-NL', { weekday: 'long', day: 'numeric' });
     const TIME_FORMATTER = new Intl.DateTimeFormat('nl-NL', { hour: '2-digit', minute: '2-digit' });
 
+    function padNumber(value, length = 2) {
+        return String(value).padStart(length, '0');
+    }
+
+    function normaliseDate(date) {
+        if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+            throw new Error('Ongeldige datum opgegeven.');
+        }
+        return new Date(date.getTime());
+    }
+
+    function formatForInput(date) {
+        const safeDate = normaliseDate(date);
+        const year = safeDate.getFullYear();
+        const month = padNumber(safeDate.getMonth() + 1);
+        const day = padNumber(safeDate.getDate());
+        const hours = padNumber(safeDate.getHours());
+        const minutes = padNumber(safeDate.getMinutes());
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+
+    function formatForServer(date) {
+        const safeDate = normaliseDate(date);
+        const year = safeDate.getFullYear();
+        const month = padNumber(safeDate.getMonth() + 1);
+        const day = padNumber(safeDate.getDate());
+        const hours = padNumber(safeDate.getHours());
+        const minutes = padNumber(safeDate.getMinutes());
+        const seconds = padNumber(safeDate.getSeconds());
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    }
+
+    function parseLocalDate(value) {
+        if (!value) {
+            throw new Error('Datum ontbreekt.');
+        }
+        const parsed = new Date(value);
+        if (Number.isNaN(parsed.getTime())) {
+            throw new Error('Kan datum niet lezen.');
+        }
+        return parsed;
+    }
+
+    function clamp(value, min, max) {
+        return Math.min(Math.max(value, min), max);
+    }
+
     function cloneDate(date) {
         return new Date(date.getTime());
     }
@@ -146,6 +193,7 @@
             this.onEventResize = options.onEventResize || (() => {});
             this.onRangeChange = options.onRangeChange || (() => {});
             this.columnsMeta = [];
+            this.monthCellsMeta = [];
             this.dragState = null;
             this.element.classList.add('planner-root');
             this.loadingOverlay = buildElement('div', 'planner-loading hidden', [
@@ -252,6 +300,7 @@
 
         render() {
             this.columnsMeta = [];
+            this.monthCellsMeta = [];
             const wrapper = buildElement('div', 'planner-view');
             const range = this.getCurrentRange();
             switch (this.view) {
@@ -327,7 +376,6 @@
                     }
                 }
                 header.appendChild(headerCell);
-                this.columnsMeta.push({ index, date: column.date, instructorId: column.instructorId ?? null });
             });
             container.appendChild(header);
 
@@ -383,11 +431,171 @@
                     columnElement.appendChild(eventElement);
                 });
 
+                this.columnsMeta.push({
+                    index: columnIndex,
+                    date: column.date,
+                    instructorId: column.instructorId ?? null,
+                    element: columnElement,
+                    rect: null,
+                });
+
                 body.appendChild(columnElement);
             });
 
             container.appendChild(body);
             return container;
+        }
+
+        updateColumnRects() {
+            this.columnsMeta.forEach((meta) => {
+                if (meta.element) {
+                    meta.rect = meta.element.getBoundingClientRect();
+                }
+            });
+        }
+
+        resolveColumnFromPoint(x) {
+            let closest = null;
+            let closestDistance = Infinity;
+            this.columnsMeta.forEach((meta) => {
+                if (!meta.rect) {
+                    return;
+                }
+                if (x >= meta.rect.left && x <= meta.rect.right) {
+                    closest = meta;
+                    closestDistance = 0;
+                } else {
+                    const distance = Math.min(Math.abs(x - meta.rect.left), Math.abs(x - meta.rect.right));
+                    if (distance < closestDistance) {
+                        closestDistance = distance;
+                        closest = meta;
+                    }
+                }
+            });
+            return closest;
+        }
+
+        highlightColumn(meta) {
+            if (this.dragState?.activeColumnMeta === meta) {
+                return;
+            }
+            if (this.dragState?.activeColumnMeta?.element) {
+                this.dragState.activeColumnMeta.element.removeAttribute('data-drag-target');
+            }
+            if (meta?.element) {
+                meta.element.setAttribute('data-drag-target', 'true');
+            }
+            if (this.dragState) {
+                this.dragState.activeColumnMeta = meta || null;
+            }
+        }
+
+        updateMonthCellRects() {
+            this.monthCellsMeta.forEach((meta) => {
+                if (meta.element) {
+                    meta.rect = meta.element.getBoundingClientRect();
+                }
+            });
+        }
+
+        resolveMonthCellFromPoint(x, y) {
+            let target = null;
+            let distance = Infinity;
+            this.monthCellsMeta.forEach((meta) => {
+                if (!meta.rect) {
+                    return;
+                }
+                const withinX = x >= meta.rect.left && x <= meta.rect.right;
+                const withinY = y >= meta.rect.top && y <= meta.rect.bottom;
+                if (withinX && withinY) {
+                    target = meta;
+                    distance = 0;
+                } else {
+                    const dx = withinX ? 0 : Math.min(Math.abs(x - meta.rect.left), Math.abs(x - meta.rect.right));
+                    const dy = withinY ? 0 : Math.min(Math.abs(y - meta.rect.top), Math.abs(y - meta.rect.bottom));
+                    const current = Math.hypot(dx, dy);
+                    if (current < distance) {
+                        distance = current;
+                        target = meta;
+                    }
+                }
+            });
+            return target;
+        }
+
+        highlightMonthCell(meta) {
+            if (this.dragState?.activeMonthMeta === meta) {
+                return;
+            }
+            if (this.dragState?.activeMonthMeta?.element) {
+                this.dragState.activeMonthMeta.element.removeAttribute('data-drag-target');
+            }
+            if (meta?.element) {
+                meta.element.setAttribute('data-drag-target', 'true');
+            }
+            if (this.dragState) {
+                this.dragState.activeMonthMeta = meta || null;
+            }
+        }
+
+        startMonthDrag(evt, event, meta) {
+            this.updateMonthCellRects();
+            this.dragState = {
+                kind: 'month',
+                type: 'move',
+                event,
+                pointerId: evt.pointerId,
+                originalStart: new Date(event.start.getTime()),
+                originalEnd: new Date(event.end.getTime()),
+                duration: Math.max(SLOT_MINUTES, differenceInMinutes(event.end, event.start)),
+                originMeta: meta,
+                previewStart: new Date(event.start.getTime()),
+                previewEnd: new Date(event.end.getTime()),
+                activeMonthMeta: meta,
+            };
+            meta?.element?.setAttribute('data-drag-target', 'true');
+            evt.preventDefault();
+        }
+
+        handleMonthDragMove(evt) {
+            const drag = this.dragState;
+            if (!drag) {
+                return;
+            }
+            const meta = this.resolveMonthCellFromPoint(evt.clientX, evt.clientY) || drag.originMeta;
+            if (!meta) {
+                return;
+            }
+            this.highlightMonthCell(meta);
+
+            const start = startOfDay(meta.date);
+            start.setHours(drag.originalStart.getHours(), drag.originalStart.getMinutes(), 0, 0);
+            const end = addMinutes(start, drag.duration);
+
+            drag.previewStart = start;
+            drag.previewEnd = end;
+            drag.targetMonthMeta = meta;
+        }
+
+        finishMonthDrag(evt) {
+            const drag = this.dragState;
+            if (!drag) {
+                return;
+            }
+            const meta = this.resolveMonthCellFromPoint(evt.clientX, evt.clientY) || drag.targetMonthMeta || drag.originMeta;
+            if (drag.activeMonthMeta?.element) {
+                drag.activeMonthMeta.element.removeAttribute('data-drag-target');
+            }
+            this.dragState = null;
+            if (!meta) {
+                return;
+            }
+            const newStart = drag.previewStart || drag.originalStart;
+            const newEnd = drag.previewEnd || drag.originalEnd;
+            if (newStart.getTime() === drag.originalStart.getTime() && newEnd.getTime() === drag.originalEnd.getTime()) {
+                return;
+            }
+            this.onEventMove({ event: drag.event, start: newStart, end: newEnd });
         }
 
         renderMonthView(start, end) {
@@ -432,31 +640,16 @@
 
                 const dayEvents = this.events.filter((event) => isSameDay(event.start, cursor));
                 const list = buildElement('ul', 'planner-month__events');
-                dayEvents.slice(0, 3).forEach((event) => {
-                    const status = STATUS_CONFIG[event.status] ?? STATUS_CONFIG.les;
-                    const item = buildElement(
-                        'li',
-                        'planner-month__event',
-                        `<span class="planner-month__dot" style="background:${status.color}"></span>` +
-                            `<span class="planner-month__title">${event.title}</span>` +
-                            `<span class="planner-month__time">${formatTime(event.start)}</span>`,
-                    );
-                    item.addEventListener('click', (evt) => {
-                        evt.preventDefault();
-                        evt.stopPropagation();
-                        this.onEventClick({ event });
-                    });
-                    list.appendChild(item);
-                });
-                if (dayEvents.length > 3) {
-                    list.appendChild(
-                        buildElement(
-                            'li',
-                            'planner-month__more',
-                            `+${dayEvents.length - 3} meer`,
-                        ),
-                    );
-                }
+                const cellMeta = {
+                    date: new Date(cursor.getTime()),
+                    element: cell,
+                    events: dayEvents,
+                    listElement: list,
+                    expanded: false,
+                    rect: null,
+                };
+                this.monthCellsMeta.push(cellMeta);
+                this.renderMonthCellEvents(cellMeta);
                 cell.appendChild(list);
 
                 cell.addEventListener('click', () => {
@@ -470,6 +663,78 @@
             }
             container.appendChild(grid);
             return container;
+        }
+
+        renderMonthCellEvents(meta) {
+            const { events, listElement, element } = meta;
+            listElement.innerHTML = '';
+            const collapsedOverflow = events.length > 3;
+            const limit = meta.expanded ? events.length : 3;
+            events.slice(0, limit).forEach((event) => {
+                const status = STATUS_CONFIG[event.status] ?? STATUS_CONFIG.les;
+                const item = buildElement(
+                    'li',
+                    'planner-month__event',
+                    `<span class="planner-month__dot" style="background:${status.color}"></span>` +
+                        `<span class="planner-month__title">${event.title}</span>` +
+                        `<span class="planner-month__time">${formatTime(event.start)}</span>`,
+                );
+                item.addEventListener('click', (evt) => {
+                    evt.preventDefault();
+                    evt.stopPropagation();
+                    this.onEventClick({ event });
+                });
+                const moveHandler = (evt) => this.handlePointerMove(evt);
+                const upHandler = (evt) => {
+                    item.releasePointerCapture(evt.pointerId);
+                    item.removeEventListener('pointermove', moveHandler);
+                    this.handlePointerUp(evt);
+                };
+                item.addEventListener('pointerdown', (evt) => {
+                    if (evt.button !== 0) {
+                        return;
+                    }
+                    if (evt.target.closest('button')) {
+                        return;
+                    }
+                    this.startMonthDrag(evt, event, meta);
+                    if (this.dragState) {
+                        item.setPointerCapture(evt.pointerId);
+                        item.addEventListener('pointermove', moveHandler);
+                        item.addEventListener('pointerup', upHandler, { once: true });
+                        item.addEventListener('pointercancel', upHandler, { once: true });
+                    }
+                });
+                listElement.appendChild(item);
+            });
+
+            element.dataset.expanded = meta.expanded ? 'true' : 'false';
+
+            if (!meta.expanded && collapsedOverflow) {
+                const wrapper = buildElement('li', 'planner-month__more-item');
+                const button = buildElement('button', 'planner-month__more', `+${events.length - limit} meer`);
+                button.type = 'button';
+                button.addEventListener('click', (evt) => {
+                    evt.preventDefault();
+                    evt.stopPropagation();
+                    meta.expanded = true;
+                    this.renderMonthCellEvents(meta);
+                });
+                wrapper.appendChild(button);
+                listElement.appendChild(wrapper);
+            } else if (meta.expanded && collapsedOverflow) {
+                const wrapper = buildElement('li', 'planner-month__more-item');
+                const button = buildElement('button', 'planner-month__more', 'Minder tonen');
+                button.type = 'button';
+                button.addEventListener('click', (evt) => {
+                    evt.preventDefault();
+                    evt.stopPropagation();
+                    meta.expanded = false;
+                    this.renderMonthCellEvents(meta);
+                });
+                wrapper.appendChild(button);
+                listElement.appendChild(wrapper);
+            }
         }
 
         computeColumnLayouts(events) {
@@ -586,33 +851,54 @@
                 }
                 const target = evt.target;
                 if (target.classList.contains('planner-event__resize--start')) {
-                    this.startDrag(evt, event, 'resize-start', columnIndex, columnDate);
+                    this.startDrag(evt, event, 'resize-start', columnIndex, columnDate, element);
                 } else if (target.classList.contains('planner-event__resize--end')) {
-                    this.startDrag(evt, event, 'resize-end', columnIndex, columnDate);
+                    this.startDrag(evt, event, 'resize-end', columnIndex, columnDate, element);
                 } else {
-                    this.startDrag(evt, event, 'move', columnIndex, columnDate);
+                    this.startDrag(evt, event, 'move', columnIndex, columnDate, element);
                 }
                 if (this.dragState) {
                     element.setPointerCapture(evt.pointerId);
                     element.addEventListener('pointermove', moveHandler);
                     element.addEventListener('pointerup', upHandler, { once: true });
+                    element.addEventListener('pointercancel', upHandler, { once: true });
                 }
             });
 
             return element;
         }
 
-        startDrag(evt, event, type, columnIndex, columnDate) {
+        startDrag(evt, event, type, columnIndex, columnDate, element) {
+            const meta = this.columnsMeta.find((item) => item.index === columnIndex) || null;
+            const columnElement = element.closest('.planner-time-grid__column');
+            const styles = columnElement ? window.getComputedStyle(columnElement) : null;
+            const paddingTop = styles ? Number.parseFloat(styles.paddingTop) || 0 : 0;
+            const eventRect = element.getBoundingClientRect();
+            const pointerOffsetMinutes = Math.round((evt.clientY - eventRect.top) / MINUTE_HEIGHT);
+            const duration = Math.max(SLOT_MINUTES, differenceInMinutes(event.end, event.start));
+
+            this.updateColumnRects();
+
             this.dragState = {
+                kind: 'time-grid',
                 type,
                 event,
-                columnIndex,
-                columnDate,
+                columnIndex: meta?.index ?? columnIndex,
+                columnDate: meta?.date ?? columnDate,
+                columnElement: meta?.element ?? columnElement,
                 pointerId: evt.pointerId,
-                startY: evt.clientY,
                 originalStart: new Date(event.start.getTime()),
                 originalEnd: new Date(event.end.getTime()),
+                pointerOffsetMinutes: clamp(pointerOffsetMinutes, 0, duration),
+                duration,
+                columnPaddingTop: paddingTop,
+                previewStart: new Date(event.start.getTime()),
+                previewEnd: new Date(event.end.getTime()),
+                activeColumnMeta: meta || null,
             };
+            if (meta?.element) {
+                meta.element.setAttribute('data-drag-target', 'true');
+            }
             evt.preventDefault();
         }
 
@@ -621,20 +907,70 @@
             if (!drag || evt.pointerId !== drag.pointerId) {
                 return;
             }
-            const deltaY = evt.clientY - drag.startY;
-            const minutesDelta = Math.round(deltaY / MINUTE_HEIGHT / SLOT_MINUTES) * SLOT_MINUTES;
+            if (drag.kind === 'month') {
+                this.handleMonthDragMove(evt);
+                return;
+            }
+
+            const currentMeta = this.columnsMeta.find((meta) => meta.index === drag.columnIndex) || null;
+            const activeMeta =
+                drag.type === 'move'
+                    ? this.resolveColumnFromPoint(evt.clientX) || currentMeta
+                    : currentMeta;
+
+            if (activeMeta?.element && activeMeta.element !== drag.columnElement) {
+                drag.columnElement = activeMeta.element;
+                drag.columnIndex = activeMeta.index;
+                drag.columnDate = activeMeta.date;
+                drag.columnPaddingTop = Number.parseFloat(
+                    window.getComputedStyle(activeMeta.element).paddingTop,
+                ) || 0;
+            }
+
+            if (activeMeta) {
+                this.highlightColumn(activeMeta);
+            }
+
+            const columnRect = drag.columnElement?.getBoundingClientRect();
+            const paddingTop = drag.columnPaddingTop || 0;
+            const minutesFromTop = (() => {
+                if (!columnRect) {
+                    return 0;
+                }
+                const relative = evt.clientY - (columnRect.top + paddingTop);
+                return clamp(Math.round(relative / MINUTE_HEIGHT), 0, 24 * 60);
+            })();
+
             let newStart = new Date(drag.originalStart.getTime());
             let newEnd = new Date(drag.originalEnd.getTime());
+
             if (drag.type === 'move') {
-                newStart = addMinutes(drag.originalStart, minutesDelta);
-                newEnd = addMinutes(drag.originalEnd, minutesDelta);
+                const startMinutes = clamp(
+                    Math.round((minutesFromTop - drag.pointerOffsetMinutes) / SLOT_MINUTES) * SLOT_MINUTES,
+                    0,
+                    24 * 60 - drag.duration,
+                );
+                newStart = addMinutes(drag.columnDate, startMinutes);
+                newEnd = addMinutes(newStart, drag.duration);
             } else if (drag.type === 'resize-start') {
-                newStart = addMinutes(drag.originalStart, minutesDelta);
+                const startMinutes = Math.round(minutesFromTop / SLOT_MINUTES) * SLOT_MINUTES;
+                newStart = addMinutes(
+                    drag.columnDate,
+                    clamp(startMinutes, 0, differenceInMinutes(drag.originalEnd, drag.columnDate) - SLOT_MINUTES),
+                );
                 if (differenceInMinutes(newEnd, newStart) < SLOT_MINUTES) {
                     newStart = addMinutes(newEnd, -SLOT_MINUTES);
                 }
             } else if (drag.type === 'resize-end') {
-                newEnd = addMinutes(drag.originalEnd, minutesDelta);
+                const endMinutes = Math.round(minutesFromTop / SLOT_MINUTES) * SLOT_MINUTES;
+                newEnd = addMinutes(
+                    drag.columnDate,
+                    clamp(
+                        endMinutes,
+                        differenceInMinutes(drag.originalStart, drag.columnDate) + SLOT_MINUTES,
+                        24 * 60,
+                    ),
+                );
                 if (differenceInMinutes(newEnd, newStart) < SLOT_MINUTES) {
                     newEnd = addMinutes(newStart, SLOT_MINUTES);
                 }
@@ -660,15 +996,21 @@
             const eventElements = this.element.querySelectorAll(
                 `.planner-event[data-event-id="${drag.event.id}"]`,
             );
-            eventElements.forEach((element) => {
+            eventElements.forEach((node) => {
+                if (drag.columnElement && node.parentElement !== drag.columnElement) {
+                    drag.columnElement.appendChild(node);
+                    node.dataset.columnIndex = String(drag.columnIndex);
+                    node.style.left = '0px';
+                    node.style.width = '100%';
+                }
                 const startMinutes = Math.max(0, differenceInMinutes(newStart, columnStart));
                 const endMinutes = Math.min(24 * 60, differenceInMinutes(newEnd, columnStart));
-                element.style.top = `${startMinutes * MINUTE_HEIGHT}px`;
-                element.style.height = `${Math.max(
+                node.style.top = `${startMinutes * MINUTE_HEIGHT}px`;
+                node.style.height = `${Math.max(
                     MIN_EVENT_HEIGHT,
                     (endMinutes - startMinutes) * MINUTE_HEIGHT,
                 )}px`;
-                element.classList.add('planner-event--dragging');
+                node.classList.add('planner-event--dragging');
             });
 
             drag.previewStart = newStart;
@@ -680,6 +1022,10 @@
             if (!drag || evt.pointerId !== drag.pointerId) {
                 return;
             }
+            if (drag.kind === 'month') {
+                this.finishMonthDrag(evt);
+                return;
+            }
             const eventElements = this.element.querySelectorAll(
                 `.planner-event[data-event-id="${drag.event.id}"]`,
             );
@@ -688,6 +1034,10 @@
                 element.releasePointerCapture(drag.pointerId);
                 element.removeEventListener('pointermove', this.handlePointerMove);
             });
+
+            if (drag.activeColumnMeta?.element) {
+                drag.activeColumnMeta.element.removeAttribute('data-drag-target');
+            }
 
             const newStart = drag.previewStart || drag.originalStart;
             const newEnd = drag.previewEnd || drag.originalEnd;
@@ -1052,8 +1402,8 @@
             packageInput.value = event?.package ?? '';
             locationInput.value = event?.location ?? '';
             descriptionInput.value = event?.description ?? '';
-            startInput.value = event?.start ? event.start.toISOString().slice(0, 16) : '';
-            endInput.value = event?.end ? event.end.toISOString().slice(0, 16) : '';
+            startInput.value = event?.start ? formatForInput(event.start) : '';
+            endInput.value = event?.end ? formatForInput(event.end) : '';
             notifyStudentEmailInput.checked = Boolean(event?.notify_student_email ?? true);
             notifyStudentPhoneInput.checked = Boolean(event?.notify_student_phone ?? false);
             notifyGuardianEmailInput.checked = Boolean(event?.notify_guardian_email ?? false);
@@ -1227,11 +1577,13 @@
             if (!startInput.value || !endInput.value) {
                 throw new Error('Vul start- en eindtijd in.');
             }
+            const startDate = parseLocalDate(startInput.value);
+            const endDate = parseLocalDate(endInput.value);
             const payload = {
                 student_id: Number.parseInt(studentIdInput.value, 10),
                 status: statusSelect.value,
-                start_time: new Date(startInput.value).toISOString(),
-                end_time: new Date(endInput.value).toISOString(),
+                start_time: formatForServer(startDate),
+                end_time: formatForServer(endDate),
                 vehicle: vehicleInput.value || null,
                 package: packageInput.value || null,
                 location: locationInput.value || null,
@@ -1275,8 +1627,8 @@
             const payload = {
                 student_id: event.student_id,
                 status: event.status,
-                start_time: start.toISOString(),
-                end_time: end.toISOString(),
+                start_time: formatForServer(start),
+                end_time: formatForServer(end),
                 vehicle: event.vehicle,
                 package: event.package,
                 location: event.location,
@@ -1291,8 +1643,8 @@
                 notify_guardian_email: event.notify_guardian_email,
                 notify_guardian_phone: event.notify_guardian_phone,
             };
-            event.start = start;
-            event.end = end;
+            event.start = new Date(start.getTime());
+            event.end = new Date(end.getTime());
             event.start_time = payload.start_time;
             event.end_time = payload.end_time;
             const local = planner.events.find((item) => item.id === event.id);

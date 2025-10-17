@@ -186,6 +186,10 @@
             background: linear-gradient(180deg, rgba(224, 231, 255, 0.75), rgba(248, 250, 252, 0.85));
         }
 
+        .planner-time-grid__column[data-drag-target="true"] {
+            box-shadow: inset 0 0 0 2px rgba(14, 165, 233, 0.55);
+        }
+
         .planner-time-grid__background {
             position: absolute;
             inset: 0;
@@ -377,6 +381,15 @@
             opacity: 0.55;
         }
 
+        .planner-month__cell[data-expanded="true"] {
+            box-shadow: 0 16px 40px -28px rgba(15, 23, 42, 0.45);
+        }
+
+        .planner-month__cell[data-drag-target="true"] {
+            outline: 2px dashed rgba(14, 165, 233, 0.5);
+            outline-offset: 6px;
+        }
+
         .planner-month__cell-header {
             display: flex;
             justify-content: space-between;
@@ -389,6 +402,13 @@
             flex-direction: column;
             gap: 0.35rem;
             font-size: 0.8rem;
+            max-height: 160px;
+            overflow: hidden;
+        }
+
+        .planner-month__cell[data-expanded="true"] .planner-month__events {
+            max-height: 260px;
+            overflow-y: auto;
         }
 
         .planner-month__event {
@@ -399,6 +419,7 @@
             border-radius: 0.85rem;
             background: rgba(255, 255, 255, 0.9);
             cursor: pointer;
+            transition: background 120ms ease, transform 120ms ease;
         }
 
         .planner-month__dot {
@@ -407,9 +428,46 @@
             border-radius: 9999px;
         }
 
+        .planner-month__event:hover {
+            background: rgba(224, 242, 254, 0.9);
+            transform: translateY(-1px);
+        }
+
+        .planner-month__title {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .planner-month__time {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        .planner-month__more-item {
+            display: flex;
+        }
+
         .planner-month__more {
-            font-size: 0.7rem;
-            color: #0ea5e9;
+            margin-top: 0.25rem;
+            width: 100%;
+            border-radius: 9999px;
+            padding: 0.4rem 0.75rem;
+            border: 1px dashed rgba(148, 163, 184, 0.55);
+            background: rgba(241, 245, 249, 0.9);
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #0369a1;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            cursor: pointer;
+            transition: all 120ms ease;
+        }
+
+        .planner-month__more:hover {
+            background: rgba(224, 242, 254, 0.95);
+            border-color: rgba(14, 165, 233, 0.5);
         }
 
         .planner-empty {
