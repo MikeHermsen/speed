@@ -690,7 +690,21 @@
                 if (!canManageStudents) {
                     input.setAttribute('readonly', 'readonly');
                 }
+                const defaultToggleLabel = toggle ? toggle.textContent.trim() || 'Bewerk' : 'Bewerk';
                 let editing = false;
+
+                function setEditing(nextEditing, { focus } = { focus: false }) {
+                    editing = nextEditing;
+                    input.classList.toggle('hidden', !editing);
+                    display.classList.toggle('hidden', editing);
+                    if (toggle) {
+                        toggle.textContent = editing ? 'Opslaan' : defaultToggleLabel;
+                    }
+                    if (editing && focus) {
+                        input.focus();
+                    }
+                }
+
                 function apply(value) {
                     const trimmed = value?.trim();
                     const hasValue = Boolean(trimmed);
@@ -705,28 +719,27 @@
                         if (!canManageStudents) {
                             return;
                         }
-                        editing = !editing;
-                        input.classList.toggle('hidden', !editing);
-                        display.classList.toggle('hidden', editing);
-                        toggle.textContent = editing ? 'Opslaan' : 'Wijzig';
-                        if (!editing) {
+                        const nextEditing = !editing;
+                        setEditing(nextEditing, { focus: nextEditing });
+                        if (!nextEditing) {
                             apply(input.value);
-                        } else {
-                            input.focus();
                         }
                     });
                 } else {
                     input.classList.add('hidden');
                     display.classList.remove('hidden');
                 }
-                apply(input.value || '');
+                const initialValue = input.value || '';
+                apply(initialValue);
+                const shouldAutoEdit = Boolean(toggle && canManageStudents && !initialValue.trim());
+                setEditing(shouldAutoEdit);
                 return {
                     setValue(value) {
-                        input.value = value || '';
-                        apply(input.value);
-                        if (toggle && editing) {
-                            toggle.click();
-                        }
+                        const nextValue = value ? String(value) : '';
+                        input.value = nextValue;
+                        apply(nextValue);
+                        const shouldEdit = Boolean(toggle && canManageStudents && !nextValue.trim());
+                        setEditing(shouldEdit);
                     },
                     getValue() {
                         return input.value?.trim() || '';
