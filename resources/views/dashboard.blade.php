@@ -54,12 +54,89 @@
             position: relative;
         }
 
+        .planner-main {
+            scroll-margin-top: 5rem;
+        }
+
+        .planner-shell {
+            border-radius: 2rem;
+        }
+
+        .planner-content {
+            gap: 1.75rem;
+        }
+
         .planner-header {
             gap: 1.5rem;
         }
 
         .planner-toolbar > * {
             flex-shrink: 0;
+        }
+
+        .planner-mobile-toggle {
+            display: none;
+        }
+
+        @media (max-width: 1023px) {
+            .planner-mobile-toggle {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                border-radius: 9999px;
+                border: 1px solid rgba(148, 163, 184, 0.55);
+                background: rgba(255, 255, 255, 0.92);
+                color: #0369a1;
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                font-weight: 600;
+                font-size: 0.7rem;
+                padding: 0.55rem 0.95rem;
+                box-shadow: 0 22px 40px -32px rgba(14, 165, 233, 0.45);
+                transition: all 160ms ease;
+            }
+
+            .planner-mobile-toggle[data-expanded="true"] {
+                border-color: rgba(14, 165, 233, 0.7);
+                color: #0f172a;
+                background: rgba(224, 242, 254, 0.96);
+                box-shadow: 0 26px 52px -34px rgba(14, 165, 233, 0.5);
+            }
+
+            .planner-mobile-toggle svg {
+                width: 1rem;
+                height: 1rem;
+            }
+        }
+
+        [data-mobile-panel] {
+            transition: transform 160ms ease, opacity 150ms ease;
+        }
+
+        @media (max-width: 1023px) {
+            [data-mobile-panel] {
+                width: 100%;
+            }
+
+            [data-mobile-panel][data-open="true"] {
+                display: flex;
+                flex-direction: column;
+                gap: 1.25rem;
+                border-radius: 1.5rem;
+                border: 1px solid rgba(148, 163, 184, 0.35);
+                background: rgba(255, 255, 255, 0.96);
+                padding: 1.25rem;
+                box-shadow: 0 32px 60px -38px rgba(15, 23, 42, 0.45);
+                opacity: 1;
+                transform: translateY(0);
+                margin-top: 0.75rem;
+            }
+
+            [data-mobile-panel]:not([data-open="true"]) {
+                display: none;
+                opacity: 0;
+                transform: translateY(-6px);
+            }
         }
 
         .planner-view {
@@ -471,6 +548,48 @@
                 padding: 0.55rem;
             }
 
+            .planner-header {
+                padding-inline: 1rem;
+            }
+
+            .planner-main {
+                padding: 1.25rem 1rem 1.75rem;
+            }
+
+            .planner-shell {
+                padding: 1.25rem;
+                border-radius: 1.5rem;
+                box-shadow: 0 24px 48px -36px rgba(15, 23, 42, 0.25);
+            }
+
+            .planner-content {
+                gap: 1.25rem;
+            }
+
+            .planner-toolbar {
+                flex-direction: row;
+                align-items: center;
+                gap: 0.5rem;
+                overflow-x: auto;
+                padding-bottom: 0.35rem;
+                margin-inline: -0.5rem;
+                padding-inline: 0.5rem;
+                scroll-snap-type: x proximity;
+            }
+
+            .planner-toolbar::-webkit-scrollbar {
+                display: none;
+            }
+
+            .planner-toolbar > * {
+                width: auto;
+                scroll-snap-align: start;
+            }
+
+            .planner-toolbar > div {
+                flex-wrap: nowrap;
+            }
+
             .planner-event__time {
                 font-size: 0.7rem;
             }
@@ -499,6 +618,12 @@
             #status-filter .filter-chip {
                 width: 100%;
                 justify-content: center;
+            }
+
+            .filter-chip {
+                font-size: 0.7rem;
+                padding: 0.3rem 0.75rem;
+                gap: 0.35rem;
             }
         }
 
@@ -695,10 +820,10 @@
             </div>
         </header>
 
-        <main class="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
-            <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl">
+        <main class="planner-main mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
+            <div class="planner-shell rounded-3xl border border-slate-200 bg-white p-6 shadow-xl">
                 <div class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-                    <div class="flex flex-col gap-4">
+                    <div class="planner-content flex flex-col gap-4 lg:flex-1">
                         <div class="planner-toolbar flex flex-wrap items-center gap-3">
                             <div class="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm">
                                 <button type="button" class="rounded-full bg-gradient-to-r from-sky-500 to-blue-600 px-3 py-1 text-xs font-semibold text-white shadow-sm transition hover:from-sky-600 hover:to-blue-700" data-calendar-nav="prev">Vorige</button>
@@ -724,6 +849,19 @@
                             >
                                 Afspraak plannen
                             </button>
+                            <button
+                                type="button"
+                                class="planner-mobile-toggle lg:hidden"
+                                data-mobile-panel-toggle
+                                data-expanded="false"
+                                aria-expanded="false"
+                                aria-controls="planner-side-panel"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                                </svg>
+                                Filters & contact
+                            </button>
                         </div>
                         <div>
                             <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Datum bereik</p>
@@ -736,7 +874,12 @@
                             <span class="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1"><span class="h-2.5 w-2.5 rounded-full bg-rose-400"></span>Ziek</span>
                         </div>
                     </div>
-                    <div class="flex w-full flex-col gap-4 lg:w-80">
+                    <div
+                        id="planner-side-panel"
+                        data-mobile-panel
+                        data-open="true"
+                        class="planner-side-panel flex w-full flex-col gap-4 lg:w-80"
+                    >
                         @if ($user->isAdmin())
                             <div>
                                 <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Instructeurs filteren</p>

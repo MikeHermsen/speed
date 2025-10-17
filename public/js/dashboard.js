@@ -2068,6 +2068,43 @@
         bindFilterButtons(instructorFilter);
         bindFilterButtons(statusFilter);
 
+        const mobilePanelToggle = document.querySelector('[data-mobile-panel-toggle]');
+        const mobilePanel = document.querySelector('[data-mobile-panel]');
+
+        if (mobilePanel && mobilePanelToggle) {
+            const breakpoint = window.matchMedia('(min-width: 1024px)');
+
+            const applyPanelState = (expanded, { userTriggered = false } = {}) => {
+                const nextState = expanded ? 'true' : 'false';
+                mobilePanel.dataset.open = nextState;
+                mobilePanelToggle.setAttribute('aria-expanded', nextState);
+                mobilePanelToggle.dataset.expanded = nextState;
+
+                if (userTriggered && expanded && !breakpoint.matches) {
+                    window.requestAnimationFrame(() => {
+                        mobilePanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    });
+                }
+            };
+
+            const handleBreakpointChange = (event) => {
+                applyPanelState(event.matches);
+            };
+
+            applyPanelState(breakpoint.matches);
+
+            if (typeof breakpoint.addEventListener === 'function') {
+                breakpoint.addEventListener('change', handleBreakpointChange);
+            } else if (typeof breakpoint.addListener === 'function') {
+                breakpoint.addListener(handleBreakpointChange);
+            }
+
+            mobilePanelToggle.addEventListener('click', () => {
+                const expanded = mobilePanel.dataset.open === 'true';
+                applyPanelState(!expanded, { userTriggered: true });
+            });
+        }
+
         updateRangeLabel();
         refreshEvents();
     });
