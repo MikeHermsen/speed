@@ -119,15 +119,15 @@
         .planner-time-grid {
             display: flex;
             flex-direction: column;
-            gap: 1.5rem;
+            gap: 1.25rem;
             overflow-x: auto;
             padding-bottom: 0.5rem;
         }
 
         .planner-time-grid {
             --planner-column-count: 1;
-            --planner-column-min: 180px;
-            --planner-time-width: 72px;
+            --planner-column-min: 160px;
+            --planner-time-width: 68px;
         }
 
         .planner-time-grid__header {
@@ -387,14 +387,14 @@
 
         @media (max-width: 1280px) {
             .planner-time-grid {
-                --planner-column-min: 160px;
+                --planner-column-min: 150px;
             }
         }
 
         @media (max-width: 1024px) {
             .planner-time-grid {
-                --planner-column-min: 140px;
-                --planner-time-width: 68px;
+                --planner-column-min: 130px;
+                --planner-time-width: 64px;
             }
 
             .planner-header {
@@ -416,8 +416,8 @@
 
         @media (max-width: 768px) {
             .planner-time-grid {
-                --planner-column-min: 110px;
-                --planner-time-width: 64px;
+                --planner-column-min: 100px;
+                --planner-time-width: 60px;
             }
 
             .planner-event {
@@ -456,19 +456,19 @@
 
         @media (max-width: 640px) {
             .planner-time-grid {
-                --planner-column-min: 0px;
-                --planner-time-width: 56px;
+                --planner-column-min: clamp(42px, 14vw, 80px);
+                --planner-time-width: 52px;
             }
 
             .planner-time-grid__header,
             .planner-time-grid__body {
-                gap: 0.4rem;
+                gap: 0.35rem;
                 min-width: 100%;
             }
 
             .planner-time-grid__column {
                 min-height: 48rem;
-                padding: 0.6rem;
+                padding: 0.55rem;
             }
 
             .planner-event__time {

@@ -1359,6 +1359,7 @@
         const statusFilter = document.getElementById('status-filter');
         const modalTitle = document.getElementById('event-modal-title');
         const quickCreateButton = document.getElementById('quick-create-event');
+        const studentBirthDateInput = document.getElementById('student_birth_date');
         const openStudentButtons = document.querySelectorAll('[data-open-student-modal]');
         const closeModalButtons = modal.querySelectorAll('[data-close-modal]');
         const closeStudentButtons = studentModal.querySelectorAll('[data-close-student-modal]');
