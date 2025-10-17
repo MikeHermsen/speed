@@ -1,41 +1,9 @@
 @push('head')
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fullcalendar/resource-timegrid@6.1.8/main.min.css">
     <style>
         body {
             background: radial-gradient(circle at top, rgba(59, 130, 246, 0.15), transparent 55%),
                 radial-gradient(circle at bottom, rgba(16, 185, 129, 0.1), transparent 45%),
                 #f8fafc;
-        }
-
-        #calendar .fc-event {
-            backdrop-filter: saturate(140%) blur(0.5px);
-            border-radius: 18px;
-            border: none;
-            box-shadow: 0 10px 25px -12px rgba(15, 23, 42, 0.4);
-        }
-
-        #calendar .fc-timegrid-slot:hover {
-            background-color: rgba(14, 165, 233, 0.08);
-        }
-
-        #calendar .fc-timegrid-now-indicator-line,
-        #calendar .fc-timegrid-now-indicator-arrow {
-            border-color: rgba(56, 189, 248, 0.85);
-        }
-
-        #calendar .fc-daygrid-day.fc-day-today,
-        #calendar .fc-timegrid-col.fc-day-today {
-            background: linear-gradient(180deg, rgba(56, 189, 248, 0.08), rgba(56, 189, 248, 0));
-        }
-
-        #calendar .fc-scrollgrid {
-            border-radius: 28px;
-            overflow: hidden;
-        }
-
-        #calendar .fc-toolbar-title {
-            font-weight: 700;
         }
 
         .fancy-chip {
@@ -58,6 +26,341 @@
         .fancy-chip:hover::before,
         .fancy-chip[data-active="true"]::before {
             opacity: 1;
+        }
+
+        .filter-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            border-radius: 9999px;
+            padding: 0.35rem 0.85rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            border: 1px solid rgba(148, 163, 184, 0.45);
+            background: rgba(255, 255, 255, 0.78);
+            color: #475569;
+            transition: all 120ms ease;
+        }
+
+        .filter-chip.active {
+            border-color: rgba(14, 165, 233, 0.6);
+            color: #0369a1;
+            background: rgba(224, 242, 254, 0.85);
+            box-shadow: 0 6px 16px -14px rgba(14, 116, 144, 0.6);
+        }
+
+        .planner-root {
+            position: relative;
+        }
+
+        .planner-view {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .planner-loading {
+            position: absolute;
+            inset: 0;
+            background: rgba(248, 250, 252, 0.75);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 30;
+            backdrop-filter: blur(2px);
+        }
+
+        .planner-loading.hidden {
+            display: none;
+        }
+
+        .planner-loading__spinner {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 9999px;
+            border: 4px solid rgba(148, 163, 184, 0.35);
+            border-top-color: rgba(14, 165, 233, 0.8);
+            animation: planner-spin 900ms linear infinite;
+        }
+
+        @keyframes planner-spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .planner-time-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .planner-time-grid__header {
+            display: grid;
+            grid-template-columns: 80px repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            align-items: end;
+        }
+
+        .planner-time-grid__header-cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-bottom: 0.25rem;
+            color: #0f172a;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-size: 0.75rem;
+        }
+
+        .planner-time-grid__header-cell:first-child {
+            justify-content: flex-end;
+            color: #64748b;
+        }
+
+        .planner-time-grid__header-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-radius: 9999px;
+            background: linear-gradient(130deg, rgba(59, 130, 246, 0.14), rgba(14, 165, 233, 0.22));
+            color: #0f172a;
+            padding: 0.5rem 1rem;
+        }
+
+        .planner-time-grid__body {
+            display: grid;
+            grid-template-columns: 80px repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+        }
+
+        .planner-time-grid__times {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            color: #94a3b8;
+            font-size: 0.75rem;
+            position: relative;
+        }
+
+        .planner-time-grid__time-label {
+            display: flex;
+            align-items: flex-start;
+            justify-content: flex-end;
+            padding-right: 0.75rem;
+            box-sizing: border-box;
+        }
+
+        .planner-time-grid__column {
+            position: relative;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 252, 0.85));
+            border-radius: 1.75rem;
+            padding: 0.75rem;
+            box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.2);
+            overflow: hidden;
+            min-height: 64rem;
+        }
+
+        .planner-time-grid__background {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        .planner-time-grid__hour-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 0;
+            border-top: 1px solid rgba(148, 163, 184, 0.25);
+        }
+
+        .planner-event {
+            position: absolute;
+            padding: 0.85rem 1rem;
+            border-radius: 1.25rem;
+            background: rgba(255, 255, 255, 0.94);
+            box-shadow: 0 18px 36px -20px rgba(15, 23, 42, 0.35);
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            cursor: pointer;
+            transition: transform 120ms ease, box-shadow 150ms ease;
+        }
+
+        .planner-event::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 1.2rem;
+            background: var(--planner-event-bg, rgba(14, 165, 233, 0.2));
+            opacity: 0.6;
+            z-index: -1;
+        }
+
+        .planner-event:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 20px 40px -24px rgba(15, 23, 42, 0.4);
+        }
+
+        .planner-event__time {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #0f172a;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .planner-event__title {
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .planner-event__meta {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        .planner-event__status {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .planner-event__resize {
+            position: absolute;
+            left: 18%;
+            right: 18%;
+            height: 10px;
+            background: transparent;
+            border: none;
+            cursor: ns-resize;
+        }
+
+        .planner-event__resize--start {
+            top: 4px;
+        }
+
+        .planner-event__resize--end {
+            bottom: 4px;
+        }
+
+        .planner-event--dragging {
+            opacity: 0.85;
+            box-shadow: 0 24px 48px -24px rgba(14, 165, 233, 0.45);
+        }
+
+        .planner-month {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .planner-month__header,
+        .planner-month__grid {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 0.75rem;
+        }
+
+        .planner-month__header-cell {
+            text-align: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #64748b;
+        }
+
+        .planner-month__cell {
+            border-radius: 1.5rem;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(241, 245, 249, 0.95));
+            padding: 1rem;
+            box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.2);
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .planner-month__cell--muted {
+            opacity: 0.55;
+        }
+
+        .planner-month__cell-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .planner-month__events {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            font-size: 0.8rem;
+        }
+
+        .planner-month__event {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.35rem 0.5rem;
+            border-radius: 0.85rem;
+            background: rgba(255, 255, 255, 0.9);
+            cursor: pointer;
+        }
+
+        .planner-month__dot {
+            width: 0.5rem;
+            height: 0.5rem;
+            border-radius: 9999px;
+        }
+
+        .planner-month__more {
+            font-size: 0.7rem;
+            color: #0ea5e9;
+        }
+
+        .planner-instructor {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .planner-instructor__section {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .planner-instructor__header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+        }
+
+        .planner-instructor__title {
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .planner-instructor__subtitle {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        .planner-empty {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #64748b;
+            padding: 2rem;
+            border-radius: 1.5rem;
+            background: rgba(226, 232, 240, 0.35);
         }
     </style>
 @endpush
@@ -506,1186 +809,12 @@
         </div>
     </div>
 
+@endpush
+
+@push('scripts')
     <script id="planning-config" type="application/json">
         @json($planningConfig, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.8/index.global.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/timegrid@6.1.8/index.global.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/interaction@6.1.8/index.global.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/resource@6.1.8/index.global.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/resource-timegrid@6.1.8/index.global.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const calendarElement = document.getElementById('calendar');
-            if (!calendarElement) {
-                return;
-            }
-            let config = {};
-            const configScript = document.getElementById('planning-config');
-            if (configScript) {
-                try {
-                    config = JSON.parse(configScript.textContent || '{}');
-                } catch (error) {
-                    console.error('Kon planningconfiguratie niet laden:', error);
-                }
-            }
-            if (!window.FullCalendar || !FullCalendar.Calendar) {
-                console.error('FullCalendar kon niet geladen worden.');
-                return;
-            }
-            const rangeLabel = document.getElementById('calendar-range');
-            const modal = document.getElementById('event-modal');
-            const studentModal = document.getElementById('student-modal');
-            const modalForm = document.getElementById('event-form');
-            const studentForm = document.getElementById('student-form');
-            const closeButtons = modal.querySelectorAll('[data-close-modal]');
-            const closeStudentButtons = studentModal.querySelectorAll('[data-close-student-modal]');
-            const studentSearch = document.getElementById('student-search');
-            const studentResults = document.getElementById('student-results');
-            const selectedStudent = document.getElementById('selected-student');
-            const selectedStudentDetails = document.getElementById('selected-student-details');
-            const deleteStudentButton = document.getElementById('delete-student');
-            const studentIdInput = document.getElementById('student_id');
-            const eventIdInput = document.getElementById('event_id');
-            const statusSelect = document.getElementById('status');
-            const vehicleInput = document.getElementById('vehicle');
-            const packageInput = document.getElementById('package');
-            const locationInput = document.getElementById('location');
-            const calendarError = document.getElementById('calendar-error');
-            const emailInput = document.getElementById('email');
-            const emailDisplay = document.getElementById('email-display');
-            const emailLink = document.getElementById('email-link');
-            const toggleEmailButton = document.getElementById('toggle-email-edit');
-            const phoneInput = document.getElementById('phone');
-            const phoneDisplay = document.getElementById('phone-display');
-            const phoneLink = document.getElementById('phone-link');
-            const togglePhoneButton = document.getElementById('toggle-phone-edit');
-            const parentEmailInput = document.getElementById('parent_email');
-            const parentEmailDisplay = document.getElementById('parent-email-display');
-            const parentEmailLink = document.getElementById('parent-email-link');
-            const toggleParentEmailButton = document.getElementById('toggle-parent-email-edit');
-            const parentPhoneInput = document.getElementById('parent_phone');
-            const parentPhoneDisplay = document.getElementById('parent-phone-display');
-            const parentPhoneLink = document.getElementById('parent-phone-link');
-            const toggleParentPhoneButton = document.getElementById('toggle-parent-phone-edit');
-            const hasGuardianInput = document.getElementById('has_guardian');
-            const guardianSection = document.getElementById('guardian-section');
-            const guardianEmailInput = document.getElementById('guardian_email');
-            const guardianEmailDisplay = document.getElementById('guardian-email-display');
-            const guardianEmailLink = document.getElementById('guardian-email-link');
-            const toggleGuardianEmailButton = document.getElementById('toggle-guardian-email-edit');
-            const guardianPhoneInput = document.getElementById('guardian_phone');
-            const guardianPhoneDisplay = document.getElementById('guardian-phone-display');
-            const guardianPhoneLink = document.getElementById('guardian-phone-link');
-            const toggleGuardianPhoneButton = document.getElementById('toggle-guardian-phone-edit');
-            const notifyStudentEmailInput = document.getElementById('notify-student-email');
-            const notifyStudentPhoneInput = document.getElementById('notify-student-phone');
-            const notifyParentEmailInput = document.getElementById('notify-parent-email');
-            const notifyParentPhoneInput = document.getElementById('notify-parent-phone');
-            const notifyGuardianEmailInput = document.getElementById('notify-guardian-email');
-            const notifyGuardianPhoneInput = document.getElementById('notify-guardian-phone');
-            const descriptionInput = document.getElementById('description');
-            const startInput = document.getElementById('start_time');
-            const endInput = document.getElementById('end_time');
-            const openStudentModalButtons = document.querySelectorAll('[data-open-student-modal]');
-            const modalTitle = document.getElementById('event-modal-title');
-            const summaryStudent = document.getElementById('summary-student');
-            const summaryInstructor = document.getElementById('summary-instructor');
-            const summaryStatus = document.getElementById('summary-status');
-            const summaryLocation = document.getElementById('summary-location');
-            const instructorSelect = document.getElementById('instructor_id');
-            const instructorFilter = document.getElementById('instructor-filter');
-            const statusFilter = document.getElementById('status-filter');
-            const instructorLookup = new Map((config.instructors || []).map((instructor) => [String(instructor.id), instructor.name]));
-            const studentHasGuardianInput = document.getElementById('student_has_guardian');
-            const studentGuardianFields = document.getElementById('student-guardian-fields');
-            const studentGuardianEmailInput = document.getElementById('student_guardian_email');
-            const studentGuardianPhoneInput = document.getElementById('student_guardian_phone');
-            const studentGuardianPrefToggles = studentModal.querySelectorAll('[data-student-guardian-pref]');
-            const studentNotifyGuardianEmailInput = document.getElementById('student_notify_guardian_email');
-            const studentNotifyGuardianPhoneInput = document.getElementById('student_notify_guardian_phone');
-            let calendar;
-            const dayGridPlugin = FullCalendar?.dayGridPlugin || FullCalendar?.DayGrid;
-            const timeGridPlugin = FullCalendar?.timeGridPlugin || FullCalendar?.TimeGrid;
-            const interactionPlugin = FullCalendar?.interactionPlugin || FullCalendar?.Interaction;
-            const resourcePlugin = FullCalendar?.resourcePlugin || FullCalendar?.Resource;
-            const resourceTimeGridPlugin = FullCalendar?.resourceTimeGridPlugin || FullCalendar?.ResourceTimeGrid;
-            const hasResourceSupport = Boolean(resourcePlugin && resourceTimeGridPlugin);
-
-            const plugins = [];
-            if (dayGridPlugin) plugins.push(dayGridPlugin);
-            if (timeGridPlugin) plugins.push(timeGridPlugin);
-            if (interactionPlugin) plugins.push(interactionPlugin);
-            if (config.userRole === 'admin' && hasResourceSupport) {
-                plugins.push(resourcePlugin, resourceTimeGridPlugin);
-            }
-
-            if (config.userRole === 'admin' && !hasResourceSupport) {
-                document.querySelector('[data-calendar-view="resourceTimeGridWeek"]')?.remove();
-                console.warn('FullCalendar resource plug-in niet beschikbaar; standaardweergave wordt gebruikt.');
-            }
-
-            const colorByStatus = {
-                les: '#10b981',
-                proefles: '#0ea5e9',
-                examen: '#f59e0b',
-                ziek: '#f43f5e',
-            };
-
-            const statusLabels = {
-                les: 'Les',
-                proefles: 'Proefles',
-                examen: 'Examen',
-                ziek: 'Ziek',
-            };
-
-            let selectedStudentData = null;
-
-            function escapeHtml(value) {
-                if (value === undefined || value === null) {
-                    return '';
-                }
-                return String(value)
-                    .replace(/&/g, '&amp;')
-                    .replace(/</g, '&lt;')
-                    .replace(/>/g, '&gt;')
-                    .replace(/"/g, '&quot;')
-                    .replace(/'/g, '&#039;');
-            }
-
-            function normalisePhoneHref(value) {
-                return `tel:${(value || '').replace(/[^0-9+]/g, '')}`;
-            }
-
-            function createContactEditor({ input, display, link, toggleButton, editLabel, saveLabel, hrefFormatter }) {
-                let editing = false;
-
-                function applyDisplay(rawValue) {
-                    const value = rawValue || '';
-                    const hasValue = value.trim() !== '';
-                    const emptyLabel = link.dataset.emptyLabel || 'Niet ingesteld';
-                    link.textContent = hasValue ? value : emptyLabel;
-                    link.href = hasValue ? hrefFormatter(value) : '#';
-                    if (hasValue) {
-                        link.classList.add('text-sky-600');
-                        link.classList.remove('text-slate-400');
-                    } else {
-                        link.classList.add('text-slate-400');
-                        link.classList.remove('text-sky-600');
-                    }
-                }
-
-                function setValue(rawValue) {
-                    input.value = rawValue || '';
-                    applyDisplay(input.value);
-                    if (editing) {
-                        editing = false;
-                        input.classList.add('hidden');
-                        display.classList.remove('hidden');
-                        toggleButton.textContent = editLabel;
-                    }
-                }
-
-                function toggle(force) {
-                    const nextState = typeof force === 'boolean' ? force : !editing;
-                    if (nextState === editing) {
-                        if (!nextState) {
-                            applyDisplay(input.value);
-                        }
-                        return;
-                    }
-                    editing = nextState;
-                    input.classList.toggle('hidden', !editing);
-                    display.classList.toggle('hidden', editing);
-                    toggleButton.textContent = editing ? saveLabel : editLabel;
-                    if (editing) {
-                        input.focus();
-                    } else {
-                        applyDisplay(input.value);
-                    }
-                }
-
-                toggleButton.addEventListener('click', () => toggle());
-                link.addEventListener('click', (event) => {
-                    if (!input.value) {
-                        event.preventDefault();
-                    }
-                });
-
-                return {
-                    setValue,
-                    toggle,
-                    getValue: () => input.value || '',
-                    ensureView: () => {
-                        if (editing) {
-                            toggle(false);
-                        } else {
-                            applyDisplay(input.value);
-                        }
-                    },
-                };
-            }
-
-            const studentEmailEditor = createContactEditor({
-                input: emailInput,
-                display: emailDisplay,
-                link: emailLink,
-                toggleButton: toggleEmailButton,
-                editLabel: 'Bewerk',
-                saveLabel: 'Opslaan e-mail',
-                hrefFormatter: (value) => `mailto:${value}`,
-            });
-
-            const studentPhoneEditor = createContactEditor({
-                input: phoneInput,
-                display: phoneDisplay,
-                link: phoneLink,
-                toggleButton: togglePhoneButton,
-                editLabel: 'Bewerk',
-                saveLabel: 'Opslaan nummer',
-                hrefFormatter: (value) => normalisePhoneHref(value),
-            });
-
-            const parentEmailEditor = createContactEditor({
-                input: parentEmailInput,
-                display: parentEmailDisplay,
-                link: parentEmailLink,
-                toggleButton: toggleParentEmailButton,
-                editLabel: 'Bewerk',
-                saveLabel: 'Opslaan e-mail',
-                hrefFormatter: (value) => `mailto:${value}`,
-            });
-
-            const parentPhoneEditor = createContactEditor({
-                input: parentPhoneInput,
-                display: parentPhoneDisplay,
-                link: parentPhoneLink,
-                toggleButton: toggleParentPhoneButton,
-                editLabel: 'Bewerk',
-                saveLabel: 'Opslaan nummer',
-                hrefFormatter: (value) => normalisePhoneHref(value),
-            });
-
-            const guardianEmailEditor = createContactEditor({
-                input: guardianEmailInput,
-                display: guardianEmailDisplay,
-                link: guardianEmailLink,
-                toggleButton: toggleGuardianEmailButton,
-                editLabel: 'Bewerk',
-                saveLabel: 'Opslaan e-mail',
-                hrefFormatter: (value) => `mailto:${value}`,
-            });
-
-            const guardianPhoneEditor = createContactEditor({
-                input: guardianPhoneInput,
-                display: guardianPhoneDisplay,
-                link: guardianPhoneLink,
-                toggleButton: toggleGuardianPhoneButton,
-                editLabel: 'Bewerk',
-                saveLabel: 'Opslaan nummer',
-                hrefFormatter: (value) => normalisePhoneHref(value),
-            });
-
-            studentEmailEditor.setValue('');
-            studentPhoneEditor.setValue('');
-            parentEmailEditor.setValue('');
-            parentPhoneEditor.setValue('');
-            guardianEmailEditor.setValue('');
-            guardianPhoneEditor.setValue('');
-
-            function updateGuardianVisibility(clear = false) {
-                const enabled = hasGuardianInput?.checked ?? false;
-                if (guardianSection) {
-                    guardianSection.classList.toggle('hidden', !enabled);
-                }
-                [guardianEmailInput, guardianPhoneInput, notifyGuardianEmailInput, notifyGuardianPhoneInput].forEach((element) => {
-                    if (!element) {
-                        return;
-                    }
-                    element.disabled = !enabled;
-                    if (!enabled && clear) {
-                        if (element === notifyGuardianEmailInput || element === notifyGuardianPhoneInput) {
-                            element.checked = false;
-                        } else {
-                            element.value = '';
-                        }
-                    }
-                });
-                if (!enabled && clear) {
-                    guardianEmailEditor.setValue('');
-                    guardianPhoneEditor.setValue('');
-                } else {
-                    guardianEmailEditor.ensureView();
-                    guardianPhoneEditor.ensureView();
-                }
-            }
-
-            updateGuardianVisibility(true);
-
-            hasGuardianInput?.addEventListener('change', () => {
-                updateGuardianVisibility(!hasGuardianInput.checked);
-            });
-
-            function updateStudentGuardianVisibility(clear = false) {
-                const enabled = studentHasGuardianInput?.checked ?? false;
-                if (studentGuardianFields) {
-                    studentGuardianFields.classList.toggle('hidden', !enabled);
-                }
-                studentGuardianPrefToggles.forEach((label) => {
-                    label.classList.toggle('hidden', !enabled);
-                });
-                [studentGuardianEmailInput, studentGuardianPhoneInput, studentNotifyGuardianEmailInput, studentNotifyGuardianPhoneInput].forEach((element) => {
-                    if (!element) {
-                        return;
-                    }
-                    element.disabled = !enabled;
-                    if (!enabled && clear) {
-                        if (element === studentNotifyGuardianEmailInput || element === studentNotifyGuardianPhoneInput) {
-                            element.checked = false;
-                        } else {
-                            element.value = '';
-                        }
-                    }
-                });
-            }
-
-            updateStudentGuardianVisibility(true);
-
-            studentHasGuardianInput?.addEventListener('change', () => {
-                updateStudentGuardianVisibility(!studentHasGuardianInput.checked);
-            });
-
-            function formatDisplayDate(dateString) {
-                if (!dateString) {
-                    return null;
-                }
-                const date = new Date(dateString);
-                if (Number.isNaN(date.getTime())) {
-                    return null;
-                }
-                return date.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
-            }
-
-            function renderSelectedStudent(student) {
-                if (!student) {
-                    selectedStudentDetails.innerHTML = '';
-                    selectedStudent.classList.add('hidden');
-                    deleteStudentButton?.classList.add('hidden');
-                    return;
-                }
-
-                const contactParts = [student.email ?? 'Geen e-mail', student.phone ?? 'Geen telefoon'];
-                const metaParts = [];
-                const birth = formatDisplayDate(student.birth_date);
-                if (birth) {
-                    metaParts.push(`Geboren: ${birth}`);
-                }
-                const parentParts = [];
-                if (student.parent_email) {
-                    parentParts.push(`Ouder e-mail: ${student.parent_email}`);
-                }
-                if (student.parent_phone) {
-                    parentParts.push(`Ouder tel: ${student.parent_phone}`);
-                }
-                if (parentParts.length) {
-                    metaParts.push(parentParts.join(' · '));
-                }
-                const guardianParts = [];
-                if (student.has_guardian && student.guardian_email) {
-                    guardianParts.push(`Voogd e-mail: ${student.guardian_email}`);
-                }
-                if (student.has_guardian && student.guardian_phone) {
-                    guardianParts.push(`Voogd tel: ${student.guardian_phone}`);
-                }
-                if (guardianParts.length) {
-                    metaParts.push(guardianParts.join(' · '));
-                }
-
-                selectedStudentDetails.innerHTML = `
-                    <div class="font-semibold text-slate-800">${escapeHtml(student.full_name)}</div>
-                    <div class="text-xs text-slate-500">${escapeHtml(contactParts.join(' · '))}</div>
-                    ${metaParts.length ? `<div class="text-[11px] text-slate-400">${escapeHtml(metaParts.join(' · '))}</div>` : ''}
-                `;
-                selectedStudent.classList.remove('hidden');
-                deleteStudentButton?.classList.remove('hidden');
-            }
-
-            function setSelectedStudent(student, options = {}) {
-                const preserveContact = options.preserveContact ?? false;
-                selectedStudentData = student;
-                if (student) {
-                    studentIdInput.value = student.id;
-                    renderSelectedStudent(student);
-                    if (!preserveContact) {
-                        vehicleInput.value = student.vehicle || '';
-                        packageInput.value = student.package || '';
-                        locationInput.value = student.location || '';
-                        studentEmailEditor.setValue(student.email || '');
-                        studentPhoneEditor.setValue(student.phone || '');
-                        parentEmailEditor.setValue(student.parent_email || '');
-                        parentPhoneEditor.setValue(student.parent_phone || '');
-                        hasGuardianInput.checked = student.has_guardian ?? false;
-                        updateGuardianVisibility();
-                        guardianEmailEditor.setValue(student.guardian_email || '');
-                        guardianPhoneEditor.setValue(student.guardian_phone || '');
-                        notifyStudentEmailInput.checked = student.notify_student_email ?? true;
-                        notifyStudentPhoneInput.checked = student.notify_student_phone ?? true;
-                        notifyParentEmailInput.checked = student.notify_parent_email ?? false;
-                        notifyParentPhoneInput.checked = student.notify_parent_phone ?? false;
-                        notifyGuardianEmailInput.checked = student.notify_guardian_email ?? false;
-                        notifyGuardianPhoneInput.checked = student.notify_guardian_phone ?? false;
-                    } else {
-                        updateGuardianVisibility();
-                    }
-                } else {
-                    studentIdInput.value = '';
-                    renderSelectedStudent(null);
-                    if (!preserveContact) {
-                        vehicleInput.value = '';
-                        packageInput.value = '';
-                        locationInput.value = '';
-                        studentEmailEditor.setValue('');
-                        studentPhoneEditor.setValue('');
-                        parentEmailEditor.setValue('');
-                        parentPhoneEditor.setValue('');
-                        hasGuardianInput.checked = false;
-                        updateGuardianVisibility(true);
-                        notifyStudentEmailInput.checked = true;
-                        notifyStudentPhoneInput.checked = true;
-                        notifyParentEmailInput.checked = false;
-                        notifyParentPhoneInput.checked = false;
-                        notifyGuardianEmailInput.checked = false;
-                        notifyGuardianPhoneInput.checked = false;
-                    }
-                }
-                studentSearch.focus();
-                refreshSummary();
-            }
-
-            function toLocalInputValue(dateString) {
-                if (!dateString) {
-                    return '';
-                }
-                const date = new Date(dateString);
-                const tzOffset = date.getTimezoneOffset() * 60000;
-                return new Date(date.getTime() - tzOffset).toISOString().slice(0, 16);
-            }
-
-            function toIsoString(value) {
-                if (!value) {
-                    return null;
-                }
-                const date = new Date(value);
-                return Number.isNaN(date.getTime()) ? null : date.toISOString();
-            }
-
-            function openModal(mode, payload) {
-                modal.dataset.mode = mode;
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-                modalForm.reset();
-                descriptionInput.value = '';
-                studentResults.innerHTML = '';
-                studentSearch.value = '';
-                setSelectedStudent(null);
-                studentEmailEditor.ensureView();
-                studentPhoneEditor.ensureView();
-                parentEmailEditor.ensureView();
-                parentPhoneEditor.ensureView();
-                guardianEmailEditor.ensureView();
-                guardianPhoneEditor.ensureView();
-
-                if (mode === 'create') {
-                    modalTitle.textContent = 'Afspraak plannen';
-                    eventIdInput.value = '';
-                    const { start, end, instructorId } = payload;
-                    startInput.value = toLocalInputValue(start.toISOString());
-                    endInput.value = toLocalInputValue(end.toISOString());
-                    if (config.userRole === 'admin') {
-                        const initialInstructor = instructorId || (config.instructors[0] ? config.instructors[0].id : '');
-                        if (instructorSelect) {
-                            instructorSelect.value = initialInstructor ? String(initialInstructor) : '';
-                        }
-                    }
-                    summaryInstructor.textContent = instructorSelect ? instructorSelect.options[instructorSelect.selectedIndex]?.textContent ?? '-' : payload.instructorName || '-';
-                    summaryStatus.textContent = statusLabels[statusSelect.value] ?? statusSelect.value;
-                    summaryLocation.textContent = locationInput.value || '-';
-                    summaryStudent.textContent = '-';
-                } else if (mode === 'edit') {
-                    modalTitle.textContent = 'Afspraak bewerken';
-                    const { event } = payload;
-                    const props = event.extendedProps;
-                    eventIdInput.value = event.id;
-                    startInput.value = toLocalInputValue(event.startStr);
-                    endInput.value = toLocalInputValue(event.endStr || event.startStr);
-                    statusSelect.value = props.status;
-                    vehicleInput.value = props.vehicle || '';
-                    packageInput.value = props.package || '';
-                    locationInput.value = props.location || '';
-                    descriptionInput.value = props.description || '';
-                    summaryStudent.textContent = props.student_name || '-';
-                    summaryInstructor.textContent = props.instructor_name || '-';
-                    summaryStatus.textContent = statusLabels[props.status] ?? props.status;
-                    summaryLocation.textContent = props.location || '-';
-                    if (config.userRole === 'admin' && instructorSelect) {
-                        instructorSelect.value = String(props.instructor_id);
-                    }
-                    setSelectedStudent({
-                        id: props.student_id,
-                        full_name: props.student_name,
-                        email: props.student_email,
-                        phone: props.student_phone,
-                        parent_email: props.student_parent_email,
-                        parent_phone: props.student_parent_phone,
-                        birth_date: props.student_birth_date,
-                        package: props.package,
-                        vehicle: props.vehicle,
-                        location: props.location,
-                        notify_student_email: props.student_notify_student_email,
-                        notify_student_phone: props.student_notify_student_phone,
-                        notify_parent_email: props.student_notify_parent_email,
-                        notify_parent_phone: props.student_notify_parent_phone,
-                    }, { preserveContact: true });
-                    studentEmailEditor.setValue(props.email ?? props.student_email ?? '');
-                    studentPhoneEditor.setValue(props.phone ?? props.student_phone ?? '');
-                    parentEmailEditor.setValue(props.parent_email ?? props.student_parent_email ?? '');
-                    parentPhoneEditor.setValue(props.parent_phone ?? props.student_parent_phone ?? '');
-                    notifyStudentEmailInput.checked = props.notify_student_email ?? props.student_notify_student_email ?? true;
-                    notifyStudentPhoneInput.checked = props.notify_student_phone ?? props.student_notify_student_phone ?? true;
-                    notifyParentEmailInput.checked = props.notify_parent_email ?? props.student_notify_parent_email ?? false;
-                    notifyParentPhoneInput.checked = props.notify_parent_phone ?? props.student_notify_parent_phone ?? false;
-                    hasGuardianInput.checked = props.has_guardian ?? props.student_has_guardian ?? false;
-                    updateGuardianVisibility();
-                    guardianEmailEditor.setValue(props.guardian_email ?? props.student_guardian_email ?? '');
-                    guardianPhoneEditor.setValue(props.guardian_phone ?? props.student_guardian_phone ?? '');
-                    notifyGuardianEmailInput.checked = props.notify_guardian_email ?? props.student_notify_guardian_email ?? false;
-                    notifyGuardianPhoneInput.checked = props.notify_guardian_phone ?? props.student_notify_guardian_phone ?? false;
-                    studentEmailEditor.ensureView();
-                    studentPhoneEditor.ensureView();
-                    parentEmailEditor.ensureView();
-                    parentPhoneEditor.ensureView();
-                    guardianEmailEditor.ensureView();
-                    guardianPhoneEditor.ensureView();
-                }
-                refreshSummary();
-            }
-
-            function closeModal() {
-                modal.classList.remove('flex');
-                modal.classList.add('hidden');
-            }
-
-            closeButtons.forEach((button) => {
-                button.addEventListener('click', closeModal);
-            });
-
-            modal.addEventListener('click', (event) => {
-                if (event.target === modal) {
-                    closeModal();
-                }
-            });
-
-            function openStudentModal() {
-                studentModal.classList.remove('hidden');
-                studentModal.classList.add('flex');
-                studentForm.reset();
-                updateStudentGuardianVisibility(true);
-                document.getElementById('student_first_name').focus();
-            }
-
-            function closeStudentModal() {
-                studentModal.classList.remove('flex');
-                studentModal.classList.add('hidden');
-            }
-
-            openStudentModalButtons.forEach((button) => {
-                button.addEventListener('click', openStudentModal);
-            });
-
-            closeStudentButtons.forEach((button) => {
-                button.addEventListener('click', closeStudentModal);
-            });
-
-            studentModal.addEventListener('click', (event) => {
-                if (event.target === studentModal) {
-                    closeStudentModal();
-                }
-            });
-
-            let searchTimeout;
-
-            async function fetchStudents(params = {}) {
-                const searchParams = new URLSearchParams();
-                if (params.query) {
-                    searchParams.set('query', params.query);
-                }
-                if (params.initial) {
-                    searchParams.set('initial', '1');
-                }
-                const response = await fetch(`/students/search?${searchParams.toString()}`);
-                if (!response.ok) {
-                    return [];
-                }
-                return response.json();
-            }
-
-            async function deleteStudent(studentId) {
-                const response = await fetch(`/students/${studentId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': config.csrfToken,
-                        Accept: 'application/json',
-                    },
-                });
-                if (!response.ok) {
-                    const error = await response.json().catch(() => ({}));
-                    throw new Error(error.message ?? 'Kon leerling niet verwijderen.');
-                }
-            }
-
-            function renderStudentResults(students) {
-                studentResults.innerHTML = '';
-                if (!students.length) {
-                    const empty = document.createElement('p');
-                    empty.className = 'rounded-xl bg-white px-4 py-3 text-xs text-slate-500 shadow-inner';
-                    empty.textContent = 'Geen leerlingen gevonden.';
-                    studentResults.appendChild(empty);
-                    return;
-                }
-
-                students.forEach((student) => {
-                    const button = document.createElement('button');
-                    button.type = 'button';
-                    button.className = 'fancy-chip w-full rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-left text-sm text-slate-700 transition hover:border-sky-400 hover:bg-sky-50';
-                    const contactLine = `${student.email ?? 'Geen e-mail'} · ${student.phone ?? 'Geen telefoon'}`;
-                    const detailParts = [];
-                    const birth = formatDisplayDate(student.birth_date);
-                    if (birth) {
-                        detailParts.push(`Geboren: ${birth}`);
-                    }
-                    if (student.parent_email) {
-                        detailParts.push(`Ouder e-mail: ${student.parent_email}`);
-                    }
-                    if (student.parent_phone) {
-                        detailParts.push(`Ouder tel: ${student.parent_phone}`);
-                    }
-                    if (student.has_guardian) {
-                        const guardianParts = [];
-                        if (student.guardian_email) {
-                            guardianParts.push(`Voogd e-mail: ${student.guardian_email}`);
-                        }
-                        if (student.guardian_phone) {
-                            guardianParts.push(`Voogd tel: ${student.guardian_phone}`);
-                        }
-                        if (guardianParts.length) {
-                            detailParts.push(guardianParts.join(' · '));
-                        }
-                    }
-                    const detailLine = detailParts.length
-                        ? `<div class="text-[11px] text-slate-400">${escapeHtml(detailParts.join(' · '))}</div>`
-                        : '';
-                    button.innerHTML = `
-                        <div class="font-semibold">${escapeHtml(student.full_name)}</div>
-                        <div class="text-xs text-slate-500">${escapeHtml(contactLine)}</div>
-                        ${detailLine}
-                    `;
-                    button.addEventListener('click', () => {
-                        setSelectedStudent(student);
-                        studentResults.innerHTML = '';
-                        refreshSummary();
-                    });
-                    studentResults.appendChild(button);
-                });
-            }
-
-            studentSearch.addEventListener('focus', async () => {
-                if (studentResults.childElementCount === 0) {
-                    const students = await fetchStudents({ initial: true });
-                    renderStudentResults(students);
-                }
-            });
-
-            studentSearch.addEventListener('input', () => {
-                const value = studentSearch.value.trim();
-                clearTimeout(searchTimeout);
-                if (value.length < 2) {
-                    studentResults.innerHTML = '';
-                    return;
-                }
-                searchTimeout = setTimeout(async () => {
-                    const students = await fetchStudents({ query: value });
-                    renderStudentResults(students);
-                }, 250);
-            });
-
-            studentForm.addEventListener('submit', async (event) => {
-                event.preventDefault();
-                const formData = new FormData(studentForm);
-                const response = await fetch('/students', {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': config.csrfToken,
-                    },
-                    body: formData,
-                });
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    alert(errorData.message ?? 'Kon leerling niet opslaan.');
-                    return;
-                }
-                const student = await response.json();
-                setSelectedStudent(student);
-                studentSearch.value = '';
-                studentResults.innerHTML = '';
-                closeStudentModal();
-            });
-
-            deleteStudentButton?.addEventListener('click', async () => {
-                if (!selectedStudentData?.id) {
-                    return;
-                }
-                const confirmed = window.confirm(
-                    'Weet je zeker dat je deze leerling wilt verwijderen? Bestaande afspraken voor deze leerling worden ook verwijderd.',
-                );
-                if (!confirmed) {
-                    return;
-                }
-                const previousLabel = deleteStudentButton.textContent;
-                try {
-                    deleteStudentButton.disabled = true;
-                    deleteStudentButton.textContent = 'Verwijderen...';
-                    await deleteStudent(selectedStudentData.id);
-                    alert('Leerling is verwijderd.');
-                    setSelectedStudent(null);
-                    studentSearch.value = '';
-                    studentResults.innerHTML = '';
-                    if (calendar) {
-                        calendar.refetchEvents();
-                    }
-                } catch (error) {
-                    alert(error.message);
-                } finally {
-                    deleteStudentButton.disabled = false;
-                    deleteStudentButton.textContent = previousLabel;
-                }
-            });
-
-            function refreshSummary() {
-                summaryStudent.textContent = selectedStudentData?.full_name ?? '-';
-                if (config.userRole === 'admin' && instructorSelect) {
-                    summaryInstructor.textContent = instructorSelect.value
-                        ? instructorSelect.options[instructorSelect.selectedIndex]?.textContent ?? '-'
-                        : '-';
-                }
-                summaryStatus.textContent = statusLabels[statusSelect.value] ?? statusSelect.value;
-                summaryLocation.textContent = locationInput.value || '-';
-            }
-
-            statusSelect.addEventListener('change', refreshSummary);
-            locationInput.addEventListener('input', refreshSummary);
-            instructorSelect?.addEventListener('change', refreshSummary);
-
-            function getActiveInstructorIds() {
-                if (!instructorFilter) {
-                    return [];
-                }
-                const activeButtons = [...instructorFilter.querySelectorAll('[data-instructor-filter]')].filter((button) => button.dataset.active === 'true');
-                return activeButtons.map((button) => Number.parseInt(button.dataset.instructorFilter, 10));
-            }
-
-            function getActiveStatuses() {
-                const activeButtons = [...statusFilter.querySelectorAll('[data-status-filter]')].filter((button) => button.dataset.active === 'true');
-                return activeButtons.map((button) => button.dataset.statusFilter);
-            }
-
-            const baseFilterClasses = 'fancy-chip flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold transition backdrop-blur';
-            const activeFilterClasses = 'border-sky-500 bg-white/90 text-sky-700 shadow-sm shadow-sky-100';
-            const inactiveFilterClasses = 'border-slate-200 bg-white/60 text-slate-500 hover:border-slate-300 hover:text-slate-700';
-
-            function updateFilterButton(button, active) {
-                button.dataset.active = active ? 'true' : 'false';
-                button.className = `${baseFilterClasses} ${active ? activeFilterClasses : inactiveFilterClasses}`;
-            }
-
-            function attachFilterHandlers(container) {
-                container?.querySelectorAll('button').forEach((button) => {
-                    updateFilterButton(button, button.dataset.active !== 'false');
-                    button.addEventListener('click', () => {
-                        const currentlyActive = button.dataset.active === 'true';
-                        updateFilterButton(button, !currentlyActive);
-                        if (calendar) {
-                            updateResources();
-                            calendar.refetchEvents();
-                        }
-                    });
-                });
-            }
-
-            attachFilterHandlers(instructorFilter);
-            attachFilterHandlers(statusFilter);
-
-            function updateResources() {
-                if (!hasResourceSupport || !calendar || !calendar.view || !calendar.view.type.includes('resource')) {
-                    return;
-                }
-                if (!instructorFilter) {
-                    return;
-                }
-                const activeIds = getActiveInstructorIds().map((id) => String(id));
-                const activeSet = new Set(activeIds);
-                calendar.getResources().forEach((resource) => {
-                    if (!activeSet.has(resource.id)) {
-                        resource.remove();
-                    }
-                });
-                activeIds.forEach((id) => {
-                    if (!calendar.getResourceById(id)) {
-                        const title = instructorLookup.get(id) ?? `Instructeur ${id}`;
-                        calendar.addResource({ id, title });
-                    }
-                });
-            }
-
-            const viewButtons = document.querySelectorAll('[data-calendar-view]');
-            const baseViewClasses = 'fancy-chip rounded-full px-3 py-1 transition backdrop-blur';
-            const activeViewClasses = 'bg-white/90 text-slate-900 shadow-sm shadow-slate-200';
-            const inactiveViewClasses = 'text-slate-600 hover:text-slate-900';
-
-            function updateViewButtons(activeView) {
-                viewButtons.forEach((button) => {
-                    const isActive = button.dataset.calendarView === activeView;
-                    button.className = `${baseViewClasses} ${isActive ? activeViewClasses : inactiveViewClasses}`;
-                });
-            }
-
-            function formatRange() {
-                const calendarDate = calendar.getDate();
-                const view = calendar.view.type;
-                if (view === 'dayGridMonth') {
-                    rangeLabel.textContent = calendarDate.toLocaleDateString('nl-NL', { month: 'long', year: 'numeric' });
-                } else if (view === 'timeGridDay') {
-                    rangeLabel.textContent = calendarDate.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-                } else {
-                    const start = calendar.view.currentStart;
-                    const end = new Date(calendar.view.currentEnd.getTime() - 86400000);
-                    const sameYear = start.getFullYear() === end.getFullYear();
-                    const startFormatter = new Intl.DateTimeFormat('nl-NL', sameYear ? { day: 'numeric', month: 'long' } : { day: 'numeric', month: 'long', year: 'numeric' });
-                    const endFormatter = new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
-                    rangeLabel.textContent = `${startFormatter.format(start)} – ${endFormatter.format(end)}`;
-                }
-            }
-
-            function mapEventToCalendar(event) {
-                return {
-                    id: event.id,
-                    title: event.student_name ?? 'Onbekende leerling',
-                    start: event.start_time,
-                    end: event.end_time,
-                    resourceId: event.instructor_id ? String(event.instructor_id) : undefined,
-                    backgroundColor: colorByStatus[event.status] ?? '#1f2937',
-                    borderColor: colorByStatus[event.status] ?? '#1f2937',
-                    extendedProps: {
-                        status: event.status,
-                        instructor_id: event.instructor_id,
-                        instructor_name: event.instructor_name,
-                        student_id: event.student_id,
-                        student_name: event.student_name,
-                        student_email: event.student_email,
-                        student_phone: event.student_phone,
-                        student_parent_email: event.student_parent_email,
-                        student_parent_phone: event.student_parent_phone,
-                        student_has_guardian: event.student_has_guardian,
-                        student_guardian_email: event.student_guardian_email,
-                        student_guardian_phone: event.student_guardian_phone,
-                        student_birth_date: event.student_birth_date,
-                        student_notify_student_email: event.student_notify_student_email,
-                        student_notify_parent_email: event.student_notify_parent_email,
-                        student_notify_guardian_email: event.student_notify_guardian_email,
-                        student_notify_student_phone: event.student_notify_student_phone,
-                        student_notify_parent_phone: event.student_notify_parent_phone,
-                        student_notify_guardian_phone: event.student_notify_guardian_phone,
-                        vehicle: event.vehicle,
-                        package: event.package,
-                        email: event.email,
-                        phone: event.phone,
-                        parent_email: event.parent_email,
-                        parent_phone: event.parent_phone,
-                        has_guardian: event.has_guardian,
-                        guardian_email: event.guardian_email,
-                        guardian_phone: event.guardian_phone,
-                        notify_student_email: event.notify_student_email,
-                        notify_parent_email: event.notify_parent_email,
-                        notify_guardian_email: event.notify_guardian_email,
-                        notify_student_phone: event.notify_student_phone,
-                        notify_parent_phone: event.notify_parent_phone,
-                        notify_guardian_phone: event.notify_guardian_phone,
-                        location: event.location,
-                        description: event.description,
-                    },
-                };
-            }
-
-            async function saveEvent(eventId, payload) {
-                const url = eventId ? `/events/${eventId}` : '/events';
-                const method = eventId ? 'PATCH' : 'POST';
-                const response = await fetch(url, {
-                    method,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': config.csrfToken,
-                    },
-                    body: JSON.stringify(payload),
-                });
-                if (!response.ok) {
-                    const error = await response.json().catch(() => ({}));
-                    throw new Error(error.message ?? 'Er ging iets mis.');
-                }
-                return response.json();
-            }
-
-            async function handleEventMove(info) {
-                try {
-                    const event = info.event;
-                    const props = event.extendedProps;
-                    let instructorId = props.instructor_id;
-                    if (info.newResource) {
-                        instructorId = Number.parseInt(info.newResource.id, 10);
-                        props.instructor_id = instructorId;
-                        props.instructor_name = info.newResource.title;
-                        event.setExtendedProp('instructor_id', instructorId);
-                        event.setExtendedProp('instructor_name', info.newResource.title);
-                        event.setProp('resourceId', String(instructorId));
-                    }
-                    const payload = {
-                        student_id: props.student_id,
-                        status: props.status,
-                        start_time: event.start.toISOString(),
-                        end_time: (event.end ?? new Date(event.start.getTime() + 60 * 60 * 1000)).toISOString(),
-                        vehicle: props.vehicle,
-                        package: props.package,
-                        email: props.email,
-                        phone: props.phone,
-                        parent_email: props.parent_email,
-                        parent_phone: props.parent_phone,
-                        has_guardian: props.has_guardian,
-                        guardian_email: props.guardian_email,
-                        guardian_phone: props.guardian_phone,
-                        notify_student_email: props.notify_student_email,
-                        notify_parent_email: props.notify_parent_email,
-                        notify_guardian_email: props.notify_guardian_email,
-                        notify_student_phone: props.notify_student_phone,
-                        notify_parent_phone: props.notify_parent_phone,
-                        notify_guardian_phone: props.notify_guardian_phone,
-                        location: props.location,
-                        description: props.description,
-                    };
-                    if (config.userRole === 'admin') {
-                        payload.instructor_id = instructorId;
-                    }
-                    await saveEvent(event.id, payload);
-                    calendar.refetchEvents();
-                } catch (error) {
-                    info.revert();
-                    alert(error.message);
-                }
-            }
-
-            const calendarOptions = {
-                locale: 'nl',
-                initialView: config.userRole === 'admin' && hasResourceSupport ? 'resourceTimeGridWeek' : 'timeGridWeek',
-                height: 'auto',
-                headerToolbar: false,
-                slotMinTime: '06:00:00',
-                slotMaxTime: '21:00:00',
-                selectable: true,
-                selectMirror: true,
-                nowIndicator: true,
-                expandRows: true,
-                eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
-                buttonText: {
-                    today: 'Vandaag',
-                },
-                events: async (fetchInfo, successCallback, failureCallback) => {
-                    try {
-                        const params = new URLSearchParams({
-                            start: fetchInfo.startStr,
-                            end: fetchInfo.endStr,
-                        });
-                        const instructorIds = getActiveInstructorIds();
-                        if (instructorFilter && instructorFilter.querySelectorAll('button').length && instructorIds.length === 0) {
-                            calendarError?.classList.add('hidden');
-                            successCallback([]);
-                            return;
-                        }
-                        if (instructorIds.length) {
-                            instructorIds.forEach((id) => params.append('instructor_ids[]', id));
-                        }
-                        const statuses = getActiveStatuses();
-                        if (statusFilter && statuses.length === 0) {
-                            calendarError?.classList.add('hidden');
-                            successCallback([]);
-                            return;
-                        }
-                        if (statuses.length) {
-                            statuses.forEach((status) => params.append('statuses[]', status));
-                        }
-                        const response = await fetch(`/events?${params.toString()}`);
-                        if (!response.ok) {
-                            throw new Error('Kon afspraken niet laden.');
-                        }
-                        const data = await response.json();
-                        calendarError?.classList.add('hidden');
-                        successCallback(data.map(mapEventToCalendar));
-                    } catch (error) {
-                        calendarError?.classList.remove('hidden');
-                        console.error(error);
-                        failureCallback(error);
-                    }
-                },
-                select: (selectionInfo) => {
-                    const resource = selectionInfo.resource;
-                    const resourceId = resource ? Number.parseInt(resource.id, 10) : null;
-                    const resourceTitle = resource ? resource.title : null;
-                    const fallbackInstructorId = config.userRole === 'admin'
-                        ? (getActiveInstructorIds()[0] ?? (config.instructors[0]?.id ?? null))
-                        : (config.instructors[0]?.id ?? null);
-                    const fallbackInstructorName = resourceTitle
-                        ?? (config.userRole === 'admin'
-                            ? (instructorSelect?.options[instructorSelect.selectedIndex]?.textContent
-                                ?? (fallbackInstructorId ? instructorLookup.get(String(fallbackInstructorId)) ?? '-' : '-'))
-                            : (config.instructors[0]?.name ?? '-'));
-                    openModal('create', {
-                        start: selectionInfo.start,
-                        end: selectionInfo.end,
-                        instructorId: resourceId ?? fallbackInstructorId,
-                        instructorName: resourceTitle ?? fallbackInstructorName,
-                    });
-                    calendar.unselect();
-                },
-                eventClick: (info) => {
-                    openModal('edit', { event: info.event });
-                },
-                eventDrop: handleEventMove,
-                eventResize: handleEventMove,
-                eventClassNames: () => ['rounded-2xl', 'border-0', 'px-3', 'py-2', 'shadow-lg', 'text-white', 'text-sm', 'leading-tight'],
-                eventContent: (arg) => {
-                    const props = arg.event.extendedProps;
-                    const start = arg.timeText;
-                    const statusLabel = statusLabels[props.status] ?? props.status;
-                    const locationLine = props.location ? `<div class="text-[11px] opacity-90">${props.location}</div>` : '';
-                    return {
-                        html: `
-                            <div class="flex flex-col gap-1">
-                                <div class="flex items-center justify-between gap-2">
-                                    <span class="font-semibold">${arg.event.title}</span>
-                                    <span class="rounded-full bg-white/20 px-2 py-0.5 text-[10px] uppercase tracking-wide">${statusLabel}</span>
-                                </div>
-                                <div class="text-[12px] opacity-90">${start}</div>
-                                ${locationLine}
-                            </div>
-                        `,
-                    };
-                },
-                datesSet: () => {
-                    formatRange();
-                    updateResources();
-                },
-            };
-
-            if (plugins.length) {
-                calendarOptions.plugins = plugins;
-            }
-
-            if (config.userRole === 'admin' && hasResourceSupport) {
-                calendarOptions.schedulerLicenseKey = 'GPL-My-Project-Is-Open-Source';
-                calendarOptions.resources = (config.instructors || []).map((instructor) => ({
-                    id: String(instructor.id),
-                    title: instructor.name,
-                }));
-            }
-
-            calendar = new FullCalendar.Calendar(calendarElement, calendarOptions);
-
-            calendar.render();
-            formatRange();
-            updateResources();
-            updateViewButtons(calendar.view.type);
-
-            document.querySelectorAll('[data-calendar-nav]').forEach((button) => {
-                button.addEventListener('click', () => {
-                    const action = button.dataset.calendarNav;
-                    if (action === 'prev') {
-                        calendar.prev();
-                    } else if (action === 'next') {
-                        calendar.next();
-                    } else if (action === 'today') {
-                        calendar.today();
-                    }
-                    formatRange();
-                });
-            });
-
-            document.querySelectorAll('[data-calendar-view]').forEach((button) => {
-                button.addEventListener('click', () => {
-                    const view = button.dataset.calendarView;
-                    calendar.changeView(view);
-                    formatRange();
-                    updateResources();
-                    updateViewButtons(view);
-                });
-            });
-
-            modalForm.addEventListener('submit', async (event) => {
-                event.preventDefault();
-                if (!studentIdInput.value) {
-                    alert('Selecteer eerst een leerling.');
-                    return;
-                }
-                if (!startInput.value || !endInput.value) {
-                    alert('Vul start- en eindtijd in.');
-                    return;
-                }
-                const payload = {
-                    student_id: Number.parseInt(studentIdInput.value, 10),
-                    status: statusSelect.value,
-                    start_time: toIsoString(startInput.value),
-                    end_time: toIsoString(endInput.value),
-                    vehicle: vehicleInput.value || null,
-                    package: packageInput.value || null,
-                    location: locationInput.value || null,
-                    email: studentEmailEditor.getValue() || null,
-                    phone: studentPhoneEditor.getValue() || null,
-                    parent_email: parentEmailEditor.getValue() || null,
-                    parent_phone: parentPhoneEditor.getValue() || null,
-                    has_guardian: hasGuardianInput.checked,
-                    guardian_email: hasGuardianInput.checked ? guardianEmailEditor.getValue() || null : null,
-                    guardian_phone: hasGuardianInput.checked ? guardianPhoneEditor.getValue() || null : null,
-                    notify_student_email: notifyStudentEmailInput.checked,
-                    notify_parent_email: notifyParentEmailInput.checked,
-                    notify_guardian_email: hasGuardianInput.checked ? notifyGuardianEmailInput.checked : false,
-                    notify_student_phone: notifyStudentPhoneInput.checked,
-                    notify_parent_phone: notifyParentPhoneInput.checked,
-                    notify_guardian_phone: hasGuardianInput.checked ? notifyGuardianPhoneInput.checked : false,
-                    description: descriptionInput.value || null,
-                };
-                if (config.userRole === 'admin' && instructorSelect) {
-                    if (!instructorSelect.value) {
-                        alert('Selecteer een instructeur.');
-                        return;
-                    }
-                    payload.instructor_id = Number.parseInt(instructorSelect.value, 10);
-                }
-                const eventId = eventIdInput.value || null;
-                try {
-                    await saveEvent(eventId, payload);
-                    closeModal();
-                    calendar.refetchEvents();
-                } catch (error) {
-                    alert(error.message);
-                }
-            });
-        });
-    </script>
+    <script src="{{ asset('js/dashboard.js') }}" defer></script>
+@endpush
 </x-layouts.app>
