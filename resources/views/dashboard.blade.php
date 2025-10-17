@@ -62,6 +62,61 @@
             flex-shrink: 0;
         }
 
+        .planner-card {
+            position: relative;
+            transition: padding 180ms ease, border-radius 180ms ease, box-shadow 220ms ease;
+        }
+
+        .planner-mobile-toggle {
+            border-radius: 1.25rem;
+            border: 1px solid rgba(148, 163, 184, 0.45);
+            background: linear-gradient(120deg, rgba(255, 255, 255, 0.96), rgba(241, 245, 249, 0.92));
+            padding: 0.75rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #0f172a;
+            box-shadow: 0 18px 36px -28px rgba(15, 23, 42, 0.35);
+            transition: all 180ms ease;
+        }
+
+        .planner-mobile-toggle:hover {
+            border-color: rgba(14, 165, 233, 0.45);
+            color: #0369a1;
+        }
+
+        .planner-mobile-toggle:focus-visible {
+            outline: 2px solid rgba(14, 165, 233, 0.5);
+            outline-offset: 3px;
+        }
+
+        .planner-toggle__icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.75rem;
+            height: 1.75rem;
+            border-radius: 9999px;
+            background: rgba(14, 165, 233, 0.12);
+            color: #0284c7;
+            transition: transform 180ms ease;
+        }
+
+        .planner-toggle__icon[data-rotated="true"] {
+            transform: rotate(180deg);
+        }
+
+        .planner-filters {
+            transition: opacity 180ms ease, transform 200ms ease;
+        }
+
+        .planner-calendar {
+            background: linear-gradient(180deg, rgba(248, 250, 252, 0.94), rgba(226, 232, 240, 0.92));
+        }
+
+        .planner-calendar__canvas {
+            min-height: 680px;
+        }
+
         .planner-view {
             display: flex;
             flex-direction: column;
@@ -412,6 +467,27 @@
             .planner-header form button {
                 width: 100%;
             }
+
+            .planner-card {
+                padding: 1.75rem;
+                border-radius: 2rem;
+            }
+
+            .planner-calendar__canvas {
+                min-height: 620px;
+            }
+
+            .planner-filters {
+                display: none;
+                opacity: 0;
+                transform: translateY(-6px);
+            }
+
+            .planner-filters[data-expanded="true"] {
+                display: flex;
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         @media (max-width: 768px) {
@@ -423,6 +499,11 @@
             .planner-event {
                 border-radius: 1rem;
                 padding: 0.75rem;
+            }
+
+            .planner-card {
+                padding: 1.5rem;
+                border-radius: 1.75rem;
             }
 
             .planner-toolbar {
@@ -469,6 +550,21 @@
             .planner-time-grid__column {
                 min-height: 48rem;
                 padding: 0.55rem;
+            }
+
+            .planner-card {
+                padding: 1.25rem;
+                border-radius: 1.5rem;
+                box-shadow: 0 28px 48px -38px rgba(15, 23, 42, 0.45);
+            }
+
+            .planner-calendar {
+                border-radius: 1.4rem;
+                border: 1px solid rgba(148, 163, 184, 0.35);
+            }
+
+            .planner-calendar__canvas {
+                min-height: 540px;
             }
 
             .planner-event__time {
@@ -523,6 +619,15 @@
 
             .planner-month__events {
                 gap: 0.25rem;
+            }
+
+            .planner-card {
+                padding: 1rem;
+                border-radius: 1.35rem;
+            }
+
+            .planner-calendar__canvas {
+                min-height: 500px;
             }
         }
 
@@ -678,7 +783,7 @@
 <x-layouts.app title="Planning">
     <div class="flex min-h-screen flex-col">
         <header class="sticky top-0 z-10 border-b border-slate-200 bg-white/90 backdrop-blur">
-            <div class="planner-header mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
+            <div class="planner-header mx-auto flex w-full items-center justify-between px-4 py-3 sm:px-6 sm:py-4 xl:max-w-6xl">
                 <div>
                     <h1 class="text-xl font-semibold text-slate-900">Planningsoverzicht</h1>
                     <p class="text-sm text-slate-500">Beheer afspraken met een Google Agenda-achtige ervaring.</p>
@@ -695,9 +800,9 @@
             </div>
         </header>
 
-        <main class="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
-            <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl">
-                <div class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+        <main class="mx-auto w-full flex-1 px-3 py-6 sm:px-6 lg:px-8 xl:max-w-6xl">
+            <div class="planner-card rounded-3xl border border-slate-200 bg-white p-6 shadow-xl">
+                <div class="flex flex-col gap-5 sm:gap-6 lg:flex-row lg:items-start lg:justify-between">
                     <div class="flex flex-col gap-4">
                         <div class="planner-toolbar flex flex-wrap items-center gap-3">
                             <div class="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm">
@@ -735,8 +840,29 @@
                             <span class="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1"><span class="h-2.5 w-2.5 rounded-full bg-amber-400"></span>Examen</span>
                             <span class="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1"><span class="h-2.5 w-2.5 rounded-full bg-rose-400"></span>Ziek</span>
                         </div>
+                        <button
+                            type="button"
+                            id="planner-filters-toggle"
+                            class="planner-mobile-toggle mt-2 flex w-full items-center justify-between gap-3 text-left text-sm font-semibold text-slate-700 transition lg:hidden"
+                            aria-controls="planner-filters-panel"
+                            aria-expanded="false"
+                            data-open-label="Filters tonen"
+                            data-close-label="Filters verbergen"
+                            data-default-open="false"
+                        >
+                            <span data-toggle-label>Filters tonen</span>
+                            <span class="planner-toggle__icon" aria-hidden="true" data-toggle-icon>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4">
+                                    <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.937a.75.75 0 1 1 1.08 1.04l-4.24 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .01-1.06z" clip-rule="evenodd" />
+                                </svg>
+                            </span>
+                        </button>
                     </div>
-                    <div class="flex w-full flex-col gap-4 lg:w-80">
+                    <div
+                        id="planner-filters-panel"
+                        class="planner-filters mt-3 flex w-full flex-col gap-4 rounded-3xl border border-slate-200 bg-slate-50 p-4 lg:mt-0 lg:w-80 lg:border-none lg:bg-transparent lg:p-0"
+                        data-expanded="false"
+                    >
                         @if ($user->isAdmin())
                             <div>
                                 <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Instructeurs filteren</p>
@@ -769,10 +895,10 @@
                     </div>
                 </div>
 
-                <div class="mt-6 overflow-hidden rounded-3xl border border-slate-200 shadow-inner">
+                <div class="planner-calendar mt-6 overflow-hidden rounded-3xl border border-slate-200 shadow-inner">
                     <div
                         id="calendar"
-                        class="min-h-[700px]"
+                        class="planner-calendar__canvas"
                     ></div>
                 </div>
                 <p
