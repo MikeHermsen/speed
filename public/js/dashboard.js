@@ -26,6 +26,11 @@
     const MONTH_FORMATTER = new Intl.DateTimeFormat('nl-NL', { month: 'long', year: 'numeric' });
     const WEEKDAY_FORMATTER = new Intl.DateTimeFormat('nl-NL', { weekday: 'long', day: 'numeric' });
     const TIME_FORMATTER = new Intl.DateTimeFormat('nl-NL', { hour: '2-digit', minute: '2-digit' });
+    const BIRTHDATE_FORMATTER = new Intl.DateTimeFormat('nl-NL', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+    });
 
     function padNumber(value, length = 2) {
         return String(value).padStart(length, '0');
@@ -145,6 +150,17 @@
             return `${DATE_FORMATTER.format(start)} – ${DATE_FORMATTER.format(end)}`;
         }
         return `${DATE_FORMATTER.format(start)} – ${DATE_FORMATTER.format(end)}`;
+    }
+
+    function formatBirthDate(value) {
+        if (!value) {
+            return '';
+        }
+        const parsed = new Date(`${value}T00:00:00`);
+        if (Number.isNaN(parsed.getTime())) {
+            return value;
+        }
+        return BIRTHDATE_FORMATTER.format(parsed);
     }
 
     function eventsOverlap(a, b) {
@@ -1271,7 +1287,6 @@
         const descriptionInput = document.getElementById('description');
         const startInput = document.getElementById('start_time');
         const endInput = document.getElementById('end_time');
-        const studentBirthDateInput = document.getElementById('selected_student_birth_date');
         const instructorSelect = document.getElementById('instructor_id');
         const instructorFilter = document.getElementById('instructor-filter');
         const statusFilter = document.getElementById('status-filter');
@@ -1636,9 +1651,6 @@
             contactEditors.studentPhone?.setValue(event?.phone ?? '');
             contactEditors.guardianEmail?.setValue(event?.guardian_email ?? '');
             contactEditors.guardianPhone?.setValue(event?.guardian_phone ?? '');
-            if (studentBirthDateInput) {
-                studentBirthDateInput.value = event?.student_birth_date ?? '';
-            }
             if (config.userRole === 'admin' && instructorSelect) {
                 instructorSelect.value = event?.instructor_id ?? '';
             }
@@ -1724,10 +1736,14 @@
             }
             const fragment = document.createDocumentFragment();
             students.forEach((student) => {
+                const birthDateLabel = student.birth_date ? formatBirthDate(student.birth_date) : '';
+                const nameLine = birthDateLabel
+                    ? `<div class="font-semibold text-slate-800">${escapeHtml(student.full_name)} <span class="ml-1 text-xs font-medium text-slate-500">(${escapeHtml(birthDateLabel)})</span></div>`
+                    : `<div class="font-semibold text-slate-800">${escapeHtml(student.full_name)}</div>`;
                 const item = buildElement(
                     'div',
                     'cursor-pointer rounded-xl border border-transparent px-4 py-2 text-sm transition hover:border-sky-200 hover:bg-slate-100',
-                    `<div class="font-semibold text-slate-800">${escapeHtml(student.full_name)}</div>` +
+                    nameLine +
                         `<div class="text-xs text-slate-500">${buildContactSummaryHtml(student.email, student.phone, { clickable: false })}</div>`,
                 );
                 item.addEventListener('click', () => {
@@ -1869,7 +1885,6 @@
                     guardianEnabled && notifyGuardianEmailInput ? (notifyGuardianEmailInput.checked ? 1 : 0) : 0,
                 notify_guardian_phone:
                     guardianEnabled && notifyGuardianPhoneInput ? (notifyGuardianPhoneInput.checked ? 1 : 0) : 0,
-                student_birth_date: studentBirthDateInput?.value || null,
             };
             if (config.userRole === 'admin' && instructorSelect) {
                 if (!instructorSelect.value) {

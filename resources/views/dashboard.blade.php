@@ -92,6 +92,24 @@
             animation: planner-spin 900ms linear infinite;
         }
 
+        .planner-modal {
+            overflow-y: auto;
+        }
+
+        .planner-modal__panel {
+            margin: 3rem auto;
+            width: 100%;
+        }
+
+        @media (min-width: 640px) {
+            .planner-modal__panel {
+                margin-top: 0;
+                margin-bottom: 0;
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+        }
+
         @keyframes planner-spin {
             to {
                 transform: rotate(360deg);
@@ -713,8 +731,11 @@
         </main>
     </div>
 
-    <div id="event-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 p-4">
-        <div class="w-full max-w-3xl rounded-3xl bg-white p-6 shadow-2xl">
+    <div
+        id="event-modal"
+        class="planner-modal fixed inset-0 z-50 hidden bg-slate-900/40 p-4 sm:flex sm:items-center sm:justify-center"
+    >
+        <div class="planner-modal__panel w-full max-w-3xl rounded-3xl bg-white p-6 shadow-2xl">
             <div class="flex items-start justify-between gap-4">
                 <div>
                     <h3 id="event-modal-title" class="text-lg font-semibold text-slate-900">Afspraak plannen</h3>
@@ -888,10 +909,6 @@
                                     </div>
                                 </div>
                             </div>
-                            <div>
-                                <label for="selected_student_birth_date" class="block text-sm font-medium text-slate-700">Geboortedatum</label>
-                                <input id="selected_student_birth_date" name="student_birth_date" type="date" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200" />
-                            </div>
                         </div>
 
                         <div>
@@ -932,8 +949,11 @@
         </div>
     </div>
 
-    <div id="student-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 p-4">
-        <div class="w-full max-w-xl rounded-3xl bg-white p-6 shadow-2xl">
+    <div
+        id="student-modal"
+        class="planner-modal fixed inset-0 z-50 hidden bg-slate-900/40 p-4 sm:flex sm:items-center sm:justify-center"
+    >
+        <div class="planner-modal__panel w-full max-w-xl rounded-3xl bg-white p-6 shadow-2xl">
             <div class="flex items-start justify-between gap-4">
                 <div>
                     <h3 class="text-lg font-semibold text-slate-900">Nieuwe leerling</h3>
