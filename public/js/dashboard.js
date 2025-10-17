@@ -254,6 +254,65 @@
             this.element.appendChild(this.loadingOverlay);
         }
 
+        captureScrollState() {
+            const state = {};
+            const timeGrid = this.element.querySelector('.planner-time-grid');
+            if (timeGrid) {
+                state.timeGrid = {
+                    scrollLeft: timeGrid.scrollLeft,
+                    scrollTop: timeGrid.scrollTop,
+                };
+                const timeGridBody = timeGrid.querySelector('.planner-time-grid__body');
+                if (timeGridBody) {
+                    state.timeGridBody = {
+                        scrollLeft: timeGridBody.scrollLeft,
+                        scrollTop: timeGridBody.scrollTop,
+                    };
+                }
+            }
+            const monthGrid = this.element.querySelector('.planner-month__grid');
+            if (monthGrid) {
+                state.month = {
+                    scrollLeft: monthGrid.scrollLeft,
+                    scrollTop: monthGrid.scrollTop,
+                };
+            }
+            return state;
+        }
+
+        restoreScrollState(state) {
+            if (!state || typeof state !== 'object') {
+                return;
+            }
+            const timeGrid = this.element.querySelector('.planner-time-grid');
+            if (timeGrid && state.timeGrid) {
+                if (typeof state.timeGrid.scrollLeft === 'number') {
+                    timeGrid.scrollLeft = state.timeGrid.scrollLeft;
+                }
+                if (typeof state.timeGrid.scrollTop === 'number') {
+                    timeGrid.scrollTop = state.timeGrid.scrollTop;
+                }
+            }
+            const timeGridBody = this.element.querySelector('.planner-time-grid__body');
+            if (timeGridBody && state.timeGridBody) {
+                if (typeof state.timeGridBody.scrollLeft === 'number') {
+                    timeGridBody.scrollLeft = state.timeGridBody.scrollLeft;
+                }
+                if (typeof state.timeGridBody.scrollTop === 'number') {
+                    timeGridBody.scrollTop = state.timeGridBody.scrollTop;
+                }
+            }
+            const monthGrid = this.element.querySelector('.planner-month__grid');
+            if (monthGrid && state.month) {
+                if (typeof state.month.scrollLeft === 'number') {
+                    monthGrid.scrollLeft = state.month.scrollLeft;
+                }
+                if (typeof state.month.scrollTop === 'number') {
+                    monthGrid.scrollTop = state.month.scrollTop;
+                }
+            }
+        }
+
         markEventRecentlyDragged(eventId) {
             if (!eventId) {
                 return;
@@ -399,8 +458,10 @@
         }
 
         setEvents(events) {
+            const scrollState = this.captureScrollState();
             this.events = events.map((event) => ({ ...event }));
             this.render();
+            this.restoreScrollState(scrollState);
         }
 
         buildDayColumns(start) {
