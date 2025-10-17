@@ -1,4 +1,8 @@
 @push('head')
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css"
+    >
     <style>
         body {
             background: radial-gradient(circle at top, rgba(59, 130, 246, 0.15), transparent 55%),
@@ -110,7 +114,7 @@
         }
 
         .planner-calendar {
-            background: linear-gradient(180deg, rgba(248, 250, 252, 0.94), rgba(226, 232, 240, 0.92));
+            background: transparent;
         }
 
         .planner-calendar__canvas {
@@ -147,12 +151,180 @@
             animation: planner-spin 900ms linear infinite;
         }
 
+        .fc {
+            --fc-border-color: rgba(148, 163, 184, 0.25);
+            --fc-page-bg-color: transparent;
+            font-family: inherit;
+        }
+
+        .fc .fc-scrollgrid {
+            border-radius: 1.5rem;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.96);
+            box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.12);
+        }
+
+        .fc .fc-toolbar,
+        .fc .fc-header-toolbar {
+            display: none;
+        }
+
+        .fc .fc-daygrid-day.fc-day-today,
+        .fc .fc-timegrid-col.fc-day-today {
+            background: rgba(224, 242, 254, 0.55);
+        }
+
+        .fc .fc-col-header-cell-cushion {
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #1e293b;
+        }
+
+        .fc .fc-timegrid-slot-label-cushion {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        .fc-event {
+            border-radius: 1rem;
+            border-width: 1px;
+            padding: 0.45rem 0.6rem;
+            box-shadow: 0 18px 36px -30px rgba(15, 23, 42, 0.6);
+        }
+
+        .fc-event .fc-event-main {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .fc-event .fc-event-time {
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+
+        .fc-event .fc-event-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .fc-event-status-default {
+            background: rgba(148, 163, 184, 0.25);
+            border-color: rgba(148, 163, 184, 0.55);
+            color: #0f172a;
+        }
+
+        .fc-event-status-les {
+            background: rgba(16, 185, 129, 0.18);
+            border-color: #10b981;
+            color: #064e3b;
+        }
+
+        .fc-event-status-proefles {
+            background: rgba(14, 165, 233, 0.18);
+            border-color: #0ea5e9;
+            color: #0c4a6e;
+        }
+
+        .fc-event-status-examen {
+            background: rgba(245, 158, 11, 0.18);
+            border-color: #f59e0b;
+            color: #78350f;
+        }
+
+        .fc-event-status-ziek {
+            background: rgba(244, 63, 94, 0.2);
+            border-color: #f43f5e;
+            color: #881337;
+        }
+
+        /* Week view mobile optimalisaties */
+        @media (max-width: 768px) {
+            .fc .fc-timegrid-axis {
+                width: 60px !important;
+            }
+            
+            .fc .fc-timegrid-slot-label-cushion {
+                font-size: 0.7rem;
+                padding: 0 0.25rem;
+            }
+            
+            .fc .fc-col-header-cell-cushion {
+                font-size: 0.75rem;
+                padding: 0.25rem;
+            }
+            
+            .fc-event {
+                padding: 0.25rem 0.4rem;
+                font-size: 0.8rem;
+            }
+            
+            .fc-event .fc-event-time {
+                font-size: 0.7rem;
+            }
+            
+            .fc-event .fc-event-title {
+                font-size: 0.75rem;
+                line-height: 1.2;
+            }
+            
+            .fc .fc-timegrid-event {
+                margin-bottom: 1px;
+            }
+            
+            /* Smaller scroll area for mobile */
+            .planner-calendar__canvas {
+                min-height: 500px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .fc .fc-timegrid-axis {
+                width: 50px !important;
+            }
+            
+            .fc .fc-timegrid-slot-label-cushion {
+                font-size: 0.65rem;
+            }
+            
+            .fc-event {
+                padding: 0.2rem 0.3rem;
+            }
+            
+            .fc-event .fc-event-time {
+                font-size: 0.65rem;
+            }
+            
+            .fc-event .fc-event-title {
+                font-size: 0.7rem;
+                line-height: 1.1;
+            }
+        }
+
         .planner-modal {
             overflow-y: auto;
         }
 
         .planner-modal__panel {
             margin: 3rem auto;
+        }
+
+        /* Modal mobile optimalisaties */
+        @media (max-width: 640px) {
+            .planner-modal__panel {
+                margin: 1rem;
+                width: calc(100% - 2rem);
+                max-width: none;
+            }
+            
+            .planner-modal {
+                padding: 1rem;
+            }
+        }
             width: 100%;
         }
 
@@ -560,7 +732,8 @@
 
             .planner-calendar {
                 border-radius: 1.4rem;
-                border: 1px solid rgba(148, 163, 184, 0.35);
+                border: none;
+                background: transparent;
             }
 
             .planner-calendar__canvas {
@@ -811,9 +984,9 @@
                                 <button type="button" class="rounded-full bg-gradient-to-r from-sky-500 to-blue-600 px-3 py-1 text-xs font-semibold text-white shadow-sm transition hover:from-sky-600 hover:to-blue-700" data-calendar-nav="next">Volgende</button>
                             </div>
                             <div class="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-2 text-xs font-medium uppercase tracking-wide text-slate-500">
-                                <button type="button" class="rounded-full px-3 py-1 transition" data-calendar-view="timeGridDay">Dag</button>
-                                <button type="button" class="rounded-full px-3 py-1 transition" data-calendar-view="timeGridWeek">Week</button>
-                                <button type="button" class="rounded-full px-3 py-1 transition" data-calendar-view="dayGridMonth">Maand</button>
+                                <button type="button" class="rounded-full px-3 py-1 transition hover:bg-white hover:text-sky-600 hover:shadow-sm" data-calendar-view="timeGridDay">Dag</button>
+                                <button type="button" class="rounded-full px-3 py-1 transition hover:bg-white hover:text-sky-600 hover:shadow-sm" data-calendar-view="timeGridWeek">Week</button>
+                                <button type="button" class="rounded-full px-3 py-1 transition hover:bg-white hover:text-sky-600 hover:shadow-sm" data-calendar-view="dayGridMonth">Maand</button>
                             </div>
                             <button
                                 type="button"
@@ -895,7 +1068,7 @@
                     </div>
                 </div>
 
-                <div class="planner-calendar mt-6 overflow-hidden rounded-3xl border border-slate-200 shadow-inner">
+                <div class="planner-calendar mt-6 overflow-hidden rounded-3xl">
                     <div
                         id="calendar"
                         class="planner-calendar__canvas"
@@ -1234,6 +1407,7 @@
     <script id="planning-config" type="application/json">
         @json($planningConfig, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)
     </script>
-    <script src="{{ asset('js/dashboard.js') }}" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+    <script src="{{ asset('js/dashboard.js') }}"></script>
 @endpush
 </x-layouts.app>
