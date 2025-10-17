@@ -1,4 +1,8 @@
 @push('head')
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css"
+    >
     <style>
         body {
             background: radial-gradient(circle at top, rgba(59, 130, 246, 0.15), transparent 55%),
@@ -29,25 +33,141 @@
         }
 
         .filter-chip {
+            position: relative;
             display: inline-flex;
             align-items: center;
-            gap: 0.45rem;
+            gap: 0.6rem;
             border-radius: 9999px;
-            padding: 0.35rem 0.85rem;
+            padding: 0.55rem 1rem;
             font-size: 0.75rem;
             font-weight: 600;
             letter-spacing: 0.04em;
-            border: 1px solid rgba(148, 163, 184, 0.45);
-            background: rgba(255, 255, 255, 0.78);
-            color: #475569;
-            transition: all 120ms ease;
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            background: rgba(255, 255, 255, 0.9);
+            color: #0f172a;
+            transition:
+                transform 160ms ease,
+                box-shadow 200ms ease,
+                border-color 160ms ease,
+                background 200ms ease;
+        }
+
+        .filter-chip:hover,
+        .filter-chip:focus-visible {
+            transform: translateY(-1px);
+            border-color: rgba(14, 165, 233, 0.5);
+            box-shadow: 0 22px 44px -32px rgba(14, 165, 233, 0.55);
+        }
+
+        .filter-chip:focus-visible {
+            outline: 2px solid rgba(14, 165, 233, 0.45);
+            outline-offset: 3px;
+        }
+
+        .filter-chip .filter-chip__dot {
+            width: 0.7rem;
+            height: 0.7rem;
+            border-radius: 9999px;
+            box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
+        }
+
+        .filter-chip .filter-chip__label {
+            font-weight: 700;
+            color: inherit;
+        }
+
+        .filter-chip .filter-chip__check {
+            width: 1.4rem;
+            height: 1.4rem;
+            border-radius: 9999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(14, 165, 233, 0.12);
+            color: #0284c7;
+            transition: opacity 160ms ease, transform 160ms ease;
+            opacity: 0;
+            transform: scale(0.8);
+        }
+
+        .filter-chip .filter-chip__check svg {
+            width: 0.85rem;
+            height: 0.85rem;
         }
 
         .filter-chip.active {
-            border-color: rgba(14, 165, 233, 0.6);
+            border-color: rgba(14, 165, 233, 0.55);
+            background: linear-gradient(120deg, rgba(224, 242, 254, 0.95), rgba(191, 219, 254, 0.92));
+            box-shadow: 0 26px 52px -34px rgba(14, 116, 144, 0.65);
+        }
+
+        .filter-chip.active .filter-chip__check {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .planner-filters-card {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            border-radius: 1.9rem;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            background: linear-gradient(140deg, rgba(255, 255, 255, 0.94), rgba(224, 242, 254, 0.9));
+            padding: 1.75rem 1.5rem;
+            box-shadow: 0 30px 60px -36px rgba(15, 118, 110, 0.45);
+            transition: box-shadow 200ms ease, transform 180ms ease;
+        }
+
+        .planner-filters-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 36px 68px -34px rgba(14, 116, 144, 0.5);
+        }
+
+        .planner-filters-card__header {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .planner-filters-card__title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
             color: #0369a1;
-            background: rgba(224, 242, 254, 0.85);
-            box-shadow: 0 6px 16px -14px rgba(14, 116, 144, 0.6);
+        }
+
+        .planner-filters-card__subtitle {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .planner-filters-card__body {
+            display: flex;
+            flex-direction: column;
+            gap: 1.35rem;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .filter-group__label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #475569;
+        }
+
+        .filter-group__chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.65rem;
         }
 
         .planner-root {
@@ -60,6 +180,19 @@
 
         .planner-toolbar > * {
             flex-shrink: 0;
+        }
+
+        .planner-card {
+            position: relative;
+            transition: padding 180ms ease, border-radius 180ms ease, box-shadow 220ms ease;
+        }
+
+        .planner-calendar {
+            background: transparent;
+        }
+
+        .planner-calendar__canvas {
+            min-height: 680px;
         }
 
         .planner-view {
@@ -92,12 +225,196 @@
             animation: planner-spin 900ms linear infinite;
         }
 
+        .fc {
+            --fc-border-color: rgba(148, 163, 184, 0.25);
+            --fc-page-bg-color: transparent;
+            font-family: inherit;
+        }
+
+        .fc .fc-scrollgrid {
+            border-radius: 1.5rem;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.96);
+            box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.12);
+        }
+
+        .fc .fc-toolbar,
+        .fc .fc-header-toolbar {
+            display: none;
+        }
+
+        .fc .fc-daygrid-day.fc-day-today,
+        .fc .fc-timegrid-col.fc-day-today {
+            background: rgba(224, 242, 254, 0.55);
+        }
+
+        .fc .fc-col-header-cell-cushion {
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #1e293b;
+        }
+
+        .fc .fc-timegrid-slot-label-cushion {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        .fc-event {
+            border-radius: 1rem;
+            border-width: 1px;
+            padding: 0.45rem 0.6rem;
+            box-shadow: 0 18px 36px -30px rgba(15, 23, 42, 0.6);
+        }
+
+        .fc-event .fc-event-main {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .fc-event .fc-event-time {
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+
+        .fc-event .fc-event-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .fc-event-status-default {
+            background: rgba(148, 163, 184, 0.25);
+            border-color: rgba(148, 163, 184, 0.55);
+            color: #0f172a;
+        }
+
+        .fc-event-status-les {
+            background: rgba(16, 185, 129, 0.18);
+            border-color: #10b981;
+            color: #064e3b;
+        }
+
+        .fc-event-status-proefles {
+            background: rgba(14, 165, 233, 0.18);
+            border-color: #0ea5e9;
+            color: #0c4a6e;
+        }
+
+        .fc-event-status-examen {
+            background: rgba(245, 158, 11, 0.18);
+            border-color: #f59e0b;
+            color: #78350f;
+        }
+
+        .fc-event-status-ziek {
+            background: rgba(244, 63, 94, 0.2);
+            border-color: #f43f5e;
+            color: #881337;
+        }
+
+        /* Mobile optimalisaties */
+        @media (max-width: 768px) {
+            /* Verberg tijd in month view op mobile */
+            .fc-daygrid-event .fc-event-time {
+                display: none !important;
+            }
+            
+            /* Maak events in month view compacter */
+            .fc-daygrid-event {
+                padding: 0.25rem 0.4rem !important;
+            }
+            
+            .fc-daygrid-event .fc-event-title {
+                font-size: 0.75rem !important;
+                line-height: 1.2;
+            }
+            
+            /* Week/day view optimalisaties */
+            .fc .fc-timegrid-axis {
+                width: 60px !important;
+            }
+            
+            .fc .fc-timegrid-slot-label-cushion {
+                font-size: 0.7rem;
+                padding: 0 0.25rem;
+            }
+            
+            .fc .fc-col-header-cell-cushion {
+                font-size: 0.75rem;
+                padding: 0.25rem;
+            }
+            
+            .fc-event {
+                padding: 0.25rem 0.4rem;
+                font-size: 0.8rem;
+            }
+            
+            .fc-event .fc-event-time {
+                font-size: 0.7rem;
+            }
+            
+            .fc-event .fc-event-title {
+                font-size: 0.75rem;
+                line-height: 1.2;
+            }
+            
+            .fc .fc-timegrid-event {
+                margin-bottom: 1px;
+            }
+            
+            /* Smaller scroll area for mobile */
+            .planner-calendar__canvas {
+                min-height: 500px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .fc .fc-timegrid-axis {
+                width: 50px !important;
+            }
+            
+            .fc .fc-timegrid-slot-label-cushion {
+                font-size: 0.65rem;
+            }
+            
+            .fc-event {
+                padding: 0.2rem 0.3rem;
+            }
+            
+            .fc-event .fc-event-time {
+                font-size: 0.65rem;
+            }
+            
+            .fc-event .fc-event-title {
+                font-size: 0.7rem;
+                line-height: 1.1;
+            }
+        }
+
         .planner-modal {
             overflow-y: auto;
         }
 
         .planner-modal__panel {
             margin: 3rem auto;
+        }
+
+        /* Modal mobile optimalisaties */
+        @media (max-width: 640px) {
+            .planner-modal__panel {
+                margin: 1rem;
+                width: calc(100% - 2rem);
+                max-width: none;
+            }
+            
+            .planner-modal {
+                padding: 1rem;
+            }
+        }
             width: 100%;
         }
 
@@ -412,6 +729,27 @@
             .planner-header form button {
                 width: 100%;
             }
+
+            .planner-card {
+                padding: 1.75rem;
+                border-radius: 2rem;
+            }
+
+            .planner-calendar__canvas {
+                min-height: 620px;
+            }
+
+            .planner-filters {
+                display: none;
+                opacity: 0;
+                transform: translateY(-6px);
+            }
+
+            .planner-filters[data-expanded="true"] {
+                display: flex;
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         @media (max-width: 768px) {
@@ -423,6 +761,11 @@
             .planner-event {
                 border-radius: 1rem;
                 padding: 0.75rem;
+            }
+
+            .planner-card {
+                padding: 1.5rem;
+                border-radius: 1.75rem;
             }
 
             .planner-toolbar {
@@ -471,6 +814,22 @@
                 padding: 0.55rem;
             }
 
+            .planner-card {
+                padding: 1.25rem;
+                border-radius: 1.5rem;
+                box-shadow: 0 28px 48px -38px rgba(15, 23, 42, 0.45);
+            }
+
+            .planner-calendar {
+                border-radius: 1.4rem;
+                border: none;
+                background: transparent;
+            }
+
+            .planner-calendar__canvas {
+                min-height: 540px;
+            }
+
             .planner-event__time {
                 font-size: 0.7rem;
             }
@@ -490,15 +849,13 @@
                 min-height: 120px;
             }
 
-            #instructor-filter,
-            #status-filter {
+            .filter-group__chips {
                 width: 100%;
             }
 
-            #instructor-filter .filter-chip,
-            #status-filter .filter-chip {
+            .filter-group__chips .filter-chip {
                 width: 100%;
-                justify-content: center;
+                justify-content: space-between;
             }
         }
 
@@ -523,6 +880,15 @@
 
             .planner-month__events {
                 gap: 0.25rem;
+            }
+
+            .planner-card {
+                padding: 1rem;
+                border-radius: 1.35rem;
+            }
+
+            .planner-calendar__canvas {
+                min-height: 500px;
             }
         }
 
@@ -678,7 +1044,7 @@
 <x-layouts.app title="Planning">
     <div class="flex min-h-screen flex-col">
         <header class="sticky top-0 z-10 border-b border-slate-200 bg-white/90 backdrop-blur">
-            <div class="planner-header mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
+            <div class="planner-header mx-auto flex w-full items-center justify-between px-4 py-3 sm:px-6 sm:py-4 xl:max-w-6xl">
                 <div>
                     <h1 class="text-xl font-semibold text-slate-900">Planningsoverzicht</h1>
                     <p class="text-sm text-slate-500">Beheer afspraken met een Google Agenda-achtige ervaring.</p>
@@ -695,9 +1061,9 @@
             </div>
         </header>
 
-        <main class="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
-            <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl">
-                <div class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+        <main class="mx-auto w-full flex-1 px-3 py-6 sm:px-6 lg:px-8 xl:max-w-6xl">
+            <div class="planner-card rounded-3xl border border-slate-200 bg-white p-6 shadow-xl">
+                <div class="flex flex-col gap-5 sm:gap-6 lg:flex-row lg:items-start lg:justify-between">
                     <div class="flex flex-col gap-4">
                         <div class="planner-toolbar flex flex-wrap items-center gap-3">
                             <div class="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm">
@@ -706,9 +1072,9 @@
                                 <button type="button" class="rounded-full bg-gradient-to-r from-sky-500 to-blue-600 px-3 py-1 text-xs font-semibold text-white shadow-sm transition hover:from-sky-600 hover:to-blue-700" data-calendar-nav="next">Volgende</button>
                             </div>
                             <div class="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-2 text-xs font-medium uppercase tracking-wide text-slate-500">
-                                <button type="button" class="rounded-full px-3 py-1 transition" data-calendar-view="timeGridDay">Dag</button>
-                                <button type="button" class="rounded-full px-3 py-1 transition" data-calendar-view="timeGridWeek">Week</button>
-                                <button type="button" class="rounded-full px-3 py-1 transition" data-calendar-view="dayGridMonth">Maand</button>
+                                <button type="button" class="rounded-full px-3 py-1 transition hover:bg-white hover:text-sky-600 hover:shadow-sm" data-calendar-view="timeGridDay">Dag</button>
+                                <button type="button" class="rounded-full px-3 py-1 transition hover:bg-white hover:text-sky-600 hover:shadow-sm" data-calendar-view="timeGridWeek">Week</button>
+                                <button type="button" class="rounded-full px-3 py-1 transition hover:bg-white hover:text-sky-600 hover:shadow-sm" data-calendar-view="dayGridMonth">Maand</button>
                             </div>
                             <button
                                 type="button"
@@ -729,50 +1095,60 @@
                             <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Datum bereik</p>
                             <p id="calendar-range" class="text-lg font-semibold text-slate-900">&nbsp;</p>
                         </div>
-                        <div class="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                            <span class="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1"><span class="h-2.5 w-2.5 rounded-full bg-emerald-400"></span>Les</span>
-                            <span class="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1"><span class="h-2.5 w-2.5 rounded-full bg-sky-400"></span>Proefles</span>
-                            <span class="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1"><span class="h-2.5 w-2.5 rounded-full bg-amber-400"></span>Examen</span>
-                            <span class="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1"><span class="h-2.5 w-2.5 rounded-full bg-rose-400"></span>Ziek</span>
-                        </div>
                     </div>
-                    <div class="flex w-full flex-col gap-4 lg:w-80">
-                        @if ($user->isAdmin())
-                            <div>
-                                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Instructeurs filteren</p>
-                                <div id="instructor-filter" class="mt-2 flex flex-wrap gap-2">
-                                    @foreach ($instructors as $instructor)
-                                        <button type="button" data-instructor-filter="{{ $instructor['id'] }}" data-active="true" class="filter-chip fancy-chip active">
-                                            <span class="h-2.5 w-2.5 rounded-full bg-gradient-to-br from-sky-400 to-blue-500"></span>
-                                            <span>{{ $instructor['name'] }}</span>
+                    <div id="planner-filters-panel" class="planner-filters-card mt-3 w-full lg:mt-0 lg:w-80">
+                        <div class="planner-filters-card__header">
+                            <span class="planner-filters-card__title">Filters</span>
+                            <span class="planner-filters-card__subtitle">Stel je planning makkelijk samen</span>
+                        </div>
+                        <div class="planner-filters-card__body">
+                            @if ($user->isAdmin())
+                                <div class="filter-group">
+                                    <p class="filter-group__label">Instructeurs</p>
+                                    <div id="instructor-filter" class="filter-group__chips">
+                                        @foreach ($instructors as $instructor)
+                                            <button type="button" data-instructor-filter="{{ $instructor['id'] }}" data-active="true" aria-pressed="true" class="filter-chip active">
+                                                <span class="filter-chip__dot bg-gradient-to-br from-sky-400 to-blue-500"></span>
+                                                <span class="filter-chip__label">{{ $instructor['name'] }}</span>
+                                                <span class="filter-chip__check" aria-hidden="true">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                        <path fill-rule="evenodd" d="M16.704 5.29a1 1 0 0 1 .006 1.414l-7.07 7.127a1 1 0 0 1-1.427.007L3.29 9.91a1 1 0 0 1 1.414-1.414l4.01 4.01 6.364-6.364a1 1 0 0 1 1.414-.007z" clip-rule="evenodd" />
+                                                    </svg>
+                                                </span>
+                                            </button>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+                            <div class="filter-group">
+                                <p class="filter-group__label">Statussen</p>
+                                <div id="status-filter" class="filter-group__chips">
+                                    @foreach ([
+                                        ['value' => 'les', 'label' => 'Les', 'color' => 'bg-emerald-500'],
+                                        ['value' => 'proefles', 'label' => 'Proefles', 'color' => 'bg-sky-500'],
+                                        ['value' => 'examen', 'label' => 'Examen', 'color' => 'bg-amber-500'],
+                                        ['value' => 'ziek', 'label' => 'Ziek', 'color' => 'bg-rose-500'],
+                                    ] as $status)
+                                        <button type="button" data-status-filter="{{ $status['value'] }}" data-active="true" aria-pressed="true" class="filter-chip active">
+                                            <span class="filter-chip__dot {{ $status['color'] }}"></span>
+                                            <span class="filter-chip__label">{{ $status['label'] }}</span>
+                                            <span class="filter-chip__check" aria-hidden="true">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fill-rule="evenodd" d="M16.704 5.29a1 1 0 0 1 .006 1.414l-7.07 7.127a1 1 0 0 1-1.427.007L3.29 9.91a1 1 0 0 1 1.414-1.414l4.01 4.01 6.364-6.364a1 1 0 0 1 1.414-.007z" clip-rule="evenodd" />
+                                                </svg>
+                                            </span>
                                         </button>
                                     @endforeach
                                 </div>
-                            </div>
-                        @endif
-                        <div>
-                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Statussen</p>
-                            <div id="status-filter" class="mt-2 flex flex-wrap gap-2">
-                                @foreach ([
-                                    ['value' => 'les', 'label' => 'Les', 'color' => 'bg-emerald-500'],
-                                    ['value' => 'proefles', 'label' => 'Proefles', 'color' => 'bg-sky-500'],
-                                    ['value' => 'examen', 'label' => 'Examen', 'color' => 'bg-amber-500'],
-                                    ['value' => 'ziek', 'label' => 'Ziek', 'color' => 'bg-rose-500'],
-                                ] as $status)
-                                    <button type="button" data-status-filter="{{ $status['value'] }}" data-active="true" class="filter-chip fancy-chip active">
-                                        <span class="h-2.5 w-2.5 rounded-full {{ $status['color'] }}"></span>
-                                        <span>{{ $status['label'] }}</span>
-                                    </button>
-                                @endforeach
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="mt-6 overflow-hidden rounded-3xl border border-slate-200 shadow-inner">
+                <div class="planner-calendar mt-6 overflow-hidden rounded-3xl">
                     <div
                         id="calendar"
-                        class="min-h-[700px]"
+                        class="planner-calendar__canvas"
                     ></div>
                 </div>
                 <p
@@ -858,7 +1234,7 @@
                             </div>
                         </div>
 
-                        <div class="grid gap-4 sm:grid-cols-2">
+                        <div data-student-dependent class="hidden grid gap-4 sm:grid-cols-2" aria-hidden="true">
                             <div>
                                 <label for="status" class="block text-sm font-medium text-slate-700">Status</label>
                                 <select id="status" name="status" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200">
@@ -888,7 +1264,7 @@
                             </div>
                         </div>
 
-                        <div class="space-y-6">
+                        <div data-student-dependent class="hidden space-y-6" aria-hidden="true">
                             <div class="grid gap-6 sm:grid-cols-2">
                                 <div class="space-y-3">
                                     <div class="flex items-center justify-between gap-3">
@@ -965,7 +1341,7 @@
                             </div>
                         </div>
 
-                        <div>
+                        <div data-student-dependent class="hidden" aria-hidden="true">
                             <label for="description" class="block text-sm font-medium text-slate-700">Omschrijving</label>
                             <textarea id="description" name="description" rows="3" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-200"></textarea>
                         </div>
@@ -1108,6 +1484,7 @@
     <script id="planning-config" type="application/json">
         @json($planningConfig, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT)
     </script>
-    <script src="{{ asset('js/dashboard.js') }}" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+    <script src="{{ asset('js/dashboard.js') }}"></script>
 @endpush
 </x-layouts.app>

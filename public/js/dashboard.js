@@ -12,15 +12,8 @@
         dayGridMonth: 'month',
     };
 
-    const REVERSE_VIEW_MAP = {
-        week: 'timeGridWeek',
-        day: 'timeGridDay',
-        month: 'dayGridMonth',
-    };
-
-    const SLOT_MINUTES = 15;
-    const MINUTE_HEIGHT = 1.05;
-    const MIN_EVENT_HEIGHT = 32;
+    const SUPPORTS_MATCH_MEDIA = typeof window !== 'undefined' && typeof window.matchMedia === 'function';
+    const COMPACT_WEEKDAY_MEDIA = SUPPORTS_MATCH_MEDIA ? window.matchMedia('(max-width: 640px)') : null;
 
     const DATE_FORMATTER = new Intl.DateTimeFormat('nl-NL', { day: 'numeric', month: 'long' });
     const MONTH_FORMATTER = new Intl.DateTimeFormat('nl-NL', { month: 'long', year: 'numeric' });
@@ -31,6 +24,7 @@
         month: '2-digit',
         year: 'numeric',
     });
+    const WEEKDAY_SHORT_FORMATTER = new Intl.DateTimeFormat('nl-NL', { weekday: 'short' });
 
     function padNumber(value, length = 2) {
         return String(value).padStart(length, '0');
@@ -228,110 +222,232 @@
         return capitalize(WEEKDAY_FORMATTER.format(date));
     }
 
+    function formatShortWeekday(date) {
+        const raw = WEEKDAY_SHORT_FORMATTER.format(date);
+        return capitalize(raw.replace('.', ''));
+    }
+
     function formatTime(date) {
         return TIME_FORMATTER.format(date);
     }
+
     class PlannerCalendar {
         constructor(element, options = {}) {
+            const fc = window.FullCalendar;
+            if (!fc || !fc.Calendar) {
+                throw new Error('FullCalendar is niet geladen.');
+            }
             this.element = element;
-            this.options = options;
-            this.view = VIEW_MAP[options.initialView] || 'week';
-            this.currentDate = options.initialDate ? new Date(options.initialDate) : new Date();
+            this.options = {
+                onSelect: () => {},
+                onEventClick: () => {},
+                onEventMove: () => {},
+                onEventResize: () => {},
+                onRangeChange: () => {},
+                initialView: 'timeGridWeek',
+                initialDate: new Date().toISOString(),
+                ...options,
+            };
             this.events = [];
-            this.onSelect = options.onSelect || (() => {});
-            this.onEventClick = options.onEventClick || (() => {});
-            this.onEventMove = options.onEventMove || (() => {});
-            this.onEventResize = options.onEventResize || (() => {});
-            this.onRangeChange = options.onRangeChange || (() => {});
-            this.columnsMeta = [];
-            this.monthCellsMeta = [];
-            this.dragState = null;
-            this.recentlyDragged = new Map();
             this.element.classList.add('planner-root');
+            this.element.style.position = 'relative';
             this.loadingOverlay = buildElement('div', 'planner-loading hidden', [
                 buildElement('div', 'planner-loading__spinner', ''),
             ]);
+
+            const initialDate = this.options.initialDate ? new Date(this.options.initialDate) : new Date();
+            const requestedInitialView = this.options.initialView || 'timeGridWeek';
+
+            const plugins = [
+                fc.dayGridPlugin,
+                fc.timeGridPlugin,
+                fc.interactionPlugin,
+            ].filter(Boolean);
+
+            if (!plugins.length) {
+                console.warn('FullCalendar plugins niet gevonden; beperktere weergaven beschikbaar.');
+            }
+
+            const hasTimeGrid = plugins.includes(fc.timeGridPlugin);
+            const initialView = hasTimeGrid ? requestedInitialView : 'dayGridMonth';
+
+            this.calendar = new fc.Calendar(this.element, {
+                plugins,
+                locale: 'nl',
+                buttonText: {
+                    today: 'Vandaag',
+                    month: 'Maand',
+                    week: 'Week',
+                    day: 'Dag',
+                    list: 'Agenda'
+                },
+                initialView,
+                initialDate,
+                firstDay: 1,
+                height: 'auto',
+                expandRows: true,
+                stickyHeaderDates: true,
+                nowIndicator: true,
+                selectable: true,
+                selectMirror: true,
+                editable: true,
+                eventStartEditable: true,
+                eventDurationEditable: true,
+                slotDuration: '00:15:00',
+                slotMinTime: '06:00:00',
+                slotMaxTime: '22:00:00',
+                slotLabelFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
+                eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
+                headerToolbar: false,
+                dayHeaderContent: (arg) => this.getDayHeaderText(arg.date),
+                select: (info) => this.handleSelect(info),
+                dateClick: (info) => this.handleDateClick(info),
+                eventClick: (info) => this.handleEventClick(info),
+                eventDrop: (info) => this.handleEventUpdate(info, 'move'),
+                eventResize: (info) => this.handleEventUpdate(info, 'resize'),
+                datesSet: (info) => {
+                    this.view = VIEW_MAP[info.view.type] || this.view || 'week';
+                    this.refreshWeekdayHeaders();
+                    this.notifyRangeChange();
+                },
+                eventClassNames: (info) => this.getEventClasses(info),
+                eventDidMount: (info) => this.decorateEvent(info),
+                eventDisplay: 'block',
+                dayMaxEvents: false,
+                moreLinkClick: 'popover',
+                eventOverlap: true,
+                selectOverlap: true,
+                // Mobile responsive settings
+                views: {
+                    timeGridWeek: {
+                        dayHeaderFormat: { weekday: 'short', day: 'numeric' }
+                    },
+                    timeGridDay: {
+                        dayHeaderFormat: { weekday: 'long', day: 'numeric', month: 'long' }
+                    },
+                    dayGridMonth: {
+                        dayHeaderFormat: { weekday: 'short' }
+                    }
+                },
+                // Touch device optimalisaties
+                longPressDelay: 500,
+                eventLongPressDelay: 500
+            });
+
+            this.view = VIEW_MAP[this.calendar.view.type] || 'week';
+            this.calendar.render();
             this.element.appendChild(this.loadingOverlay);
         }
 
-        captureScrollState() {
-            const state = {};
-            const timeGrid = this.element.querySelector('.planner-time-grid');
-            if (timeGrid) {
-                state.timeGrid = {
-                    scrollLeft: timeGrid.scrollLeft,
-                    scrollTop: timeGrid.scrollTop,
-                };
-                const timeGridBody = timeGrid.querySelector('.planner-time-grid__body');
-                if (timeGridBody) {
-                    state.timeGridBody = {
-                        scrollLeft: timeGridBody.scrollLeft,
-                        scrollTop: timeGridBody.scrollTop,
-                    };
-                }
+        handleSelect(info) {
+            this.calendar.unselect();
+            const start = new Date(info.start.getTime());
+            let end = info.end ? new Date(info.end.getTime()) : addMinutes(start, 60);
+            
+            // Voor all-day events of maand view, set standaard tijd
+            if (info.allDay || info.view?.type === 'dayGridMonth') {
+                start.setHours(9, 0, 0, 0);
+                end = addMinutes(start, 60);
             }
-            const monthGrid = this.element.querySelector('.planner-month__grid');
-            if (monthGrid) {
-                state.month = {
-                    scrollLeft: monthGrid.scrollLeft,
-                    scrollTop: monthGrid.scrollTop,
-                };
+            
+            // Zorg ervoor dat eind tijd niet voor start tijd is
+            if (end <= start) {
+                end = addMinutes(start, 60);
             }
-            return state;
+            
+            this.options.onSelect({
+                start,
+                end,
+                instructorId: null,
+            });
         }
 
-        restoreScrollState(state) {
-            if (!state || typeof state !== 'object') {
+        handleDateClick(info) {
+            this.calendar.unselect();
+            const start = new Date(info.date.getTime());
+            if (info.allDay || info.view?.type === 'dayGridMonth') {
+                start.setHours(9, 0, 0, 0);
+            }
+            const end = addMinutes(start, 60);
+            this.options.onSelect({
+                start,
+                end,
+                instructorId: null,
+            });
+        }
+
+        handleEventClick(info) {
+            info.jsEvent?.preventDefault();
+            const original = info.event.extendedProps?.original;
+            if (original) {
+                this.options.onEventClick({ event: { ...original } });
+            }
+        }
+
+        handleEventUpdate(info, kind) {
+            const original = info.event.extendedProps?.original;
+            if (!original) {
                 return;
             }
-            const timeGrid = this.element.querySelector('.planner-time-grid');
-            if (timeGrid && state.timeGrid) {
-                if (typeof state.timeGrid.scrollLeft === 'number') {
-                    timeGrid.scrollLeft = state.timeGrid.scrollLeft;
-                }
-                if (typeof state.timeGrid.scrollTop === 'number') {
-                    timeGrid.scrollTop = state.timeGrid.scrollTop;
-                }
-            }
-            const timeGridBody = this.element.querySelector('.planner-time-grid__body');
-            if (timeGridBody && state.timeGridBody) {
-                if (typeof state.timeGridBody.scrollLeft === 'number') {
-                    timeGridBody.scrollLeft = state.timeGridBody.scrollLeft;
-                }
-                if (typeof state.timeGridBody.scrollTop === 'number') {
-                    timeGridBody.scrollTop = state.timeGridBody.scrollTop;
-                }
-            }
-            const monthGrid = this.element.querySelector('.planner-month__grid');
-            if (monthGrid && state.month) {
-                if (typeof state.month.scrollLeft === 'number') {
-                    monthGrid.scrollLeft = state.month.scrollLeft;
-                }
-                if (typeof state.month.scrollTop === 'number') {
-                    monthGrid.scrollTop = state.month.scrollTop;
-                }
+            this.syncEventInstance(info.event, original);
+            const payload = {
+                event: original,
+                start: new Date(original.start.getTime()),
+                end: new Date(original.end.getTime()),
+            };
+            if (kind === 'move') {
+                this.options.onEventMove(payload);
+            } else {
+                this.options.onEventResize(payload);
             }
         }
 
-        markEventRecentlyDragged(eventId) {
-            if (!eventId) {
+        getEventClasses(info) {
+            const original = info.event.extendedProps?.original;
+            if (!original || !original.status) {
+                return ['fc-event-status-default'];
+            }
+            return [`fc-event-status-${original.status}`];
+        }
+
+        decorateEvent(info) {
+            const original = info.event.extendedProps?.original;
+            if (!original) {
                 return;
             }
-            const stamp = Date.now();
-            this.recentlyDragged.set(eventId, stamp);
-            window.setTimeout(() => {
-                if (this.recentlyDragged.get(eventId) === stamp) {
-                    this.recentlyDragged.delete(eventId);
-                }
-            }, 400);
+            
+            // Tooltip met event details
+            const tooltipLines = [
+                `${formatTime(original.start)} – ${formatTime(original.end)}`,
+                original.student_name || original.title || 'Afspraak',
+            ];
+            if (original.location) {
+                tooltipLines.push(`Locatie: ${original.location}`);
+            }
+            if (original.vehicle) {
+                tooltipLines.push(`Voertuig: ${original.vehicle}`);
+            }
+            info.el.title = tooltipLines.join('\n');
+            
+            // Cursor pointer voor klikbare events
+            info.el.style.cursor = 'pointer';
         }
 
-        shouldIgnoreClick(eventId) {
-            if (!eventId) {
-                return false;
+        syncEventInstance(eventInstance, original) {
+            const currentDuration = Math.max(
+                15,
+                differenceInMinutes(original.end ?? addMinutes(original.start, 60), original.start),
+            );
+            if (eventInstance.start) {
+                original.start = new Date(eventInstance.start.getTime());
             }
-            const stamp = this.recentlyDragged.get(eventId);
-            return typeof stamp === 'number' && Date.now() - stamp < 400;
+            if (eventInstance.end) {
+                original.end = new Date(eventInstance.end.getTime());
+            } else {
+                original.end = addMinutes(original.start, currentDuration);
+            }
+            original.start_time = formatForServer(original.start);
+            original.end_time = formatForServer(original.end);
         }
 
         setLoading(active) {
@@ -339,940 +455,105 @@
         }
 
         getCurrentRange() {
-            switch (this.view) {
-                case 'day': {
-                    const start = startOfDay(this.currentDate);
-                    return { start, end: addMinutes(start, 24 * 60) };
-                }
-                case 'week': {
-                    const start = startOfWeek(this.currentDate);
-                    return { start, end: endOfWeek(this.currentDate) };
-                }
-                case 'month':
-                default: {
-                    const start = startOfMonthGrid(this.currentDate);
-                    return { start, end: endOfMonthGrid(this.currentDate) };
-                }
-            }
+            const view = this.calendar.view;
+            return {
+                start: new Date(view.activeStart.getTime()),
+                end: new Date(view.activeEnd.getTime()),
+            };
         }
 
         getViewInfo() {
             const range = this.getCurrentRange();
             return {
-                type: REVERSE_VIEW_MAP[this.view] || 'timeGridWeek',
+                type: this.calendar.view.type,
                 currentStart: range.start,
                 currentEnd: range.end,
             };
         }
 
-        getDate() {
-            return new Date(this.currentDate.getTime());
-        }
-
-        changeView(nextViewName) {
-            const nextView = VIEW_MAP[nextViewName] || 'week';
-            if (nextView === this.view) {
-                this.render();
-                this.notifyRangeChange();
-                return;
-            }
-            this.view = nextView;
-            this.render();
-            this.notifyRangeChange();
-        }
-
         notifyRangeChange() {
-            if (typeof this.onRangeChange === 'function') {
+            if (typeof this.options.onRangeChange === 'function') {
                 const range = this.getCurrentRange();
-                this.onRangeChange({ ...range });
+                this.options.onRangeChange({ ...range });
             }
         }
 
         next() {
-            switch (this.view) {
-                case 'day':
-                    this.currentDate.setDate(this.currentDate.getDate() + 1);
-                    break;
-                case 'week':
-                    this.currentDate.setDate(this.currentDate.getDate() + 7);
-                    break;
-                case 'month':
-                    this.currentDate.setMonth(this.currentDate.getMonth() + 1);
-                    break;
-                default:
-                    this.currentDate.setDate(this.currentDate.getDate() + 7);
-            }
-            this.render();
-            this.notifyRangeChange();
+            this.calendar.next();
+            this.view = VIEW_MAP[this.calendar.view.type] || this.view;
         }
 
         prev() {
-            switch (this.view) {
-                case 'day':
-                    this.currentDate.setDate(this.currentDate.getDate() - 1);
-                    break;
-                case 'week':
-                    this.currentDate.setDate(this.currentDate.getDate() - 7);
-                    break;
-                case 'month':
-                    this.currentDate.setMonth(this.currentDate.getMonth() - 1);
-                    break;
-                default:
-                    this.currentDate.setDate(this.currentDate.getDate() - 7);
-            }
-            this.render();
-            this.notifyRangeChange();
+            this.calendar.prev();
+            this.view = VIEW_MAP[this.calendar.view.type] || this.view;
         }
 
         today() {
-            this.currentDate = new Date();
-            this.render();
-            this.notifyRangeChange();
+            this.calendar.today();
+            this.view = VIEW_MAP[this.calendar.view.type] || this.view;
         }
 
-        render() {
-            this.columnsMeta = [];
-            this.monthCellsMeta = [];
-            const wrapper = buildElement('div', 'planner-view');
-            const range = this.getCurrentRange();
-            switch (this.view) {
-                case 'day':
-                    wrapper.appendChild(this.renderTimeGrid({
-                        columns: this.buildDayColumns(range.start),
-                        showDayNames: false,
-                    }));
-                    break;
-                case 'week':
-                    wrapper.appendChild(this.renderTimeGrid({
-                        columns: this.buildWeekColumns(range.start),
-                        showDayNames: true,
-                    }));
-                    break;
-                case 'month':
-                default:
-                    wrapper.appendChild(this.renderMonthView(range.start, range.end));
-                    break;
-            }
-            this.element.querySelectorAll('.planner-view').forEach((child) => child.remove());
-            this.element.insertBefore(wrapper, this.loadingOverlay);
+        changeView(nextViewName) {
+            this.calendar.changeView(nextViewName);
+            this.view = VIEW_MAP[this.calendar.view.type] || this.view;
+            this.refreshWeekdayHeaders();
         }
 
         setEvents(events) {
-            const scrollState = this.captureScrollState();
-            this.events = events.map((event) => ({ ...event }));
-            this.render();
-            this.restoreScrollState(scrollState);
-        }
-
-        buildDayColumns(start) {
-            return [this.buildColumnData(start)];
-        }
-
-        buildWeekColumns(start) {
-            const columns = [];
-            for (let i = 0; i < 7; i += 1) {
-                const date = new Date(start.getTime() + i * 86400000);
-                columns.push(this.buildColumnData(date));
-            }
-            return columns;
-        }
-
-        buildColumnData(date, instructorId = null) {
-            const start = startOfDay(date);
-            const end = endOfDay(date);
-            const events = this.events
-                .filter((event) => {
-                    if (instructorId !== null && Number(event.instructor_id) !== Number(instructorId)) {
-                        return false;
-                    }
-                    return event.start < end && event.end > start;
-                })
-                .map((event) => ({ ...event }));
-            return { date: start, events, instructorId };
-        }
-        renderTimeGrid({ columns, showDayNames }) {
-            const container = buildElement('div', 'planner-time-grid');
-            const columnCount = Math.max(1, columns.length || 0);
-            container.style.setProperty('--planner-column-count', String(columnCount));
-            const header = buildElement('div', 'planner-time-grid__header');
-            header.appendChild(
-                buildElement(
-                    'div',
-                    'planner-time-grid__header-cell planner-time-grid__times-header planner-time-grid__times-header--leading',
-                ),
-            );
-            columns.forEach((column, index) => {
-                const label = showDayNames ? formatWeekday(column.date) : DATE_FORMATTER.format(column.date);
-                const headerCell = buildElement(
-                    'div',
-                    'planner-time-grid__header-cell',
-                    `<div class="planner-time-grid__header-label">${label}</div>`,
-                );
-                if (showDayNames) {
-                    const day = column.date.getDay();
-                    if (day === 0 || day === 6) {
-                        headerCell.dataset.weekend = 'true';
-                    }
-                }
-                header.appendChild(headerCell);
-            });
-            container.appendChild(header);
-
-            const body = buildElement('div', 'planner-time-grid__body');
-            const buildTimesColumn = (className) => {
-                const column = buildElement('div', `planner-time-grid__times ${className || ''}`.trim());
-                for (let hour = 0; hour < 24; hour += 1) {
-                    const timeLabel = buildElement(
-                        'div',
-                        'planner-time-grid__time-label',
-                        `<span>${`${hour}`.padStart(2, '0')}:00</span>`,
-                    );
-                    timeLabel.style.height = `${MINUTE_HEIGHT * 60}px`;
-                    column.appendChild(timeLabel);
-                }
-                return column;
-            };
-            body.appendChild(buildTimesColumn('planner-time-grid__times--leading'));
-
-            columns.forEach((column, columnIndex) => {
-                const columnElement = buildElement('div', 'planner-time-grid__column');
-                columnElement.dataset.columnIndex = String(columnIndex);
-                columnElement.dataset.date = column.date.toISOString();
-                if (column.instructorId !== null) {
-                    columnElement.dataset.instructorId = String(column.instructorId);
-                }
-                const day = column.date.getDay();
-                if (day === 0 || day === 6) {
-                    columnElement.dataset.weekend = 'true';
-                }
-
-                const backdrop = buildElement('div', 'planner-time-grid__background');
-                backdrop.style.height = `${MINUTE_HEIGHT * 60 * 24}px`;
-                for (let hour = 0; hour <= 24; hour += 1) {
-                    const line = buildElement('div', 'planner-time-grid__hour-line');
-                    line.style.top = `${MINUTE_HEIGHT * 60 * hour}px`;
-                    backdrop.appendChild(line);
-                }
-                columnElement.appendChild(backdrop);
-
-                columnElement.addEventListener('click', (event) => {
-                    if (event.target.closest('.planner-event')) {
-                        return;
-                    }
-                    const rect = columnElement.getBoundingClientRect();
-                    const offsetY = event.clientY - rect.top + columnElement.scrollTop;
-                    const minutesFromTop = Math.max(0, Math.min(offsetY / MINUTE_HEIGHT, 24 * 60));
-                    const start = addMinutes(column.date, Math.floor(minutesFromTop / SLOT_MINUTES) * SLOT_MINUTES);
-                    const end = addMinutes(start, 60);
-                    this.onSelect({ start, end, instructorId: column.instructorId ?? null });
-                });
-
-                const layouts = this.computeColumnLayouts(column.events);
-                layouts.forEach((layout) => {
-                    const eventElement = this.createEventElement(layout, column.date, columnIndex);
-                    columnElement.appendChild(eventElement);
-                });
-
-                this.columnsMeta.push({
-                    index: columnIndex,
-                    date: column.date,
-                    instructorId: column.instructorId ?? null,
-                    element: columnElement,
-                    rect: null,
-                });
-
-                body.appendChild(columnElement);
-            });
-
-            container.appendChild(body);
-            return container;
-        }
-
-        updateColumnRects() {
-            this.columnsMeta.forEach((meta) => {
-                if (meta.element) {
-                    meta.rect = meta.element.getBoundingClientRect();
-                }
-            });
-        }
-
-        resolveColumnFromPoint(x) {
-            let closest = null;
-            let closestDistance = Infinity;
-            this.columnsMeta.forEach((meta) => {
-                if (!meta.rect) {
-                    return;
-                }
-                if (x >= meta.rect.left && x <= meta.rect.right) {
-                    closest = meta;
-                    closestDistance = 0;
-                } else {
-                    const distance = Math.min(Math.abs(x - meta.rect.left), Math.abs(x - meta.rect.right));
-                    if (distance < closestDistance) {
-                        closestDistance = distance;
-                        closest = meta;
-                    }
-                }
-            });
-            return closest;
-        }
-
-        highlightColumn(meta) {
-            if (this.dragState?.activeColumnMeta === meta) {
-                return;
-            }
-            if (this.dragState?.activeColumnMeta?.element) {
-                this.dragState.activeColumnMeta.element.removeAttribute('data-drag-target');
-            }
-            if (meta?.element) {
-                meta.element.setAttribute('data-drag-target', 'true');
-            }
-            if (this.dragState) {
-                this.dragState.activeColumnMeta = meta || null;
-            }
-        }
-
-        updateMonthCellRects() {
-            this.monthCellsMeta.forEach((meta) => {
-                if (meta.element) {
-                    meta.rect = meta.element.getBoundingClientRect();
-                }
-            });
-        }
-
-        resolveMonthCellFromPoint(x, y) {
-            let target = null;
-            let distance = Infinity;
-            this.monthCellsMeta.forEach((meta) => {
-                if (!meta.rect) {
-                    return;
-                }
-                const withinX = x >= meta.rect.left && x <= meta.rect.right;
-                const withinY = y >= meta.rect.top && y <= meta.rect.bottom;
-                if (withinX && withinY) {
-                    target = meta;
-                    distance = 0;
-                } else {
-                    const dx = withinX ? 0 : Math.min(Math.abs(x - meta.rect.left), Math.abs(x - meta.rect.right));
-                    const dy = withinY ? 0 : Math.min(Math.abs(y - meta.rect.top), Math.abs(y - meta.rect.bottom));
-                    const current = Math.hypot(dx, dy);
-                    if (current < distance) {
-                        distance = current;
-                        target = meta;
-                    }
-                }
-            });
-            return target;
-        }
-
-        highlightMonthCell(meta) {
-            if (this.dragState?.activeMonthMeta === meta) {
-                return;
-            }
-            if (this.dragState?.activeMonthMeta?.element) {
-                this.dragState.activeMonthMeta.element.removeAttribute('data-drag-target');
-            }
-            if (meta?.element) {
-                meta.element.setAttribute('data-drag-target', 'true');
-            }
-            if (this.dragState) {
-                this.dragState.activeMonthMeta = meta || null;
-            }
-        }
-
-        startMonthDrag(evt, event, meta) {
-            this.updateMonthCellRects();
-            this.dragState = {
-                kind: 'month',
-                type: 'move',
-                event,
-                pointerId: evt.pointerId,
-                originalStart: new Date(event.start.getTime()),
-                originalEnd: new Date(event.end.getTime()),
-                duration: Math.max(SLOT_MINUTES, differenceInMinutes(event.end, event.start)),
-                originMeta: meta,
-                previewStart: new Date(event.start.getTime()),
-                previewEnd: new Date(event.end.getTime()),
-                activeMonthMeta: meta,
-            };
-            meta?.element?.setAttribute('data-drag-target', 'true');
-        }
-
-        handleMonthDragMove(evt) {
-            const drag = this.dragState;
-            if (!drag) {
-                return;
-            }
-            const meta = this.resolveMonthCellFromPoint(evt.clientX, evt.clientY) || drag.originMeta;
-            if (!meta) {
-                return;
-            }
-            this.highlightMonthCell(meta);
-
-            const start = startOfDay(meta.date);
-            start.setHours(drag.originalStart.getHours(), drag.originalStart.getMinutes(), 0, 0);
-            const end = addMinutes(start, drag.duration);
-
-            drag.previewStart = start;
-            drag.previewEnd = end;
-            drag.targetMonthMeta = meta;
-        }
-
-        finishMonthDrag(evt) {
-            const drag = this.dragState;
-            if (!drag) {
-                return;
-            }
-            const meta = this.resolveMonthCellFromPoint(evt.clientX, evt.clientY) || drag.targetMonthMeta || drag.originMeta;
-            if (drag.activeMonthMeta?.element) {
-                drag.activeMonthMeta.element.removeAttribute('data-drag-target');
-            }
-            this.dragState = null;
-            if (!meta) {
-                return;
-            }
-            const newStart = drag.previewStart || drag.originalStart;
-            const newEnd = drag.previewEnd || drag.originalEnd;
-            if (newStart.getTime() === drag.originalStart.getTime() && newEnd.getTime() === drag.originalEnd.getTime()) {
-                return;
-            }
-            this.markEventRecentlyDragged(drag.event.id);
-            this.onEventMove({ event: drag.event, start: newStart, end: newEnd });
-        }
-
-        renderMonthView(start, end) {
-            const container = buildElement('div', 'planner-month');
-            const header = buildElement('div', 'planner-month__header');
-            const monthWeekdays = [
-                { label: 'Ma', title: 'Maandag' },
-                { label: 'Di', title: 'Dinsdag' },
-                { label: 'Wo', title: 'Woensdag' },
-                { label: 'Do', title: 'Donderdag' },
-                { label: 'Vr', title: 'Vrijdag' },
-                { label: 'Za', title: 'Zaterdag', weekend: true },
-                { label: 'Zo', title: 'Zondag', weekend: true },
-            ];
-            monthWeekdays.forEach((weekday) => {
-                const cell = buildElement('div', 'planner-month__header-cell', weekday.label);
-                cell.setAttribute('title', weekday.title);
-                if (weekday.weekend) {
-                    cell.dataset.weekend = 'true';
-                }
-                header.appendChild(cell);
-            });
-            container.appendChild(header);
-
-            const grid = buildElement('div', 'planner-month__grid');
-            const cursor = new Date(start.getTime());
-            while (cursor < end) {
-                const cell = buildElement('div', 'planner-month__cell');
-                const cellHeader = buildElement(
-                    'div',
-                    'planner-month__cell-header',
-                    `<span>${cursor.getDate()}</span>`,
-                );
-                if (cursor.getMonth() !== this.currentDate.getMonth()) {
-                    cell.classList.add('planner-month__cell--muted');
-                }
-                const weekday = cursor.getDay();
-                if (weekday === 0 || weekday === 6) {
-                    cell.dataset.weekend = 'true';
-                }
-                cell.appendChild(cellHeader);
-
-                const dayEvents = this.events.filter((event) => isSameDay(event.start, cursor));
-                const list = buildElement('ul', 'planner-month__events');
-                const cellMeta = {
-                    date: new Date(cursor.getTime()),
-                    element: cell,
-                    events: dayEvents,
-                    listElement: list,
-                    expanded: false,
-                    rect: null,
+            this.calendar.removeAllEvents();
+            this.events = [];
+            events.forEach((event) => {
+                const stored = {
+                    ...event,
+                    start: new Date(event.start.getTime()),
+                    end: new Date(event.end.getTime()),
                 };
-                this.monthCellsMeta.push(cellMeta);
-                this.renderMonthCellEvents(cellMeta);
-                cell.appendChild(list);
-
-                cell.addEventListener('click', () => {
-                    const startTime = addMinutes(cursor, 9 * 60);
-                    const endTime = addMinutes(startTime, 60);
-                    this.onSelect({ start: startTime, end: endTime, instructorId: null });
+                this.events.push(stored);
+                const status = STATUS_CONFIG[stored.status] ?? STATUS_CONFIG.les;
+                this.calendar.addEvent({
+                    id: String(stored.id),
+                    title: stored.title,
+                    start: stored.start,
+                    end: stored.end,
+                    allDay: false,
+                    backgroundColor: status.bg,
+                    borderColor: status.color,
+                    textColor: '#0f172a',
+                    extendedProps: { ...stored, original: stored },
                 });
-
-                grid.appendChild(cell);
-                cursor.setDate(cursor.getDate() + 1);
-            }
-            container.appendChild(grid);
-            return container;
+            });
+            this.refreshMonthPreviewLimits();
         }
 
-        renderMonthCellEvents(meta) {
-            const { events, listElement, element } = meta;
-            listElement.innerHTML = '';
-            const collapsedOverflow = events.length > 3;
-            const limit = meta.expanded ? events.length : 3;
-            events.slice(0, limit).forEach((event) => {
-                const status = STATUS_CONFIG[event.status] ?? STATUS_CONFIG.les;
-                const item = buildElement(
-                    'li',
-                    'planner-month__event',
-                    `<span class="planner-month__dot" style="background:${status.color}"></span>` +
-                        `<span class="planner-month__title">${event.title}</span>` +
-                        `<span class="planner-month__time">${formatTime(event.start)}</span>`,
-                );
-                item.addEventListener('click', (evt) => {
-                    evt.preventDefault();
-                    evt.stopPropagation();
-                    if (this.shouldIgnoreClick(event.id)) {
-                        return;
-                    }
-                    this.onEventClick({ event });
-                });
-                const moveHandler = (evt) => this.handlePointerMove(evt);
-                const upHandler = (evt) => {
-                    item.releasePointerCapture(evt.pointerId);
-                    item.removeEventListener('pointermove', moveHandler);
-                    this.handlePointerUp(evt);
-                };
-                item.addEventListener('pointerdown', (evt) => {
-                    if (evt.button !== 0) {
-                        return;
-                    }
-                    if (evt.target.closest('button')) {
-                        return;
-                    }
-                    this.startMonthDrag(evt, event, meta);
-                    if (this.dragState) {
-                        item.setPointerCapture(evt.pointerId);
-                        item.addEventListener('pointermove', moveHandler);
-                        item.addEventListener('pointerup', upHandler, { once: true });
-                        item.addEventListener('pointercancel', upHandler, { once: true });
-                    }
-                });
-                listElement.appendChild(item);
-            });
-
-            element.dataset.expanded = meta.expanded ? 'true' : 'false';
-
-            if (!meta.expanded && collapsedOverflow) {
-                const wrapper = buildElement('li', 'planner-month__more-item');
-                const button = buildElement('button', 'planner-month__more', `+${events.length - limit} meer`);
-                button.type = 'button';
-                button.addEventListener('click', (evt) => {
-                    evt.preventDefault();
-                    evt.stopPropagation();
-                    meta.expanded = true;
-                    this.renderMonthCellEvents(meta);
-                });
-                wrapper.appendChild(button);
-                listElement.appendChild(wrapper);
-            } else if (meta.expanded && collapsedOverflow) {
-                const wrapper = buildElement('li', 'planner-month__more-item');
-                const button = buildElement('button', 'planner-month__more', 'Minder tonen');
-                button.type = 'button';
-                button.addEventListener('click', (evt) => {
-                    evt.preventDefault();
-                    evt.stopPropagation();
-                    meta.expanded = false;
-                    this.renderMonthCellEvents(meta);
-                });
-                wrapper.appendChild(button);
-                listElement.appendChild(wrapper);
+        refreshMonthPreviewLimits() {
+            if (typeof this.calendar.updateSize === 'function') {
+                this.calendar.updateSize();
             }
         }
 
-        computeColumnLayouts(events) {
-            if (!events.length) {
-                return [];
-            }
-            const sorted = [...events].sort((a, b) => a.start - b.start || a.end - b.end);
-            const groups = new Map();
-            sorted.forEach((event) => {
-                groups.set(event, new Set([event]));
-            });
-            for (let i = 0; i < sorted.length; i += 1) {
-                for (let j = i + 1; j < sorted.length; j += 1) {
-                    if (eventsOverlap(sorted[i], sorted[j])) {
-                        groups.get(sorted[i]).add(sorted[j]);
-                        groups.get(sorted[j]).add(sorted[i]);
-                    }
-                }
-            }
-            const assignments = new Map();
-            sorted.forEach((event) => {
-                const used = new Set();
-                groups.get(event).forEach((other) => {
-                    if (assignments.has(other)) {
-                        used.add(assignments.get(other));
-                    }
-                });
-                let columnIndex = 0;
-                while (used.has(columnIndex)) {
-                    columnIndex += 1;
-                }
-                assignments.set(event, columnIndex);
-            });
-            return sorted.map((event) => {
-                const group = groups.get(event);
-                let max = 0;
-                group.forEach((other) => {
-                    const index = assignments.get(other) ?? 0;
-                    if (index > max) {
-                        max = index;
-                    }
-                });
-                return {
-                    event,
-                    columnIndex: assignments.get(event) ?? 0,
-                    columnCount: max + 1,
-                };
-            });
-        }
-        createEventElement(layout, columnDate, columnIndex) {
-            const { event, columnIndex: colIndex, columnCount } = layout;
-            const startMinutes = Math.max(0, differenceInMinutes(event.start, columnDate));
-            const endMinutes = Math.min(24 * 60, differenceInMinutes(event.end, columnDate));
-            const top = startMinutes * MINUTE_HEIGHT;
-            const height = Math.max(MIN_EVENT_HEIGHT, (endMinutes - startMinutes) * MINUTE_HEIGHT);
-            const widthPercent = 100 / columnCount;
-            const leftPercent = colIndex * widthPercent;
-            const status = STATUS_CONFIG[event.status] ?? STATUS_CONFIG.les;
-
-            const element = buildElement(
-                'div',
-                'planner-event',
-                `
-                    <div class="planner-event__title">${event.title}</div>
-                    <div class="planner-event__status" style="color:${status.color}">${status.label}</div>
-                    ${event.location ? `<div class="planner-event__meta">${event.location}</div>` : ''}
-                    <div class="planner-event__time">${formatTime(event.start)} – ${formatTime(event.end)}</div>
-                    <button class="planner-event__resize planner-event__resize--start" type="button"></button>
-                    <button class="planner-event__resize planner-event__resize--end" type="button"></button>
-                `,
-            );
-            element.style.top = `${top}px`;
-            element.style.height = `${height}px`;
-            element.style.left = `${leftPercent}%`;
-            element.style.width = `${widthPercent}%`;
-            element.style.setProperty('--planner-event-color', status.color);
-            element.style.setProperty('--planner-event-bg', status.bg);
-            element.dataset.eventId = String(event.id);
-            element.dataset.columnIndex = String(columnIndex);
-
-            const tooltipLines = [
-                `${formatTime(event.start)} – ${formatTime(event.end)}`,
-                event.title,
-            ];
-            if (event.location) {
-                tooltipLines.push(`Locatie: ${event.location}`);
-            }
-            tooltipLines.push(`Type: ${status.label}`);
-            element.setAttribute('title', tooltipLines.join('\n'));
-
-            if (height < 110) {
-                element.classList.add('planner-event--condensed');
-            }
-            if (height < 80) {
-                element.classList.add('planner-event--minimal');
-            }
-
-            element.addEventListener('click', (evt) => {
-                if (this.dragState) {
-                    return;
-                }
-                if (evt.target.classList.contains('planner-event__resize')) {
-                    return;
-                }
-                if (this.shouldIgnoreClick(event.id)) {
-                    return;
-                }
-                this.onEventClick({ event });
-            });
-
-            element.addEventListener('pointerdown', (evt) => {
-                if (evt.button !== 0) {
-                    return;
-                }
-                const target = evt.target;
-                if (target.classList.contains('planner-event__resize--start')) {
-                    this.startDrag(evt, event, 'resize-start', columnIndex, columnDate, element);
-                } else if (target.classList.contains('planner-event__resize--end')) {
-                    this.startDrag(evt, event, 'resize-end', columnIndex, columnDate, element);
-                } else {
-                    this.startDrag(evt, event, 'move', columnIndex, columnDate, element);
-                }
-                if (this.dragState) {
-                    element.setPointerCapture(evt.pointerId);
-                    const moveHandler = (moveEvent) => this.handlePointerMove(moveEvent);
-                    element._plannerMoveHandler = moveHandler;
-                    element.addEventListener('pointermove', moveHandler);
-                    const upHandler = (upEvent) => this.handlePointerUp(upEvent);
-                    element.addEventListener('pointerup', upHandler, { once: true });
-                    element.addEventListener('pointercancel', upHandler, { once: true });
-                }
-            });
-
-            return element;
+        shouldUseCompactWeekdayLabels() {
+            return Boolean(COMPACT_WEEKDAY_MEDIA && COMPACT_WEEKDAY_MEDIA.matches);
         }
 
-        startDrag(evt, event, type, columnIndex, columnDate, element) {
-            const meta = this.columnsMeta.find((item) => item.index === columnIndex) || null;
-            const columnElement = element.closest('.planner-time-grid__column');
-            const styles = columnElement ? window.getComputedStyle(columnElement) : null;
-            const paddingTop = styles ? Number.parseFloat(styles.paddingTop) || 0 : 0;
-            const eventRect = element.getBoundingClientRect();
-            const pointerOffsetMinutes = Math.round((evt.clientY - eventRect.top) / MINUTE_HEIGHT);
-            const duration = Math.max(SLOT_MINUTES, differenceInMinutes(event.end, event.start));
-
-            const baseColumnDate = meta?.date ? startOfDay(meta.date) : startOfDay(columnDate);
-
-            let placeholder = null;
-            let placeholderTime = null;
-            if (columnElement) {
-                placeholder = buildElement(
-                    'div',
-                    'planner-drop-placeholder',
-                    `<div class="planner-drop-placeholder__time">${formatTime(event.start)} – ${formatTime(
-                        event.end,
-                    )}</div>`,
-                );
-                placeholderTime = placeholder.querySelector('.planner-drop-placeholder__time');
-                columnElement.appendChild(placeholder);
-                const startMinutes = Math.max(0, differenceInMinutes(event.start, baseColumnDate));
-                const placeholderMinutes = Math.max(
-                    SLOT_MINUTES,
-                    Math.max(1, differenceInMinutes(event.end, event.start)),
-                );
-                placeholder.style.top = `${startMinutes * MINUTE_HEIGHT}px`;
-                placeholder.style.height = `${Math.max(
-                    MIN_EVENT_HEIGHT,
-                    placeholderMinutes * MINUTE_HEIGHT,
-                )}px`;
-                placeholder.dataset.visible = 'true';
+        getDayHeaderText(date) {
+            if (this.shouldUseCompactWeekdayLabels()) {
+                return `${formatShortWeekday(date).toUpperCase()} ${date.getDate()}`;
             }
+            return formatWeekday(date);
+        }
 
-            this.updateColumnRects();
-
-            this.dragState = {
-                kind: 'time-grid',
-                type,
-                event,
-                columnIndex: meta?.index ?? columnIndex,
-                columnDate: baseColumnDate,
-                columnElement: meta?.element ?? columnElement,
-                pointerId: evt.pointerId,
-                originalStart: new Date(event.start.getTime()),
-                originalEnd: new Date(event.end.getTime()),
-                pointerOffsetMinutes: clamp(pointerOffsetMinutes, 0, duration),
-                duration,
-                columnPaddingTop: paddingTop,
-                previewStart: new Date(event.start.getTime()),
-                previewEnd: new Date(event.end.getTime()),
-                activeColumnMeta: meta || null,
-                placeholder,
-                placeholderTime,
-            };
-            if (meta?.element) {
-                meta.element.setAttribute('data-drag-target', 'true');
+        refreshWeekdayHeaders() {
+            this.calendar.setOption('dayHeaderContent', (arg) => this.getDayHeaderText(arg.date));
+            if (typeof this.calendar.rerenderDates === 'function') {
+                this.calendar.rerenderDates();
             }
         }
 
-        handlePointerMove(evt) {
-            const drag = this.dragState;
-            if (!drag || evt.pointerId !== drag.pointerId) {
-                return;
-            }
-            if (drag.kind === 'month') {
-                this.handleMonthDragMove(evt);
-                return;
-            }
-
-            this.updateColumnRects();
-
-            const currentMeta = this.columnsMeta.find((meta) => meta.index === drag.columnIndex) || null;
-            const activeMeta =
-                drag.type === 'move'
-                    ? this.resolveColumnFromPoint(evt.clientX) || currentMeta
-                    : currentMeta;
-
-            if (activeMeta?.element && activeMeta.element !== drag.columnElement) {
-                drag.columnElement = activeMeta.element;
-                drag.columnIndex = activeMeta.index;
-                drag.columnDate = startOfDay(activeMeta.date);
-                drag.columnPaddingTop = Number.parseFloat(
-                    window.getComputedStyle(activeMeta.element).paddingTop,
-                ) || 0;
-                if (drag.placeholder && activeMeta.element && drag.placeholder.parentElement !== activeMeta.element) {
-                    activeMeta.element.appendChild(drag.placeholder);
-                }
-            }
-
-            if (activeMeta) {
-                this.highlightColumn(activeMeta);
-            }
-
-            const columnRect = drag.columnElement?.getBoundingClientRect();
-            const paddingTop = drag.columnPaddingTop || 0;
-            const minutesFromTop = (() => {
-                if (!columnRect) {
-                    return 0;
-                }
-                const relative = evt.clientY - (columnRect.top + paddingTop);
-                return clamp(Math.round(relative / MINUTE_HEIGHT), 0, 24 * 60);
-            })();
-
-            let newStart = new Date(drag.originalStart.getTime());
-            let newEnd = new Date(drag.originalEnd.getTime());
-
-            if (drag.type === 'move') {
-                const startMinutes = clamp(
-                    Math.round((minutesFromTop - drag.pointerOffsetMinutes) / SLOT_MINUTES) * SLOT_MINUTES,
-                    0,
-                    24 * 60 - drag.duration,
-                );
-                newStart = addMinutes(drag.columnDate, startMinutes);
-                newEnd = addMinutes(newStart, drag.duration);
-            } else if (drag.type === 'resize-start') {
-                const startMinutes = Math.round(minutesFromTop / SLOT_MINUTES) * SLOT_MINUTES;
-                newStart = addMinutes(
-                    drag.columnDate,
-                    clamp(startMinutes, 0, differenceInMinutes(drag.originalEnd, drag.columnDate) - SLOT_MINUTES),
-                );
-                if (differenceInMinutes(newEnd, newStart) < SLOT_MINUTES) {
-                    newStart = addMinutes(newEnd, -SLOT_MINUTES);
-                }
-            } else if (drag.type === 'resize-end') {
-                const endMinutes = Math.round(minutesFromTop / SLOT_MINUTES) * SLOT_MINUTES;
-                newEnd = addMinutes(
-                    drag.columnDate,
-                    clamp(
-                        endMinutes,
-                        differenceInMinutes(drag.originalStart, drag.columnDate) + SLOT_MINUTES,
-                        24 * 60,
-                    ),
-                );
-                if (differenceInMinutes(newEnd, newStart) < SLOT_MINUTES) {
-                    newEnd = addMinutes(newStart, SLOT_MINUTES);
-                }
-            }
-
-            const columnStart = drag.columnDate;
-            const columnEnd = addMinutes(columnStart, 24 * 60);
-            if (newStart < columnStart) {
-                const adjust = differenceInMinutes(columnStart, newStart);
-                newStart = columnStart;
-                if (drag.type === 'move') {
-                    newEnd = addMinutes(newEnd, adjust);
-                }
-            }
-            if (newEnd > columnEnd) {
-                const adjust = differenceInMinutes(newEnd, columnEnd);
-                newEnd = columnEnd;
-                if (drag.type === 'move') {
-                    newStart = addMinutes(newStart, -adjust);
-                }
-            }
-
-            const eventElements = this.element.querySelectorAll(
-                `.planner-event[data-event-id="${drag.event.id}"]`,
-            );
-            eventElements.forEach((node) => {
-                if (drag.columnElement && node.parentElement !== drag.columnElement) {
-                    drag.columnElement.appendChild(node);
-                    node.dataset.columnIndex = String(drag.columnIndex);
-                    node.style.left = '0px';
-                    node.style.width = '100%';
-                }
-                const startMinutes = Math.max(0, differenceInMinutes(newStart, columnStart));
-                const endMinutes = Math.min(24 * 60, differenceInMinutes(newEnd, columnStart));
-                node.style.top = `${startMinutes * MINUTE_HEIGHT}px`;
-                node.style.height = `${Math.max(
-                    MIN_EVENT_HEIGHT,
-                    (endMinutes - startMinutes) * MINUTE_HEIGHT,
-                )}px`;
-                node.classList.add('planner-event--dragging');
-            });
-
-            if (drag.placeholder) {
-                const placeholderParent = drag.columnElement;
-                if (placeholderParent && drag.placeholder.parentElement !== placeholderParent) {
-                    placeholderParent.appendChild(drag.placeholder);
-                }
-                const placeholderStartMinutes = Math.max(0, differenceInMinutes(newStart, columnStart));
-                const placeholderEndMinutes = Math.max(
-                    placeholderStartMinutes + SLOT_MINUTES,
-                    differenceInMinutes(newEnd, columnStart),
-                );
-                drag.placeholder.style.top = `${placeholderStartMinutes * MINUTE_HEIGHT}px`;
-                drag.placeholder.style.height = `${Math.max(
-                    MIN_EVENT_HEIGHT,
-                    (placeholderEndMinutes - placeholderStartMinutes) * MINUTE_HEIGHT,
-                )}px`;
-                drag.placeholder.dataset.visible = 'true';
-                if (drag.placeholderTime) {
-                    drag.placeholderTime.textContent = `${formatTime(newStart)} – ${formatTime(newEnd)}`;
-                }
-            }
-
-            drag.previewStart = newStart;
-            drag.previewEnd = newEnd;
-            evt.preventDefault();
+        unselect() {
+            this.calendar.unselect();
         }
-
-        handlePointerUp(evt) {
-            const drag = this.dragState;
-            if (!drag || evt.pointerId !== drag.pointerId) {
-                return;
-            }
-            if (drag.kind === 'month') {
-                this.finishMonthDrag(evt);
-                return;
-            }
-            const eventElements = this.element.querySelectorAll(
-                `.planner-event[data-event-id="${drag.event.id}"]`,
-            );
-            eventElements.forEach((element) => {
-                element.classList.remove('planner-event--dragging');
-                if (element.hasPointerCapture?.(drag.pointerId)) {
-                    element.releasePointerCapture(drag.pointerId);
-                }
-                if (element._plannerMoveHandler) {
-                    element.removeEventListener('pointermove', element._plannerMoveHandler);
-                    delete element._plannerMoveHandler;
-                }
-            });
-
-            if (drag.activeColumnMeta?.element) {
-                drag.activeColumnMeta.element.removeAttribute('data-drag-target');
-            }
-
-            if (drag.placeholder?.parentElement) {
-                drag.placeholder.parentElement.removeChild(drag.placeholder);
-            }
-
-            const newStart = drag.previewStart || drag.originalStart;
-            const newEnd = drag.previewEnd || drag.originalEnd;
-            const changed =
-                newStart.getTime() !== drag.originalStart.getTime() ||
-                newEnd.getTime() !== drag.originalEnd.getTime();
-            this.dragState = null;
-
-            if (!changed) {
-                return;
-            }
-
-            this.markEventRecentlyDragged(drag.event.id);
-
-            if (drag.type === 'move') {
-                this.onEventMove({ event: drag.event, start: newStart, end: newEnd });
-            } else {
-                this.onEventResize({ event: drag.event, start: newStart, end: newEnd });
-            }
-        }
-
-        unselect() {}
     }
+
     function normaliseSearchTerm(value) {
         return value
             .toLowerCase()
@@ -1357,6 +638,7 @@
         const instructorSelect = document.getElementById('instructor_id');
         const instructorFilter = document.getElementById('instructor-filter');
         const statusFilter = document.getElementById('status-filter');
+        const studentDependentSections = document.querySelectorAll('[data-student-dependent]');
         const modalTitle = document.getElementById('event-modal-title');
         const quickCreateButton = document.getElementById('quick-create-event');
         const studentBirthDateInput = document.getElementById('student_birth_date');
@@ -1381,6 +663,15 @@
         let searchTimeout = null;
 
         const contactEditors = buildContactEditors();
+
+        function setStudentDependentVisibility(visible) {
+            studentDependentSections.forEach((section) => {
+                section.classList.toggle('hidden', !visible);
+                section.setAttribute('aria-hidden', visible ? 'false' : 'true');
+            });
+        }
+
+        setStudentDependentVisibility(false);
 
         function buildContactEditors() {
             function createContactEditor({ inputId, displayId, linkId, toggleId, emptyLabel, hrefFormatter }) {
@@ -1500,17 +791,12 @@
                 .filter(Boolean);
         }
 
-        const planner = new PlannerCalendar(calendarElement, {
-            initialView: config.initialView || 'timeGridWeek',
-            initialDate: config.initialDate || new Date().toISOString(),
-            onSelect: handleSelect,
-            onEventClick: ({ event }) => openModalForEvent(event),
-            onEventMove: handleEventMove,
-            onEventResize: handleEventResize,
-            onRangeChange: handleRangeChange,
-        });
+        // Declareer planner variabele vooraf
+        let planner;
 
+        // Functie declaraties VOOR planner instantie
         function updateRangeLabel() {
+            if (!planner) return;
             const info = planner.getViewInfo();
             const start = info.currentStart;
             const end = addMinutes(info.currentEnd, -1);
@@ -1522,6 +808,7 @@
         }
 
         async function refreshEvents() {
+            if (!planner) return;
             const { start, end } = planner.getCurrentRange();
             const params = new URLSearchParams();
             params.set('start', start.toISOString());
@@ -1553,6 +840,52 @@
             refreshEvents();
         }
 
+        function updateViewButtons() {
+            if (!planner) return;
+            const activeType = planner.getViewInfo().type;
+            document.querySelectorAll('[data-calendar-view]').forEach((button) => {
+                const isActive = button.dataset.calendarView === activeType;
+                ['bg-white', 'text-sky-600', 'shadow-sm'].forEach((klass) => {
+                    button.classList.toggle(klass, isActive);
+                });
+                button.classList.toggle('text-slate-500', !isActive);
+            });
+        }
+
+        // Initialiseer planner
+        planner = new PlannerCalendar(calendarElement, {
+            initialView: config.initialView || 'timeGridWeek',
+            initialDate: config.initialDate || new Date().toISOString(),
+            onSelect: handleSelect,
+            onEventClick: ({ event }) => openModalForEvent(event),
+            onEventMove: handleEventMove,
+            onEventResize: handleEventResize,
+            onRangeChange: handleRangeChange,
+        });
+
+        const responsiveMedia = [COMPACT_WEEKDAY_MEDIA].filter(Boolean);
+        const handleViewportChange = () => {
+            planner.refreshWeekdayHeaders();
+            planner.refreshMonthPreviewLimits();
+        };
+        responsiveMedia.forEach((media) => {
+            if (!media) {
+                return;
+            }
+            if (typeof media.addEventListener === 'function') {
+                media.addEventListener('change', handleViewportChange);
+            } else if (typeof media.addListener === 'function') {
+                media.addListener(handleViewportChange);
+            }
+        });
+        let viewportResizeTimer = null;
+        window.addEventListener('resize', () => {
+            window.clearTimeout(viewportResizeTimer);
+            viewportResizeTimer = window.setTimeout(handleViewportChange, 150);
+        });
+        handleViewportChange();
+
+        // Modal functies
         function openModal() {
             modal.classList.remove('hidden');
             modal.setAttribute('aria-hidden', 'false');
@@ -1584,6 +917,31 @@
         closeModalButtons.forEach((button) => button.addEventListener('click', closeModal));
         closeStudentButtons.forEach((button) => button.addEventListener('click', closeStudentModal));
         openStudentButtons.forEach((button) => button.addEventListener('click', openStudentModal));
+
+        // ESC key support voor modals
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                if (!modal.classList.contains('hidden')) {
+                    closeModal();
+                }
+                if (!studentModal.classList.contains('hidden')) {
+                    closeStudentModal();
+                }
+            }
+        });
+
+        // Click outside modal support
+        modal.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+
+        studentModal.addEventListener('click', (event) => {
+            if (event.target === studentModal) {
+                closeStudentModal();
+            }
+        });
         quickCreateButton?.addEventListener('click', () => {
             modalTitle.textContent = 'Nieuwe afspraak';
             const now = new Date();
@@ -1628,6 +986,7 @@
                 clearStudentFormFields();
             }
             selectedStudentData = student || null;
+            setStudentDependentVisibility(Boolean(student));
             if (!student) {
                 studentIdInput.value = '';
                 if (selectedStudent) {
@@ -2028,17 +1387,7 @@
             });
         });
 
-        function updateViewButtons() {
-            const activeType = planner.getViewInfo().type;
-            document.querySelectorAll('[data-calendar-view]').forEach((button) => {
-                const isActive = button.dataset.calendarView === activeType;
-                ['bg-white', 'text-sky-600', 'shadow-sm'].forEach((klass) => {
-                    button.classList.toggle(klass, isActive);
-                });
-                button.classList.toggle('text-slate-500', !isActive);
-            });
-        }
-
+        // View switcher buttons
         document.querySelectorAll('[data-calendar-view]').forEach((button) => {
             button.addEventListener('click', () => {
                 const view = button.dataset.calendarView;
@@ -2052,6 +1401,7 @@
         function updateFilterButton(button, active) {
             button.dataset.active = active ? 'true' : 'false';
             button.classList.toggle('active', active);
+            button.setAttribute('aria-pressed', active ? 'true' : 'false');
         }
 
         function bindFilterButtons(container) {
